@@ -1,6 +1,6 @@
 # Month Screen — Functional Specification
 
-Status: draft 3 (aligned with the wireframes in `design.pen`) · Last updated: 2026-10-28
+Status: draft 4 (aligned with the wireframes in `design.pen`) · Last updated: 2026-11-02
 
 The Month screen is the app's home and replaces one tab of the budget spreadsheet. This document describes every feature of the screen from the user's side: what you can do, how it works, which rules apply, what you see when something goes wrong, and how to check that it works.
 
@@ -24,7 +24,7 @@ Status: **Ready** = the backend supports it today. **Placeholder** = shown, wait
 | **Reading the month** | | | |
 | M-04 | Month summary | Must | Ready |
 | M-05 | Month table | Must | Ready |
-| M-06 | Sort the table | Should | Ready |
+| M-06 | Sort the table | Should | Ready (Category, Payment, #: Gap BE-4) |
 | M-07 | Income list with salary | Must | Ready |
 | M-08 | Row details | Must | Ready |
 | M-09 | Installment progress (`n of N`) | Must | Ready |
@@ -62,11 +62,11 @@ These terms and calculations are used throughout the document.
 | **Current month** | The current calendar month **in UTC**, the same reference the backend uses. Around midnight at month end, this can differ from your local date by a few hours |
 | **Past / current / future month** | Compared with the current month |
 | **Opened month** | A month that exists in the backend (a budget period). Months that don't exist yet can be viewed but are empty |
-| **Row** | One line of the month table: an expense or an envelope |
-| **Row type** | One-time, installment, recurring (expenses), or envelope |
+| **Row** | One line of the month table: an expense. Envelopes are not table rows; they live in the Envelopes card (M-04) |
+| **Row type** | One-time, installment or recurring |
 | **Salary base** | Sum of the month's incomes flagged as salary |
 | **Total income** | Sum of all the month's incomes |
-| **Total expenses** | Sum of all expense amounts **plus** the amount **spent** in each envelope (not the envelope budgets). Until the spend API exists, envelope spend counts as 0 and the Expenses card notes "Envelope spend not included yet" |
+| **Total expenses** | Sum of **all** the month's expense amounts (every page, not only the one shown) **plus** the amount **spent** in each envelope (not the envelope budgets). Until the spend API exists, envelope spend counts as 0 and the Expenses card notes "Envelope spend not included yet". The expense part is `totalAmount` from `GET /expenses`, which sums every matching expense whatever page is requested |
 | **Balance** | Total income − total expenses |
 | **% of salary** | Row amount ÷ salary base. **Not shown for now** (out of scope, see [todo.md](todo.md)) |
 | **Unpaid** | An expense with no paid date. Envelopes have no paid date and are never unpaid |
@@ -191,48 +191,60 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 - Clicking an envelope opens its row details (M-08).
 - Until the backend provides spend data (M-11), spent values and bars show "—".
 
+**Totals while the table is paginated**
+- The table loads one page at a time, but the Income, Expenses and Balance cards need the whole month.
+- Every `GET /expenses` response carries `totalAmount`, the sum of all the month's expenses across pages. The Expenses card uses it (plus envelope spend), so no extra request is needed.
+
 **Acceptance criteria**
 - *Given* incomes of 7,375.67, expenses of 6,013.62 and envelope spend of 516.86, *then* Expenses shows CAD 6,530.48 and Balance shows CAD 845.19.
 - *Given* the balance is −120.00, *then* the Balance card shows `- CAD 120.00`.
 
 #### M-05 Month table
 
-*As the budget owner, I want all the month's rows in one table with a total, like my spreadsheet tab.*
+*As the budget owner, I want the month's expenses in one table, a page at a time, so the screen stays fast and focused.*
 
 **How it works**
-1. One table holds every expense and every envelope of the month, **without pagination**.
-2. Rows appear in **order of entry**, oldest first, like the spreadsheet. The API returns each page newest first, so the frontend concatenates all pages in page order and then reverses the combined list.
+1. The table lists the month's **expenses**, **20 per page**, fetched from the server one page at a time (`GET /expenses?budgetPeriodId=&page=&limit=20&sortBy=&sortOrder=`).
+2. Rows appear **newest first** by default (`sortBy=createdAt&sortOrder=desc`). The server can also return oldest first (`sortOrder=asc`) if the spreadsheet's order is wanted as the default later.
 3. Columns:
 
 | Column | Content |
 |---|---|
-| # | Installment: `n of N` (M-09). Recurring: icon and "Month —" (M-10). Envelope: icon. One-time: empty |
+| # | Installment: `n of N` (M-09). Recurring: icon and "Month —" (M-10). One-time: empty |
 | Item | Description (fixed, narrower column) |
-| Category | The category as a small chip. Envelopes: their own category |
+| Category | The category as a small chip |
 | Payment type | Takes the remaining width |
 | Due | Date, "—" when none. Overdue dates in the danger colour (M-13) |
-| Paid | The paid control (M-12) and the paid date. Envelopes: empty |
-| Amount | `CAD 1,450.00`, without a sign, in the regular text colour. Envelope: its budget |
-| Spent | Right of Amount. Envelopes only (M-11); empty for expenses |
+| Paid | The paid control (M-12) and the paid date |
+| Amount | `CAD 1,450.00`, without a sign, in the regular text colour |
 
-4. There is **no total row**; the month's total expenses are on the Expenses summary card (M-04).
-5. The table has no title bar; it starts with the column headers.
-6. Bank, Store and Purchased are **not columns**: they are in the row details (M-08). Clicking a row opens them.
-7. At 390px each row shows the paid control, Item, the type chip, Due (or the paid date) and Amount.
-8. **Paid rows are dimmed** (muted text, half opacity) but stay in place; the paid control stays at full strength. Unpaid rows stand out.
+4. **Envelopes are not in the table.** They live in the Envelopes card (M-04), which shows each one's spent vs allocated. There is no Spent column.
+5. There is **no total row**; the month's total expenses are on the Expenses summary card (M-04).
+6. The table has no title bar; it starts with the column headers.
+7. Bank, Store and Purchased are **not columns**: they are in the row details (M-08). Clicking a row opens them.
+8. At 390px each row shows the paid control, Item, the type chip, Due (or the paid date) and Amount.
+9. **Paid rows are dimmed** (muted text, half opacity) but stay in place; the paid control stays at full strength. Unpaid rows stand out.
+
+**Pagination**
+- The design system's pagination: "Page X of N" with first, previous, next and last buttons, disabled at the ends. On desktop it is pinned to the bottom of the viewport; on the phone it sits under the list.
+- It is hidden when the month fits in one page.
+- The page lives in the address with the month (`?period=2026-11&page=2`), so back and refresh keep it.
+- Changing month goes back to page 1. Adding an expense goes to page 1, where the new expense appears first.
+- If deleting the last row of the last page leaves it empty, the previous page is shown.
 
 **Rules**
-- Envelope rows are named after their category (Grocery, Fuel…).
 - Lookups deleted after an expense was recorded show as "(deleted)" on that expense, because the API doesn't return their names (gap G-3). Once the backend provides names, the real name is shown instead.
 
 **Empty, loading, error**
-- An opened month with no rows: "No expenses yet" with an **Add expense** button.
-- Loading: skeleton rows.
+- An opened month with no expenses: "No expenses yet" with an **Add expense** button.
+- Loading: skeleton rows. While turning pages, the current page stays visible until the next one arrives.
 - Error: an inline message with **Retry**.
 
 **Acceptance criteria**
-- *Given* a month with 45 expenses, *then* all 45 are listed on one page and the Expenses card matches their sum plus the envelope spend.
-- *Given* I add an expense, *then* it appears as the last row.
+- *Given* a month with 45 expenses, *then* the table shows 20 rows, the pagination reads "Page 1 of 3", and the last page has 5 rows.
+- *Given* a month with 45 expenses, *then* the Expenses card shows the sum of all 45 plus the envelope spend, whatever page is shown.
+- *Given* I'm on page 2 and add an expense, *then* page 1 is shown with the new expense first.
+- *Given* a month with 12 expenses, *then* no pagination is shown.
 - *Given* a 390px screen, *then* no horizontal scrolling is needed to read Item, Due, Paid and Amount.
 
 #### M-06 Sort the table
@@ -240,15 +252,26 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 *As the budget owner, I want to sort by due date or amount sometimes, without losing my usual order.*
 
 **How it works**
-- **Every column header is sortable** (#, Item, Category, Payment, Due, Paid, Amount, Spent): ascending, descending, then back to order of entry. There is no separate sort control.
-- Sort keys: # by row type (one-time, installment, recurring, envelope); Paid by paid date, unpaid rows first; Spent by amount spent.
-- Rows without a value for the sorted column go last (for example envelopes when sorting by Due or Payment, expenses when sorting by Spent).
-- The sort is remembered on this device.
-- The phone list has no headers, so it can't be sorted for now; it always shows order of entry.
+- These headers are sortable: **Item, Due, Paid, Amount**. Clicking cycles ascending, descending, then back to the default order (newest first). There is no separate sort control.
+- Sorting is done **by the server**, across all pages: the frontend sends `sortBy` and `sortOrder` with `GET /expenses`. Sorting only the page on screen is never done.
+
+| Header | `sortBy` |
+|---|---|
+| Item | `description` |
+| Due | `dueAt` |
+| Paid | `paidAt` |
+| Amount | `amount` |
+
+- Rows without a value (no due date, unpaid) go **last in both directions**, as the API does.
+- **#, Category and Payment** are plain labels with no sort control: the API has no sort key for row type or for the category and payment type names (BE-4).
+- Changing the sort goes back to page 1. The sort is kept in the address with the month and page, and remembered on this device.
+- The phone list has no headers, so it can't be sorted for now.
 
 **Acceptance criteria**
-- *Given* the table, *when* I sort by Due, *then* rows run from the earliest due date, with envelopes and rows without a due date at the end.
-- *Given* a sorted table, *when* I click the header a third time, *then* order of entry is restored.
+- *Given* a month with 45 expenses, *when* I sort by Due, *then* page 1 holds the 20 earliest due dates of the whole month, and rows without a due date are on the last page.
+- *Given* a sort by Paid, ascending or descending, *then* unpaid rows are at the end.
+- *Given* a sorted table, *when* I click the header a third time, *then* the default order is restored and page 1 is shown.
+- *Given* the table, *then* #, Category and Payment headers have no sort control.
 
 #### M-07 Income list with salary
 
@@ -320,7 +343,7 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 *As the budget owner, I want to see how much I've spent against each envelope, so I can slow down before going over.*
 
 **How it works (now)**
-- On desktop, the Spent column (right of Amount) shows "—" on envelope rows, with a "Spend data coming soon" tooltip. On the phone, envelope rows show "Spent —" under the item name. No progress bar.
+- Envelope spend is shown only in the Envelopes card (desktop grid and phone strip), not in the table. Until the API exists, each envelope shows "—" for spent, with a "Spend data coming soon" tooltip, and no progress bar.
 
 **When the backend supports it**
 - Spent shows the amount and a progress bar against the budget. Over budget: amount and bar in the danger colour.
@@ -554,10 +577,10 @@ The expense is created in the month being viewed (except installments, see M-15)
 *As the budget owner, I want to remove an envelope I won't use this month.*
 
 **How it works**
-- **Delete** in the envelope row's menu, with a confirmation naming the category. Its spend leaves the totals.
+- **Delete** in the envelope's details panel (opened from the Envelopes card), with a confirmation naming the category. Its spend leaves the totals.
 
 **Acceptance criteria**
-- *Given* the Parking envelope of 20.00, *when* I delete it, *then* it is gone from the Envelopes card and the table, and the balance rises by the amount spent in it.
+- *Given* the Parking envelope of 20.00, *when* I delete it, *then* it is gone from the Envelopes card, and the balance rises by the amount spent in it.
 
 ### Rules across the screen
 
@@ -609,7 +632,7 @@ The expense is created in the month being viewed (except installments, see M-15)
 | What | Source |
 |---|---|
 | Months | `GET /budget-periods` (sorted by the frontend), `POST`, `DELETE /budget-periods` |
-| Expenses | `GET /expenses?budgetPeriodId=` (every page, up to 100 per page), `POST`, `PATCH`, `DELETE /expenses` |
+| Expenses | `GET /expenses?budgetPeriodId=&page=&limit=20&sortBy=&sortOrder=`, one page at a time; its `totalAmount` feeds the Expenses card. `POST`, `PATCH`, `DELETE /expenses` |
 | Installment plans | `GET`, `PATCH /installment-groups/:id`, one per plan in the month |
 | Incomes | `GET /incomes?budgetPeriodId=`, `POST`, `PATCH`, `DELETE /incomes` |
 | Envelopes | `GET /budget-envelopes?budgetPeriodId=`, `POST`, `DELETE /budget-envelopes` (no `PATCH`: budgets are read-only) |
@@ -644,6 +667,7 @@ These came up while writing this document. They don't block the design but need 
 | Which incomes can be copied when opening a month? | Only last month's salary incomes (M-02) |
 | Simplification (2026-10-30) | Incomes move off the page into an income panel opened from the Income card (M-07). Bank, Store and Purchased leave the table for the row details panel, opened by clicking a row (M-05, M-08). Envelopes stay mixed in the list; their spend shows under the item, and the Spent column is removed (M-11). Paid rows are dimmed (M-05, M-12) |
 | Design tweaks (2026-10-30) | No "Current month" badge. Summary order: Income, Expenses, Balance (M-04). Category gets its own column and Item is narrower; the Spent column returns, right of Amount; expense amounts use the regular text colour instead of red (M-05, M-11). All table cells are left-aligned; the spend bar sits above the spent amount. No total row: the Expenses card holds the total (M-05). Every column is sortable (M-06). An Envelopes card under the summary shows all envelopes' spent vs allocated at once, instead of one card per envelope or a carousel (M-04) |
+| Server-side pagination (2026-11-02) | The table is paginated on the server, 20 rows per page, newest first (M-05). Envelope rows and the Spent column leave the table; envelopes live in the Envelopes card (resolves U-3). The API sorts across pages (`sortBy`, `sortOrder`), so Item, Due, Paid and Amount are sortable; #, Category and Payment wait for BE-4 (M-06). The Expenses card uses `totalAmount` from the expenses response, with no extra request (M-04) |
 | Envelope budgets and totals (2026-10-30) | Envelope budgets can't be edited (M-22). Total expenses and balance count envelope **spend**, not envelope budgets (section 2, M-11). Spend will come from a backend API |
 | Design review of the wireframes (2026-10-28) | Summary keeps Balance, Income and Expenses only, with no sub-labels (M-04). No Unpaid or Envelopes cards; overdue is shown on rows only (M-13). No table title bar or sort dropdown; sorting by column headers on desktop only (M-05, M-06). % of salary removed for now (todo.md). Expense amounts shown without a minus sign |
 

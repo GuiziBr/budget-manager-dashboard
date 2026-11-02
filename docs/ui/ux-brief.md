@@ -145,7 +145,7 @@ The detailed requirements for the Month screen now live in [`docs/specs/month-sc
 
 - **Summary:** Income (opens the income panel), Expenses and Balance cards. Below them, a collapsible Envelopes card shows each envelope's spent vs allocated.
 - **Totals:** Expenses = expense amounts + **envelope spend** (not envelope budgets). Balance = income − expenses. Until the spend API exists, envelope spend counts as 0.
-- **Table:** every expense and envelope of the month, in order of entry, no pagination, no total row. Columns #, Item, Category, Payment, Due, Paid, Amount, Spent; all sortable. Bank, Store and Purchased are in the row details panel. Paid rows are dimmed; overdue due dates are red.
+- **Table:** the month's expenses, paginated on the server (20 per page, newest first), no total row. Envelopes are not in the table; they live in the Envelopes card. Columns #, Item, Category, Payment, Due, Paid, Amount; Item, Due, Paid and Amount sortable on the server. Bank, Store and Purchased are in the row details panel. Paid rows are dimmed; overdue due dates are red.
 - **Incomes:** not on the page; listed in the income panel opened from the Income card.
 - **Amounts:** expense amounts without a sign; incomes with `+`; only a negative balance has `-`.
 - **Out of scope for now:** % of salary, Unpaid and Envelopes summary cards, the History screen.
@@ -163,11 +163,11 @@ The detailed requirements for the Month screen now live in [`docs/specs/month-sc
 
 ### Design system
 - Follow `DESIGN_SYSTEM.md`: semantic tokens only, light and dark, desktop and 390px.
-- **Deviation:** the Month table is **not paginated**. A month has about 30 rows; the frontend fetches every page and shows one table. The API returns each page newest first, so the frontend concatenates the pages in page order and then reverses the combined list (reversing each page on its own would give the wrong order past 100 rows). The design system's pinned pagination doesn't apply.
+- The Month table uses the design system's **pagination** (pinned to the bottom on desktop, under the list on the phone), with 20 rows per page fetched from the server one page at a time.
 - **Deviation:** the table has up to 11 columns, more than the 1120px page column comfortably holds. Columns hide progressively by breakpoint, and the details view holds the rest.
 
 ### API
-- Expenses are listed newest first, filtered only by month, at most 100 per page. Totals are calculated in the browser.
+- Expenses are listed newest first, filtered only by month, at most 100 per page. The table requests 20 at a time, sorted on the server (`sortBy`, `sortOrder`). Each response's `totalAmount` gives the month's expense total, so totals don't need every page.
 - No endpoint lists installment plans. End month and `N` come from `GET /installment-groups/:id`, one request per plan in the month. A plan summary on the expense row would avoid this.
 - Expenses in past months cannot be updated (`422`), so the paid date of a past row cannot be set. A row left unpaid when its month ends is shown as overdue (deferred, section 13).
 
