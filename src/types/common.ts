@@ -11,3 +11,5 @@ export interface PagedResponse<T> {
 	page: number
 	limit: number
 }
+
+export type SortOrder = "asc" | "desc"

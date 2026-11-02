@@ -1,4 +1,4 @@
-import type { Id, IsoDate } from "./common"
+import type { Id, IsoDate, PagedResponse, SortOrder } from "./common"
 
 export interface Expense {
 	id: Id
@@ -75,8 +75,26 @@ export interface UpdateExpenseInput {
 	paidAt?: IsoDate | null
 }
 
+/** Keys `GET /expenses` can sort by. No key for row type, category or payment type yet (BE-4). */
+export type ExpenseSortBy =
+	| "description"
+	| "amount"
+	| "purchasedAt"
+	| "dueAt"
+	| "paidAt"
+	| "installmentNumber"
+	| "createdAt"
+	| "updatedAt"
+
 export interface ExpenseListParams {
 	budgetPeriodId?: Id
 	page?: number
 	limit?: number
+	sortBy?: ExpenseSortBy
+	sortOrder?: SortOrder
+}
+
+/** `totalAmount` sums every matching expense, whatever page is requested. */
+export interface ExpensePage extends PagedResponse<Expense> {
+	totalAmount: number
 }
