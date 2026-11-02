@@ -1,6 +1,6 @@
 # Month Screen — Implementation Plan
 
-Status: draft 1 · Last updated: 2026-11-02
+Status: draft 3 (server-side pagination and sorting) · Last updated: 2026-11-02
 
 Breaks the [Month screen spec](../specs/month-screen.md) and the wireframes in `design.pen` into small tasks. Each task is one pull request to `development`, sized to be reviewed in one sitting.
 
@@ -24,17 +24,17 @@ Related: [Month spec](../specs/month-screen.md) · [Backlog](../specs/todo.md) �
 | ID | Task | Phase | Spec | Depends on | Size | Backend |
 |---|---|---|---|---|---|---|
 | T-01 | Domain types | 0 Foundations | §5 | — | S | — |
-| T-02 | API client: JSON-paged lists and fetch-all | 0 | §5 | T-01 | S | — |
+| T-02 | API client: JSON-paged lists | 0 | §5 | T-01 | S | — |
 | T-03 | Month maths (`lib/month.ts`) | 0 | M-01, M-25 | — | S | — |
 | T-04 | Money formatting (`lib/money.ts`) | 0 | §2 | — | S | — |
 | T-05 | Row model, totals and status (`lib/month-rows.ts`) | 0 | §2, M-05, M-09, M-13 | T-01 | M | G-5 |
-| T-06 | Table sorting (`lib/sort-rows.ts`) | 0 | M-06 | T-05 | S | — |
+| T-06 | Sort params for the expenses API (`lib/expense-sort.ts`) | 0 | M-06 | T-01 | S | BE-4 |
 | T-07 | API error messages (`lib/api-error-message.ts`) | 0 | §4 | T-02 | S | — |
 | T-08 | UI primitives: Card, Badge, Checkbox, Progress, Skeleton | 0 | — | — | M | — |
 | T-09 | Navigation: Month, Recurring, Settings | 0 | A-01, A-02 | — | S | — |
 | T-10 | Lookup hooks (categories, payment types, banks, stores) | 1 Data | §5 | T-02 | S | — |
 | T-11 | Budget period hooks | 1 | M-01 | T-02 | S | — |
-| T-12 | Expense hooks | 1 | M-05 | T-02 | M | — |
+| T-12 | Expense hooks (paged, sorted list) | 1 | M-05, M-06 | T-02, T-06 | M | — |
 | T-13 | Income hooks | 1 | M-07 | T-02 | S | — |
 | T-14 | Envelope hooks | 1 | M-04 | T-02 | S | G-5 |
 | T-15 | Installment group hooks | 1 | M-09, M-19 | T-02 | S | G-2 |
@@ -42,9 +42,9 @@ Related: [Month spec](../specs/month-screen.md) · [Backlog](../specs/todo.md) �
 | T-17 | Month states: loading, error, not opened, not tracked, closed | 2 | M-01, M-02, M-25 | T-16 | S | — |
 | T-18 | Summary cards | 2 | M-04 | T-05, T-08, T-12–T-14 | S | G-5 |
 | T-19 | Envelopes card (collapsible) | 2 | M-04, M-11 | T-05, T-08, T-14 | M | G-5 |
-| T-20 | Month table (desktop) | 2 | M-05, M-09, M-10, M-13 | T-05, T-08, T-10, T-12, T-15 | L | G-2, G-3, G-5, G-6 |
-| T-21 | Sortable columns | 2 | M-06 | T-06, T-20 | S | — |
-| T-22 | Phone layout: list, envelope strip, add button | 2 | M-05, M-04 | T-18–T-20 | M | — |
+| T-20 | Month table and pagination (desktop) | 2 | M-05, M-09, M-10, M-13 | T-05, T-08, T-10, T-12, T-15 | L | G-2, G-3, G-6 |
+| T-21 | Sortable columns | 2 | M-06 | T-06, T-20 | S | BE-4 |
+| T-22 | Phone layout: list, pagination, envelope strip, add button | 2 | M-05, M-04 | T-18–T-20 | M | — |
 | T-23 | Income panel (read) | 3 Panels | M-07 | T-13, T-18 | M | — |
 | T-24 | Row details panel (read) | 3 | M-08 | T-20 | M | G-3, G-5, G-6 |
 | T-25 | Mark paid / unpaid | 4 Actions | M-12 | T-12, T-20, T-24 | S | BE-3 |
@@ -76,10 +76,10 @@ Size: **S** ≈ half a day, **M** ≈ a day, **L** ≈ two days.
 - **Includes:** `src/types/` (or `src/lib/types.ts`): `BudgetPeriod`, `Expense`, `Income`, `BudgetEnvelope`, `InstallmentGroup`, `RecurringExpense`, `Category`, `PaymentType`, `Bank`, `Store`, and the `POST /expenses` body as a union on `type` (`one-time` | `recurring` | `installment`). Field names follow `docs/APIs/`.
 - **Done when:** the types compile and match the API docs field by field.
 
-#### T-02 API client: JSON-paged lists and fetch-all
-- **Goal:** read `GET /expenses`, which returns `{ data, total, page, limit }` in the body. `getWithHeaders` expects an `x-total-count` header instead, so it doesn't fit.
-- **Includes:** a typed `getPage<T>()` in `src/lib/api.ts`, and `fetchAllPages<T>(endpoint, limit = 100)` that keeps requesting pages until `total` is reached (M-05: no pagination on screen).
-- **Done when:** unit tests cover one page, several pages and an empty list.
+#### T-02 API client: JSON-paged lists
+- **Goal:** read `GET /expenses`, which returns `{ data, total, totalAmount, page, limit }` in the body. `getWithHeaders` expects an `x-total-count` header instead, so it doesn't fit.
+- **Includes:** a typed `getPage<T>(endpoint, { page, limit, sortBy, sortOrder })` in `src/lib/api.ts` returning the body as is, including `totalAmount`.
+- **Done when:** unit tests cover a page, the last page, an empty list and the query params.
 
 #### T-03 Month maths (`lib/month.ts`)
 - **Goal:** every month decision in one tested module, in **UTC** (spec §2).
@@ -94,19 +94,22 @@ Size: **S** ≈ half a day, **M** ≈ a day, **L** ≈ two days.
 #### T-05 Row model, totals and status (`lib/month-rows.ts`)
 - **Goal:** turn API data into what the screen shows.
 - **Includes:**
-  - `rowType(expense)` → one-time / installment / recurring; envelopes become rows of type envelope.
-  - `buildRows(expenses, envelopes, lookups, groups)` in order of entry, oldest first. The API returns each page newest first, so concatenate all pages in page order and reverse the combined list (never page by page).
+  - `rowType(expense)` → one-time / installment / recurring. Envelopes are not table rows.
+  - `buildRows(pageExpenses, lookups, groups)` for **one page**, keeping the API's order (newest first, or the server sort once BE-4 lands).
   - `isUnpaid`, `isOverdue(row, today)` (unpaid and due before today, any month).
   - `totals(expenses, envelopes, incomes)` → income, expenses (**expense amounts + envelope spend**, spend = 0 until the API exists), balance, salary base.
   - `envelopeStatus` (spent, allocated, ratio, over budget) and `sortEnvelopes` (over budget first).
   - `installmentEndDate(group)` = first purchase + (N − 1) × interval days.
 - **Done when:** tests reproduce the spec examples (Expenses 6,530.48 and Balance 845.19, Hydro overdue on 2026-11-15, Car finance 78 and 79 in one month).
-- **Backend:** G-5 (envelope spend). Until it lands, spend is 0 in `totals` and `envelopeStatus`. Keep spend as one input so the API can be plugged in without changing the callers.
+- **Backend:**
+  - G-5 (envelope spend): until it lands, spend is 0 in `totals` and `envelopeStatus`. Keep spend as one input so the API can be plugged in without changing the callers.
+  - `totals` takes the month's expense total from `totalAmount` (T-02), not from the page on screen.
 
-#### T-06 Table sorting (`lib/sort-rows.ts`)
-- **Goal:** sort by every column with three states: ascending, descending, order of entry.
-- **Includes:** sort keys from M-06 (# by row type, Paid by paid date with unpaid first, Spent by amount spent), rows without a value last, a stable sort.
-- **Done when:** tests cover every column and the reset on the third click.
+#### T-06 Sort params for the expenses API (`lib/expense-sort.ts`)
+- **Goal:** turn a header click into the `sortBy` / `sortOrder` params `GET /expenses` accepts, with the three-state cycle (ascending, descending, default).
+- **Includes:** the mapping from M-06 (Item → `description`, Due → `dueAt`, Paid → `paidAt`, Amount → `amount`; default `createdAt` desc), the next-state function, and reading/writing the sort in the address. Sorting is **never** done in the browser on a single page.
+- **Done when:** tests cover the four columns, the default and the reset on the third click.
+- **Backend:** BE-4 (row type, category and payment type sorting). When it lands, add those keys to the mapping and make #, Category and Payment sortable in T-21.
 
 #### T-07 API error messages (`lib/api-error-message.ts`)
 - **Goal:** map backend errors to the messages in spec §4.
@@ -135,7 +138,9 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 - `use-budget-periods.ts`: `useBudgetPeriods`, `useCreateBudgetPeriod`, `useDeleteBudgetPeriod`.
 
 #### T-12 Expense hooks
-- `use-expenses.ts`: `useMonthExpenses(periodId)` (all pages, T-02), `useCreateExpense`, `useUpdateExpense`, `useDeleteExpense`.
+- `use-expenses.ts`:
+  - `useMonthExpensesPage(periodId, page, sort)`: one page of 20 (`getPage`, T-02) with the sort params from T-06 in the query key, keeping the previous page visible while the next loads (`placeholderData`). Built like `usePagedList`, adapted to the API's `{ data, total, totalAmount, page, limit }` body. Exposes `totalAmount` for the summary cards.
+  - `useCreateExpense`, `useUpdateExpense`, `useDeleteExpense`, invalidating the month's expense pages.
 - `useUpdateExpense` supports an **optimistic** update, used by mark paid (T-25).
 
 #### T-13 Income hooks
@@ -160,7 +165,7 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 - **Done when:** each state matches its `design.pen` frame (Not opened, Past month).
 
 #### T-18 Summary cards (M-04)
-- **Includes:** Income (with View all, wired in T-23), Expenses (with the "Envelope spend not included yet" note while spend is missing) and Balance, in that order; totals from T-05.
+- **Includes:** Income (with View all, wired in T-23), Expenses (with the "Envelope spend not included yet" note while spend is missing) and Balance, in that order; totals from T-05, using `totalAmount` from T-12, so they don't depend on the page on screen.
 - **Done when:** the M-04 acceptance criteria pass.
 - **Backend:** G-5 (envelope spend). Show the "Envelope spend not included yet" note on the Expenses card until spend is available; remove it when it lands.
 
@@ -169,30 +174,32 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 - **Done when:** it matches the expanded and collapsed `design.pen` frames, and the over-budget pill stays visible when collapsed.
 - **Backend:** G-5 (envelope spend). Until it lands, every spent value and bar shows "—" and the over-budget pill never appears. Use example spend in tests and stories so the real layout is covered.
 
-#### T-20 Month table, desktop (M-05, M-09, M-10, M-13)
+#### T-20 Month table and pagination, desktop (M-05, M-09, M-10, M-13)
 - **Includes:**
-  - columns #, Item, Category, Payment, Due, Paid, Amount, Spent, plus a row menu;
-  - the type chip: `n/N` for installments, "Month —" for recurring rows, Env for envelopes;
+  - columns #, Item, Category, Payment, Due, Paid, Amount, plus a row menu; no envelope rows and no Spent column;
+  - the type chip: `n/N` for installments, "Month —" for recurring rows;
   - left-aligned cells and no total row;
   - paid rows dimmed, with the checkbox at full strength (read-only until T-25);
   - overdue due dates in red with the alert icon and a screen-reader label;
   - "(deleted)" for lookups the list no longer returns (gap G-3);
   - the empty state "No expenses yet";
+  - **pagination** with the existing `Pagination` component (pinned to the bottom on desktop, hidden for a single page); the page kept in the address (`&page=2`); back to page 1 on month change and after adding an expense; the previous page shown when the last one empties;
   - clicking a row selects it (the details panel opens in T-24).
-- **Done when:** the M-05 acceptance criteria pass with a 45-row fixture.
+- **Done when:** the M-05 acceptance criteria pass with a 45-expense fixture (pages of 20, 20 and 5).
 - **Backend:**
   - G-3 (names of deleted lookups): show "(deleted)" until the backend returns names; then show the real name.
-  - G-5 (envelope spend): the Spent column shows "—" until spend is available.
   - G-6 (recurring months running): the # chip shows "Month —" until the count exists.
-  - G-2 (plan size on expenses): `n/N` comes from T-15's per-plan reads for now.
+  - G-2 (plan size on expenses): `n/N` comes from T-15's per-plan reads for now (at most 20 plans per page).
 
 #### T-21 Sortable columns (M-06)
-- **Includes:** every header becomes a sort button (reuse `SortableHeader`), three-state cycle, `aria-sort`, choice remembered on this device.
+- **Includes:** Item, Due, Paid and Amount headers become sort buttons (reuse `SortableHeader`), three-state cycle, `aria-sort`, sort sent to the server via T-06 and T-12, back to page 1 on change, kept in the address and remembered on this device. #, Category and Payment stay plain labels.
 - **Done when:** the M-06 acceptance criteria pass.
+- **Backend:** BE-4 (row type, category and payment type sorting). When it lands, make #, Category and Payment sortable too.
 
 #### T-22 Phone layout (M-05, M-04)
 - **Includes:**
   - below `lg`, the table becomes the list from the phone frame: checkbox, item, type chip, "Due / Paid / Overdue" line, and the amount on the right;
+  - the pagination under the list (not pinned);
   - the Balance card holds Income and Expenses;
   - the envelope strip scrolls sideways;
   - the floating add button;
@@ -313,7 +320,8 @@ These don't block any task, but each needs follow-up work once resolved (details
 
 | Item | Affects | What changes when it lands |
 |---|---|---|
-| G-5 envelope spend API | T-05, T-14, T-18, T-19, T-20, T-24 | Replace spend = 0 / "—" with real values; drop the "Envelope spend not included yet" note |
+| BE-4 sort by row type, category and payment type | T-06, T-21 | Make #, Category and Payment sortable |
+| G-5 envelope spend API | T-05, T-14, T-18, T-19, T-24 | Replace spend = 0 / "—" with real values; drop the "Envelope spend not included yet" note |
 | G-6 recurring months running | T-20, T-24 | Replace "Month —" with the count |
 | G-2 plan size on expenses | T-15, T-20, T-24 | Drop the per-plan requests |
 | G-3 names of deleted lookups | T-20, T-24, T-29 | Replace "(deleted)" with the real name |
@@ -327,4 +335,3 @@ These don't block any task, but each needs follow-up work once resolved (details
 | Question | Blocks |
 |---|---|
 | U-2: Do adding and deleting envelopes (M-23, M-24) stay, given budgets are read-only? | T-33 |
-| U-3: Should envelope rows stay in the table, or live only in the Envelopes card? Kept for now, as in the design | T-20 |

@@ -26,20 +26,24 @@ Base route: `/expenses`. An expense is a single monetary outflow belonging to on
 
 ## GET /expenses
 
-Paginated list, newest first (`createdAt` descending).
+Paginated, sortable list. Defaults to newest first (`createdAt` descending).
 
 | Query param | Type | Default | Rules |
 |---|---|---|---|
 | `budgetPeriodId` | uuid | – | filter by period |
 | `page` | integer | `1` | ≥ 1 |
 | `limit` | integer | `20` | 1–100 |
+| `sortBy` | string | `createdAt` | one of `description`, `amount`, `purchasedAt`, `dueAt`, `paidAt`, `installmentNumber`, `createdAt`, `updatedAt` |
+| `sortOrder` | string | `desc` | `asc` or `desc` |
+
+Nullable fields (`purchasedAt`, `dueAt`, `paidAt`, `installmentNumber`) sort nulls last in both directions. Ties are broken by `id`, so paging is stable.
 
 - **200**
   ```json
-  { "data": [ /* Expense[] */ ], "total": 42, "page": 1, "limit": 20 }
+  { "data": [ /* Expense[] */ ], "total": 42, "totalAmount": 1234.56, "page": 1, "limit": 20 }
   ```
-  `total` is the number of matching expenses across all pages.
-- **400** invalid `budgetPeriodId`, `page` or `limit`
+  `total` is the number of matching expenses across all pages. `totalAmount` is the sum of `amount` over those same expenses (`0` when none match).
+- **400** invalid `budgetPeriodId`, `page`, `limit`, `sortBy` or `sortOrder`
 - **500**
 
 ## GET /expenses/:id

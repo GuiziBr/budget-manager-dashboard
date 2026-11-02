@@ -86,9 +86,8 @@ One tab per lookup, plus appearance. Lists are short and not paginated.
 | ID | Question | Current behaviour | Blocks |
 |---|---|---|---|
 | U-2 | Do adding and deleting envelopes (M-23, M-24) stay? Adding one means entering its budget, while budgets are otherwise read-only (M-22) | Kept in the spec, with the budget entered once on creation | Plan task T-33 |
-| U-3 | Should envelope rows stay in the table, or live only in the Envelopes card? | Kept in the table, as in the design | Plan task T-20 |
 
-U-1 (marking a bill paid after its month ends) moved to BE-3.
+U-1 (marking a bill paid after its month ends) moved to BE-3. U-3 (envelope rows in the table) was resolved on 2026-11-02: with server-side pagination, envelopes live only in the Envelopes card.
 
 ### 2.3 Backend gaps
 
@@ -102,9 +101,8 @@ U-1 (marking a bill paid after its month ends) moved to BE-3.
 | G-6 | No months-running count or starting count for recurring bills | M-10, R-03, R-04 | Add a starting count to the template and a count per generated row |
 | G-7 | Lookup names: the software specification says unique ignoring case, the API docs say exact (case-sensitive) match | S-02, S-06, S-09, S-11, S-14 | Confirm which rule applies |
 | G-9 | No endpoint lists installment plans, so plans can only be reached from their expense rows | M-19 | `GET /installment-groups`, if a list of plans is ever wanted |
-| G-10 | No per-month totals endpoint. Month totals are calculated in the browser from every expense (up to 100 per page), and History would need many requests | M-04, History | A summary endpoint per month (and per range of months for History) |
 
-G-8 moved to BE-2, G-11 to BE-3.
+G-8 moved to BE-2, G-10 to BE-5, G-11 to BE-3.
 
 ### 2.4 BE API review
 
@@ -115,3 +113,5 @@ Backend API changes to review with the backend before or during the Month screen
 | BE-1 | Create the salary together with the month | `POST /budget-periods` creates the month and generates rows and envelopes, but not incomes. The frontend then sends one `POST /incomes` per salary, outside the backend's transaction | Accept the month's salary incomes in the `POST /budget-periods` body (for example `incomes: [{ description, amount, isSalary }]`) and create them in the same transaction. One request opens the month, and it never ends up opened without its salary | M-02 |
 | BE-2 | Reactivate a cancelled recurring bill | The software specification says `cancelledAt` can be cleared to reactivate a bill; `PATCH /recurring-expenses/:id` doesn't allow setting it back to `null` | Allow `cancelledAt: null` on the PATCH (or add a reactivate action), and align the specification and the API docs | R-07 |
 | BE-3 | Mark a bill paid after its month has ended | Past-month expenses can't be updated (`422`), so a bill paid after its month ends (due 28 Nov, paid 2 Dec) can't get a paid date and stays overdue for good | Allow `paidAt` alone to be set or cleared on past-month expenses; every other field stays locked. The frontend would then show the paid control in past months | M-12, M-13, M-25 |
+| BE-4 | Sort expenses by row type, category and payment type | `GET /expenses` now sorts across pages by `description`, `amount`, `purchasedAt`, `dueAt`, `paidAt`, `installmentNumber`, `createdAt`, `updatedAt`. It has no key for the row type (one-time, installment, recurring) or for the category and payment type **names** (expenses only carry their ids) | Add `sortBy` values for the row type and the category and payment type names | M-06 (#, Category and Payment headers) |
+| BE-5 | Totals across months | `GET /expenses` returns `totalAmount` for the month, which covers the Month screen's Expenses card. Comparing months (History) would still need one request per month | A summary endpoint for a range of months, when History is picked up | History |
