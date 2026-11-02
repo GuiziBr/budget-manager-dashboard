@@ -75,10 +75,10 @@ Frequency decides prominence. The more often a task happens, the fewer steps it 
 ## 6. Design principles
 
 1. **The month is the unit.** Everything for a month lives on one screen, like a spreadsheet tab. No separate pages for expenses, incomes and envelopes.
-2. **Familiar first, better second.** Keep the spreadsheet's columns, order of entry and total row so the switch is painless. Improve only where the sheet hurts: setup, phone editing, finding things.
+2. **Familiar first, better second.** Keep the spreadsheet's columns and order of entry so the switch is painless. Improve only where the sheet hurts: setup, phone editing, finding things.
 3. **Status at a glance.** Balance, what's unpaid and how envelopes are doing are answered before the user scrolls or taps.
 4. **Phone is a first-class device.** Every daily and weekly task works one-handed at 390px. Only the monthly setup may prefer the desktop, and it must still work on the phone.
-5. **Show the rules, don't just enforce them.** Past months look read-only, the bank field appears only when the payment type needs it, and lookups in use say so before a delete is attempted.
+5. **Show the rules, don't just enforce them.** Past months look read-only, the bank field is marked required as soon as the payment type needs it, and lookups in use say so before a delete is attempted.
 6. **Honest placeholders.** Features waiting on the backend show a visible placeholder ("—" with a note), never invented numbers.
 7. **Follow the design system.** Tokens, components and patterns from `DESIGN_SYSTEM.md`. Deviations are deliberate and listed in section 11.
 
@@ -91,7 +91,7 @@ Frequency decides prominence. The more often a task happens, the fewer steps it 
 | **Settings** | Categories, payment types, banks, stores (tabs), and the theme | Primary |
 
 - **Month switcher** in the Month screen header: previous and next arrows (like moving between tabs) and a popover listing every opened month, plus "Open {next month}".
-- The selected month lives in the URL (`?period=2026-11`) and defaults to the current month.
+- The selected month lives in the URL (`?period=2026-11`) and defaults to the current month **in UTC**, the same reference the backend uses.
 - Dialogs, not screens: expense form (one-time, installment, recurring), income form, envelope form, open-month review, installment plan details, delete confirmations.
 - Phone tab bar: Month, Recurring, Settings. The More sheet is not needed; the theme setting moves to Settings.
 
@@ -99,12 +99,12 @@ Frequency decides prominence. The more often a task happens, the fewer steps it 
 
 ### 8.1 Open a new month (replaces "duplicate the tab")
 
-1. From the month switcher or the empty state of an unopened month: **Open December 2026**.
+1. From the month switcher or the empty state of an unopened **current or future** month: **Open December 2026**. A past month that was never opened shows that it wasn't tracked, with no Open action.
 2. The backend creates the month and generates installment rows, recurring rows and envelopes.
 3. A **review step** shows what was generated, grouped:
    - Recurring bills, with their amounts as estimates (editable)
    - Installments, with `n of N` (finishing plans highlighted)
-   - Envelopes, with allocated amounts (editable)
+   - Envelopes, with allocated amounts (read-only)
 4. **Income:** the review offers to copy last month's incomes as this month's expected income, so they don't have to be retyped.
    - **Copy:** last month's **salary** incomes (only those) are listed with their amounts (editable) and created when the user confirms.
    - **Don't copy:** a **Salary** amount field is shown instead. Salary is the main income, so the month starts with it; it is created as an income flagged as salary. Other incomes are added later from the month.
@@ -121,8 +121,9 @@ Frequency decides prominence. The more often a task happens, the fewer steps it 
 
 - **+ Add** opens a menu: Expense, Income, Envelope.
 - The expense form starts with a type choice: one-time, installment, recurring. Installment adds number of payments and interval; recurring explains that the bill will repeat every month.
-- Payment type, bank and store default to the last values used.
+- Payment type, bank and category default to the last values used. Store is not remembered, since it changes more often.
 - The bank field is always shown and becomes required when the payment type has a statement.
+- Savings and investment transfers (Retirement, House savings…) are **ordinary expenses**, distinguished only by their category and payment type (for example Savings Account, Invest Account). They count in the monthly total like any other expense; there is no separate type, form or backend field.
 - Deleted lookups are not offered.
 
 ### 8.4 Correct a variable bill
@@ -140,72 +141,14 @@ Frequency decides prominence. The more often a task happens, the fewer steps it 
 
 ## 9. Month screen requirements
 
-> **Superseded in part by the design review of 2026-10-28.** The summary now holds Balance, Income and Expenses only; there are no Unpaid or Envelopes cards, % of salary is out of scope for now, expense amounts are shown without a minus sign, and the table has no sort dropdown. `docs/specs/month-screen.md` is the reference for the Month screen.
+The detailed requirements for the Month screen now live in [`docs/specs/month-screen.md`](../specs/month-screen.md), which is the source of truth. This brief's earlier draft of this section was superseded by the design reviews of 2026-10-28 and 2026-10-30. In short, the current design is:
 
-### 9.1 Summary (top, always visible)
-
-In order of importance from the interview:
-
-1. **Balance** (income − expenses − envelope allocations). Shown in danger colour and with a minus sign when negative.
-2. **Unpaid:** count and amount of rows not yet paid, with overdue rows called out.
-3. **Envelopes:** how many are on track and how many are over budget. Placeholder until spend is available (section 10).
-4. **Income** and **Expenses** totals.
-5. **% of salary** is secondary: shown on the total row and as a smaller figure, not as a headline card.
-
-### 9.2 Table
-
-Rows are listed in **order of entry** (oldest first), like the sheet. The API returns newest first, so the frontend reverses it. Sorting by due date is offered as an option.
-
-| Column | Content | Phone |
-|---|---|---|
-| # | Installment `n of N`; recurring icon with months running (placeholder); envelope icon | Chip under the item |
-| Item | Description | Shown |
-| Payment type | | Details |
-| Bank | | Details |
-| Store | | Details |
-| Purchased | Date | Details |
-| Due | Date; overdue in danger colour when unpaid | Shown, compact |
-| Paid | One-tap control; paid date on hover or in details | Shown |
-| Amount | Signed, `- CAD 1,450.00` | Shown |
-| Spent | Envelope rows only: spent and a progress bar. Placeholder for now | Details |
-| % of salary | | Details |
-
-- **Total row** at the bottom: total amount (expenses + envelope allocations) and total % of salary.
-- **Income section** under the table: each income with its amount; the salary income(s) carry a **Salary** badge. The salary base (sum of salary incomes) is named next to the % of salary figure so the percentage is explainable.
-- **Row actions:** edit, delete, mark paid or unpaid, view installment plan, view recurring template.
-
-### 9.3 Row types
-
-| Type | How to tell | Shown as |
-|---|---|---|
-| One-time | No plan, no template | Plain row |
-| Installment | Part of an installment plan | `n of N` chip |
-| Recurring | Generated from a template | Recurring icon + months running |
-| Envelope | Budget envelope for a category | Envelope icon, Amount = allocated, Spent column filled |
-
-### 9.4 States
-
-| State | Treatment |
-|---|---|
-| Current month | Fully editable |
-| Future month | Editable |
-| Past month | Read-only banner; edit, delete and paid controls hidden. Rows left unpaid stay **overdue** |
-| Month not opened | Empty state with **Open {month}** |
-| Row unpaid, not due | Default |
-| Row unpaid, overdue | Due date in danger colour, counted in the summary |
-| Row paid | Paid control checked; row text unchanged (paid is the normal end state, not "done and hidden") |
-| Envelope over budget | Spent and progress bar in danger colour (once spend exists) |
-| Negative balance | Balance card in danger colour |
-| Loading | Skeleton rows and cards |
-| Error | Inline message with Retry |
-
-### 9.5 Alerts
-
-In-app only, no notifications:
-
-- **Overdue bills:** highlighted rows and a count in the summary. This applies to past months too: a row whose due date has passed and has no paid date is overdue, whichever month it belongs to.
-- **Envelope over budget:** danger-coloured progress bar and a count in the summary.
-- **Negative balance:** danger-coloured balance.
+- **Summary:** Income (opens the income panel), Expenses and Balance cards. Below them, a collapsible Envelopes card shows each envelope's spent vs allocated.
+- **Totals:** Expenses = expense amounts + **envelope spend** (not envelope budgets). Balance = income − expenses. Until the spend API exists, envelope spend counts as 0.
+- **Table:** every expense and envelope of the month, in order of entry, no pagination, no total row. Columns #, Item, Category, Payment, Due, Paid, Amount, Spent; all sortable. Bank, Store and Purchased are in the row details panel. Paid rows are dimmed; overdue due dates are red.
+- **Incomes:** not on the page; listed in the income panel opened from the Income card.
+- **Amounts:** expense amounts without a sign; incomes with `+`; only a negative balance has `-`.
+- **Out of scope for now:** % of salary, Unpaid and Envelopes summary cards, the History screen.
 
 ## 10. Placeholders (waiting on the backend)
 
@@ -220,7 +163,7 @@ In-app only, no notifications:
 
 ### Design system
 - Follow `DESIGN_SYSTEM.md`: semantic tokens only, light and dark, desktop and 390px.
-- **Deviation:** the Month table is **not paginated**. A month has about 30 rows; the frontend fetches every page and shows one table with a total row. The design system's pinned pagination doesn't apply.
+- **Deviation:** the Month table is **not paginated**. A month has about 30 rows; the frontend fetches every page and shows one table. The API returns each page newest first, so the frontend concatenates the pages in page order and then reverses the combined list (reversing each page on its own would give the wrong order past 100 rows). The design system's pinned pagination doesn't apply.
 - **Deviation:** the table has up to 11 columns, more than the 1120px page column comfortably holds. Columns hide progressively by breakpoint, and the details view holds the rest.
 
 ### API
@@ -252,7 +195,7 @@ None at the moment.
 | Mark recurring amounts as estimates? | No (section 8.4) |
 | Copy incomes when opening a month? | Offer to copy; if declined, ask for the salary (section 8.1) |
 | How far back should History go? | History is out of scope for now (section 12) |
-| Do unpaid rows in past months count as overdue? | Yes (sections 9.4 and 9.5) |
+| Do unpaid rows in past months count as overdue? | Yes (Month spec, M-13) |
 | Where does the months-running count start? | Out of scope; placeholder field (section 10) |
 
 ## 14. Next steps

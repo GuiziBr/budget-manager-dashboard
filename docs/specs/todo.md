@@ -21,7 +21,7 @@ Needed alongside the Month screen, since the Month screen lives inside it.
 |---|---|---|---|
 | A-01 | Navigation: sidebar on desktop, tab bar on the phone, with Month, Recurring and Settings | Must | Ready |
 | A-02 | Page title in the top bar for each screen | Must | Ready |
-| A-03 | Remove the More sheet; move the theme switch to Settings (S-13) | Must | Ready |
+| A-03 | Remove the More sheet; move the theme switch to Settings. Ships with the Settings screen (S-13): until then the theme switch stays where it is | Must | Ready |
 
 ### 1.2 Recurring screen
 
@@ -83,7 +83,12 @@ One tab per lookup, plus appearance. Lists are short and not paginated.
 
 ### 2.2 Unresolved questions
 
-None at the moment. U-1 (marking a bill paid after its month ends) moved to BE-3.
+| ID | Question | Current behaviour | Blocks |
+|---|---|---|---|
+| U-2 | Do adding and deleting envelopes (M-23, M-24) stay? Adding one means entering its budget, while budgets are otherwise read-only (M-22) | Kept in the spec, with the budget entered once on creation | Plan task T-33 |
+| U-3 | Should envelope rows stay in the table, or live only in the Envelopes card? | Kept in the table, as in the design | Plan task T-20 |
+
+U-1 (marking a bill paid after its month ends) moved to BE-3.
 
 ### 2.3 Backend gaps
 
@@ -98,6 +103,7 @@ None at the moment. U-1 (marking a bill paid after its month ends) moved to BE-3
 | G-7 | Lookup names: the software specification says unique ignoring case, the API docs say exact (case-sensitive) match | S-02, S-06, S-09, S-11, S-14 | Confirm which rule applies |
 | G-9 | No endpoint lists installment plans, so plans can only be reached from their expense rows | M-19 | `GET /installment-groups`, if a list of plans is ever wanted |
 | G-10 | No per-month totals endpoint. Month totals are calculated in the browser from every expense (up to 100 per page), and History would need many requests | M-04, History | A summary endpoint per month (and per range of months for History) |
+
 G-8 moved to BE-2, G-11 to BE-3.
 
 ### 2.4 BE API review

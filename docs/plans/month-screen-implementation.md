@@ -95,7 +95,7 @@ Size: **S** ≈ half a day, **M** ≈ a day, **L** ≈ two days.
 - **Goal:** turn API data into what the screen shows.
 - **Includes:**
   - `rowType(expense)` → one-time / installment / recurring; envelopes become rows of type envelope.
-  - `buildRows(expenses, envelopes, lookups, groups)` in order of entry, oldest first (the API returns newest first).
+  - `buildRows(expenses, envelopes, lookups, groups)` in order of entry, oldest first. The API returns each page newest first, so concatenate all pages in page order and reverse the combined list (never page by page).
   - `isUnpaid`, `isOverdue(row, today)` (unpaid and due before today, any month).
   - `totals(expenses, envelopes, incomes)` → income, expenses (**expense amounts + envelope spend**, spend = 0 until the API exists), balance, salary base.
   - `envelopeStatus` (spent, allocated, ratio, over budget) and `sortEnvelopes` (over budget first).
@@ -265,7 +265,7 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 
 #### T-33 Add and delete envelopes (M-23, M-24)
 - **Includes:** **+ Add → Envelope**, offering only envelope categories without an envelope this month; delete from the envelope's details.
-- **Blocked by a decision:** adding an envelope means typing its budget, while budgets are otherwise read-only (M-22). Confirm that M-23 and M-24 stay before starting.
+- **Blocked by a decision:** U-2 in [todo.md](../specs/todo.md). Adding an envelope means entering its budget once (the one exception to M-22). Confirm that M-23 and M-24 stay before starting.
 
 #### T-34 Closed-month guard (M-25)
 - **Includes:** any 422 shows "This month is now closed and can't be changed", refreshes the periods, and switches the screen to read-only.
@@ -286,7 +286,7 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 - **Done when:** the first, second and fourth M-02 acceptance criteria pass.
 
 #### T-37 Open-month review: salary (M-02, step 3)
-- **Includes:** "Copy last month's salary", listing last month's salary incomes with editable amounts and checkboxes, or a "Salary" field; one `POST /incomes` per income on Done.
+- **Includes:** "Copy last month's salary", listing last month's salary incomes with editable amounts and checkboxes, or a "Salary" field; one `POST /incomes` per income on Done. Before any retry, re-read the month's incomes and skip salaries that already exist with the same description and amount, so a lost response doesn't create a duplicate. If a salary still fails, the month stays usable and the review says which salary is missing (it can be added from the income panel).
 - **Done when:** the third M-02 acceptance criterion passes.
 - **Backend:** BE-1 (salary with the month). For now, one `POST /incomes` per salary after the month is created. If the backend accepts incomes in `POST /budget-periods`, collect the salary before opening and send it with that request (this also changes T-35).
 
@@ -326,5 +326,5 @@ These don't block any task, but each needs follow-up work once resolved (details
 
 | Question | Blocks |
 |---|---|
-| Do adding and deleting envelopes (M-23, M-24) stay, given budgets are read-only? | T-33 |
-| Should envelope rows stay in the table, or live only in the Envelopes card? Kept for now, as in the design | T-20 |
+| U-2: Do adding and deleting envelopes (M-23, M-24) stay, given budgets are read-only? | T-33 |
+| U-3: Should envelope rows stay in the table, or live only in the Envelopes card? Kept for now, as in the design | T-20 |

@@ -71,7 +71,7 @@ These terms and calculations are used throughout the document.
 | **% of salary** | Row amount ÷ salary base. **Not shown for now** (out of scope, see [todo.md](todo.md)) |
 | **Unpaid** | An expense with no paid date. Envelopes have no paid date and are never unpaid |
 | **Overdue** | An unpaid expense whose due date is before today. Applies in every month, past ones included |
-| **Money** | CAD with 2 decimals: `CAD 1,450.00`. Expense amounts are shown **without a sign**, in the regular text colour; incomes carry a plus sign in the success colour (`+ CAD 6,144.00`). Only a negative balance shows a minus sign |
+| **Money** | CAD with 2 decimals: `CAD 1,450.00`. Expense amounts are shown **without a sign**, in the regular text colour; incomes carry a plus sign in the success colour (`+ CAD 6,144.00`). Only a negative balance shows a minus sign. Compact lists (phone rows and the income panel) use the **compact form** without the currency (`1,450.00`, `+ 6,144.00`), since the app is CAD only and the totals next to them show it |
 
 ---
 
@@ -128,13 +128,14 @@ These terms and calculations are used throughout the document.
 
 **Rules**
 - The month is created in step 2, before the review. Closing the review without **Done** leaves the month opened with the generated rows and default budgets, and without incomes.
-- Income creation is done by the frontend, one request per income, not in the backend's transaction. If one fails, the others are kept and the failed one can be retried. A backend change to create the salary together with the month is under review ([todo.md](todo.md), BE-1); if adopted, the incomes would be sent with the Open request instead.
+- Income creation is done by the frontend, one request per income, not in the backend's transaction. If one fails, the others are kept and the failed one can be retried. **Before any retry**, the frontend re-reads the month's incomes and skips any salary that already exists with the same description and amount, so a request that succeeded but whose response was lost isn't created twice. If a salary still can't be saved, the month stays usable: the review says which salary is missing, and it can be added later from the income panel (M-20). A backend change to create the salary together with the month is under review ([todo.md](todo.md), BE-1); if adopted, the incomes would be sent with the Open request instead.
 - The salary field is optional. If left empty, a note says "You can add the salary later from the month".
 - The copied or entered salary is created as an income flagged as salary. Its description is "Salary".
 - "Copy last month's salary" is offered only when last month exists and has at least one salary income. Copied incomes keep their description.
 - Only the current month and future months can be opened. A past month that was never opened (for example, before you started using the app) shows "November 2025 wasn't tracked in the app" without an Open button. Past months that were opened are simply viewed through the month switcher (M-01).
 
 **When something goes wrong**
+
 | Situation | What you see |
 |---|---|
 | The month already exists (opened elsewhere) | "December 2026 is already open." The month is loaded |
@@ -200,7 +201,7 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 
 **How it works**
 1. One table holds every expense and every envelope of the month, **without pagination**.
-2. Rows appear in **order of entry**, oldest first, like the spreadsheet.
+2. Rows appear in **order of entry**, oldest first, like the spreadsheet. The API returns each page newest first, so the frontend concatenates all pages in page order and then reverses the combined list.
 3. Columns:
 
 | Column | Content |
@@ -222,7 +223,7 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 
 **Rules**
 - Envelope rows are named after their category (Grocery, Fuel…).
-- Lookups deleted after an expense was recorded still show their name on that expense (see section 6, gap G-3).
+- Lookups deleted after an expense was recorded show as "(deleted)" on that expense, because the API doesn't return their names (gap G-3). Once the backend provides names, the real name is shown instead.
 
 **Empty, loading, error**
 - An opened month with no rows: "No expenses yet" with an **Add expense** button.
@@ -258,7 +259,7 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 2. Clicking the Income card (or the Income figure in the phone's Balance card) opens the **income panel**: a side panel from the right on desktop (440px wide, over a dimmed page), a bottom sheet on the phone.
 3. The panel shows:
    - the total income and how much of it is salary ("CAD 6,144.00 of this is salary");
-   - each income: description, Salary badge for salary incomes, received date (if any), amount (`+ 6,144.00`, success colour) and a row menu (Edit, Delete);
+   - each income: description, Salary badge for salary incomes, received date (if any), amount in the compact form (`+ 6,144.00`, success colour, section 2) and a row menu (Edit, Delete);
    - an **Add income** button at the bottom (M-20).
 4. The panel closes with the close button, Escape, or a click on the dimmed page.
 
@@ -542,7 +543,7 @@ The expense is created in the month being viewed (except installments, see M-15)
 *As the budget owner, I want to add an envelope that wasn't created with the month, for a category that uses envelopes.*
 
 **How it works**
-1. **+ Add → Envelope** opens a form: Category (only categories that use envelopes and don't have one this month) and Budget.
+1. **+ Add → Envelope** opens a form: Category (only categories that use envelopes and don't have one this month) and Budget. This is the one exception to M-22: `POST /budget-envelopes` requires an `allocatedAmount`, so the budget is entered once on creation and can't be changed afterwards. **Pending decision:** whether adding and deleting envelopes stay at all (see [todo.md](todo.md), U-2).
 2. If every such category already has an envelope, the option is disabled: "Every envelope category already has an envelope this month."
 
 **Acceptance criteria**
@@ -598,7 +599,7 @@ The expense is created in the month being viewed (except installments, see M-15)
 | 400 bank required | M-14 to M-17 | On the Bank field: "Bank is required for this payment type." |
 | 400 no period for installments | M-15 | "Open the month of the first payment before adding this plan." |
 | 404 lookup not found | Forms | "{Field} no longer exists. Choose another." The lists are refreshed |
-| 422 past period | Any change | "This month is now closed and can't be changed." Screen switches to read-only |
+| 422 past period | Update or delete of an expense, income or envelope; creating an envelope | "This month is now closed and can't be changed." The screen switches to read-only. (The backend still accepts new incomes and expenses in past months; hiding **+ Add** there is a frontend rule, M-25) |
 | Network or 500 | Any | Toast: "Something went wrong. Try again." Forms keep what was typed |
 
 ---
