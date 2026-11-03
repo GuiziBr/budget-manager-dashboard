@@ -10,6 +10,7 @@ export interface RecurringExpense {
 	amount: number
 	startedAt: IsoDate
 	cancelledAt: IsoDate | null
+	monthsAlreadyPaid: number
 	createdAt: IsoDate
 	updatedAt: IsoDate
 	deletedAt: null

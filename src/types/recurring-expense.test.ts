@@ -12,6 +12,7 @@ test("RecurringExpense matches the API resource", () => {
 		amount: number
 		startedAt: string
 		cancelledAt: string | null
+		monthsAlreadyPaid: number
 		createdAt: string
 		updatedAt: string
 		deletedAt: null

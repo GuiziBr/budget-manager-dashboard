@@ -1,6 +1,6 @@
 # Month Screen — Functional Specification
 
-Status: draft 4 (aligned with the wireframes in `design.pen`) · Last updated: 2026-11-02
+Status: draft 5 (backend delivered: envelope spend, plan size, lookup names, months running) · Last updated: 2026-11-03
 
 The Month screen is the app's home and replaces one tab of the budget spreadsheet. This document describes every feature of the screen from the user's side: what you can do, how it works, which rules apply, what you see when something goes wrong, and how to check that it works.
 
@@ -28,8 +28,8 @@ Status: **Ready** = the backend supports it today. **Placeholder** = shown, wait
 | M-07 | Income list with salary | Must | Ready |
 | M-08 | Row details | Must | Ready |
 | M-09 | Installment progress (`n of N`) | Must | Ready |
-| M-10 | Recurring months running | Should | Placeholder |
-| M-11 | Envelope spend | Must | Placeholder |
+| M-10 | Recurring months running | Should | Ready |
+| M-11 | Envelope spend | Must | Ready |
 | **Paying** | | | |
 | M-12 | Mark a row paid or unpaid | Must | Ready |
 | M-13 | Overdue warnings | Must | Ready |
@@ -66,7 +66,7 @@ These terms and calculations are used throughout the document.
 | **Row type** | One-time, installment or recurring |
 | **Salary base** | Sum of the month's incomes flagged as salary |
 | **Total income** | Sum of all the month's incomes |
-| **Total expenses** | Sum of **all** the month's expense amounts (every page, not only the one shown) **plus** the amount **spent** in each envelope (not the envelope budgets). Until the spend API exists, envelope spend counts as 0 and the Expenses card notes "Envelope spend not included yet". The expense part is `totalAmount` from `GET /expenses`, which sums every matching expense whatever page is requested |
+| **Total expenses** | Sum of **all** the month's expense amounts (every page, not only the one shown) **plus** the amount **spent** in each envelope (not the envelope budgets). Envelope spend is `spentAmount` on each envelope. When it is `null` (the external spend API couldn't answer) it counts as 0 and the Expenses card notes "Envelope spend not included yet". The expense part is `totalAmount` from `GET /expenses`, which sums every matching expense whatever page is requested |
 | **Balance** | Total income − total expenses |
 | **% of salary** | Row amount ÷ salary base. **Not shown for now** (out of scope, see [todo.md](todo.md)) |
 | **Unpaid** | An expense with no paid date. Envelopes have no paid date and are never unpaid |
@@ -189,7 +189,7 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 - Desktop: a 4-column grid. The card can be **collapsed** with Hide / Show in its header; collapsed, it keeps only the header line (with the over-budget pill). The choice is remembered on this device.
 - Phone: a strip of small envelope cards scrolled sideways (not collapsible).
 - Clicking an envelope opens its row details (M-08).
-- Until the backend provides spend data (M-11), spent values and bars show "—".
+- When an envelope's spend is unavailable (M-11), its spent value shows "—" and it has no bar.
 
 **Totals while the table is paginated**
 - The table loads one page at a time, but the Income, Expenses and Balance cards need the whole month.
@@ -210,7 +210,7 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 
 | Column | Content |
 |---|---|
-| # | Installment: `n of N` (M-09). Recurring: icon and "Month —" (M-10). One-time: empty |
+| # | Installment: `n of N` (M-09). Recurring: icon and "Month 11" (M-10). One-time: empty |
 | Item | Description (fixed, narrower column) |
 | Category | The category as a small chip |
 | Payment type | Takes the remaining width |
@@ -233,7 +233,7 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 - If deleting the last row of the last page leaves it empty, the previous page is shown.
 
 **Rules**
-- Lookups deleted after an expense was recorded show as "(deleted)" on that expense, because the API doesn't return their names (gap G-3). Once the backend provides names, the real name is shown instead.
+- Category, payment type, bank and store names come with each expense and are still returned after the lookup is deleted, so old rows always show the real name.
 
 **Empty, loading, error**
 - An opened month with no expenses: "No expenses yet" with an **Add expense** button.
@@ -301,8 +301,8 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 **How it works**
 1. Clicking or tapping a row opens the details: a side panel from the right on desktop, a bottom sheet on the phone. The selected row is highlighted behind it.
 2. Details show the type, item, category, amount and status (paid, unpaid, overdue), a **Mark as paid today** button when unpaid, and every field not shown in the table: payment type, **bank, store**, **purchased**, due and paid dates.
-3. For installments they add the plan: `n of N`, amount per payment, interval, first purchase date, **end date**, and **View plan** (M-19).
-4. For recurring rows they add the bill's start month, "Month —" (M-10) and a link to the bill on the Recurring screen.
+3. For installments they add the plan: `n of N`, interval, first purchase date, **end date**, and **View plan** (M-19). The plan's amount per payment is shown in View plan, which reads the plan; the row's own amount can differ after a single-row edit (M-17).
+4. For recurring rows they add the bill's start month, "Month 11" (M-10) and a link to the bill on the Recurring screen.
 5. Actions: Mark paid / unpaid, Edit, Delete (hidden in past months).
 
 **Rules**
@@ -327,28 +327,25 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 **Acceptance criteria**
 - *Given* an installment row with number 3 in a 12-payment plan, *then* # shows `3 of 12`.
 
-#### M-10 Recurring months running (placeholder)
+#### M-10 Recurring months running
 
 *As the budget owner, I want to see how many months a recurring bill has been running, for example how many rents I've paid on this contract.*
 
-**How it works (now)**
-- Recurring rows show the recurring icon and "Month —".
-- Hovering or tapping "—" explains: "Coming soon".
+**How it works**
+- Recurring rows show the recurring icon and "Month 11". The number is `monthsRunning` from the expense: the bill's "months already paid" starting count plus the calendar months from its start up to and including the row's month.
+- It doesn't change when rows are deleted.
 
-**When the backend supports it**
-- "Month 11" replaces "Month —", counted from the bill's starting count (set on the Recurring screen).
-
-#### M-11 Envelope spend (placeholder)
+#### M-11 Envelope spend
 
 *As the budget owner, I want to see how much I've spent against each envelope, so I can slow down before going over.*
 
-**How it works (now)**
-- Envelope spend is shown only in the Envelopes card (desktop grid and phone strip), not in the table. Until the API exists, each envelope shows "—" for spent, with a "Spend data coming soon" tooltip, and no progress bar.
-
-**When the backend supports it**
-- Spent shows the amount and a progress bar against the budget. Over budget: amount and bar in the danger colour.
+**How it works**
+- Spend is shown only in the Envelopes card (desktop grid and phone strip), not in the table. Each envelope shows the amount spent against its budget, with a progress bar. Over budget: amount and bar in the danger colour.
+- Spend is `spentAmount` on each envelope. The backend takes it from an external spend API and applies the billing-cycle rule: a purchase made after a card's due date counts in the next month, so future months can already have spend. The user never enters it.
 - Envelope **spend** counts in the Expenses total and the balance; envelope budgets don't (section 2).
-- Spend comes from a backend API (planned). The user never enters it.
+
+**When something goes wrong**
+- If the spend service can't answer, the envelopes still load with `spentAmount: null`. Each shows "—" with no bar, spend counts as 0 in the totals, and the Expenses card notes "Envelope spend not included yet".
 
 ### Paying
 
@@ -476,7 +473,7 @@ The expense is created in the month being viewed (except installments, see M-15)
 - Changes apply to **this row only**:
   - installment row: the other payments and the plan don't change. A note says "To change all remaining payments, edit the plan" with a link (M-19);
   - recurring row: the bill and other months don't change. A note links to the bill on the Recurring screen.
-- If the row uses a lookup that was deleted since, it stays selected and shows "(deleted)", but can't be chosen again once changed.
+- If the row uses a lookup that was deleted since, it stays selected with its name and a "(deleted)" mark (the name comes with the expense), but can't be chosen again once changed.
 - Not available in past months (M-25).
 
 **Acceptance criteria**
@@ -633,9 +630,9 @@ The expense is created in the month being viewed (except installments, see M-15)
 |---|---|
 | Months | `GET /budget-periods` (sorted by the frontend), `POST`, `DELETE /budget-periods` |
 | Expenses | `GET /expenses?budgetPeriodId=&page=&limit=20&sortBy=&sortOrder=`, one page at a time; its `totalAmount` feeds the Expenses card. `POST`, `PATCH`, `DELETE /expenses` |
-| Installment plans | `GET`, `PATCH /installment-groups/:id`, one per plan in the month |
+| Installment plans | `n of N`, interval, first purchase date and end date come with each expense (`installment`). `GET`, `PATCH /installment-groups/:id` only for **View plan** and changing the amount |
 | Incomes | `GET /incomes?budgetPeriodId=`, `POST`, `PATCH`, `DELETE /incomes` |
-| Envelopes | `GET /budget-envelopes?budgetPeriodId=`, `POST`, `DELETE /budget-envelopes` (no `PATCH`: budgets are read-only) |
+| Envelopes | `GET /budget-envelopes?budgetPeriodId=` (with `spentAmount`), `POST`, `DELETE /budget-envelopes` (no `PATCH`: budgets are read-only) |
 | Lookups | `GET /categories`, `/payment-types`, `/banks`, `/stores` |
 
 ---
@@ -647,11 +644,10 @@ These came up while writing this document. They don't block the design but need 
 | ID | Gap | Effect on this screen |
 |---|---|---|
 | G-1 | `docs/APIs/expense.md` doesn't list the 422 for changing or deleting a past-month expense, while the software specification requires it | M-25 assumes the 422 exists |
-| G-2 | Expenses only carry the installment plan's id; `N` and the end date need one request per plan | M-09 and M-08 make one extra request per plan in the month. Returning `totalInstallments` with each expense would remove them |
-| G-3 | Lookup lists don't return deleted records, but expenses keep pointing to them. The frontend can't show the name of a deleted bank or category on an old expense | Without a fix, those cells show "(deleted)" instead of the name. The backend could include names on expenses, or let lookup lists include deleted records |
 | G-4 | The software specification says creating a recurring expense also adds it to months after it that are already opened. The API doc only says months opened **afterwards** get a copy | M-16 needs to know which is true, to tell the user whether next month already has the row |
-| G-5 | Envelope spend has no source yet | M-11 placeholder |
-| G-6 | Recurring months-running count has no source yet | M-10 placeholder |
+| G-12 | Envelopes carry only `categoryId`, so the name of a category deleted after the envelope's month can't be shown | The Envelopes card and envelope details show "(deleted)" for it |
+
+G-2, G-3, G-5 and G-6 were delivered by the backend on 2026-11-03 (plan size, lookup names, envelope spend and months running now come with the API responses).
 
 ---
 
@@ -668,6 +664,7 @@ These came up while writing this document. They don't block the design but need 
 | Simplification (2026-10-30) | Incomes move off the page into an income panel opened from the Income card (M-07). Bank, Store and Purchased leave the table for the row details panel, opened by clicking a row (M-05, M-08). Envelopes stay mixed in the list; their spend shows under the item, and the Spent column is removed (M-11). Paid rows are dimmed (M-05, M-12) |
 | Design tweaks (2026-10-30) | No "Current month" badge. Summary order: Income, Expenses, Balance (M-04). Category gets its own column and Item is narrower; the Spent column returns, right of Amount; expense amounts use the regular text colour instead of red (M-05, M-11). All table cells are left-aligned; the spend bar sits above the spent amount. No total row: the Expenses card holds the total (M-05). Every column is sortable (M-06). An Envelopes card under the summary shows all envelopes' spent vs allocated at once, instead of one card per envelope or a carousel (M-04) |
 | Server-side pagination (2026-11-02) | The table is paginated on the server, 20 rows per page, newest first (M-05). Envelope rows and the Spent column leave the table; envelopes live in the Envelopes card (resolves U-3). The API sorts across pages (`sortBy`, `sortOrder`), so Item, Due, Paid and Amount are sortable; #, Category and Payment wait for BE-4 (M-06). The Expenses card uses `totalAmount` from the expenses response, with no extra request (M-04) |
+| Backend delivered (2026-11-03) | Envelope spend, installment plan size, lookup names and months running come from the API (M-08 to M-11). Spend can be `null` when the external service is down; the screen shows "—" and keeps the note on the Expenses card |
 | Envelope budgets and totals (2026-10-30) | Envelope budgets can't be edited (M-22). Total expenses and balance count envelope **spend**, not envelope budgets (section 2, M-11). Spend will come from a backend API |
 | Design review of the wireframes (2026-10-28) | Summary keeps Balance, Income and Expenses only, with no sub-labels (M-04). No Unpaid or Envelopes cards; overdue is shown on rows only (M-13). No table title bar or sort dropdown; sorting by column headers on desktop only (M-05, M-06). % of salary removed for now (todo.md). Expense amounts shown without a minus sign |
 

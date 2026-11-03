@@ -1,6 +1,6 @@
 # Month Screen — Implementation Plan
 
-Status: draft 3 (server-side pagination and sorting) · Last updated: 2026-11-02
+Status: draft 4 (backend delivered: spend, plan size, lookup names, months running) · Last updated: 2026-11-03
 
 Breaks the [Month screen spec](../specs/month-screen.md) and the wireframes in `design.pen` into small tasks. Each task is one pull request to `development`, sized to be reviewed in one sitting.
 
@@ -27,7 +27,7 @@ Related: [Month spec](../specs/month-screen.md) · [Backlog](../specs/todo.md) �
 | T-02 | API client: JSON-paged lists | 0 | §5 | T-01 | S | — |
 | T-03 | Month maths (`lib/month.ts`) | 0 | M-01, M-25 | — | S | — |
 | T-04 | Money formatting (`lib/money.ts`) | 0 | §2 | — | S | — |
-| T-05 | Row model, totals and status (`lib/month-rows.ts`) | 0 | §2, M-05, M-09, M-13 | T-01 | M | G-5 |
+| T-05 | Row model, totals and status (`lib/month-rows.ts`) | 0 | §2, M-05, M-09, M-13 | T-01 | M | — |
 | T-06 | Sort params for the expenses API (`lib/expense-sort.ts`) | 0 | M-06 | T-01 | S | BE-4 |
 | T-07 | API error messages (`lib/api-error-message.ts`) | 0 | §4 | T-02 | S | — |
 | T-08 | UI primitives: Card, Badge, Checkbox, Progress, Skeleton | 0 | — | — | M | — |
@@ -36,22 +36,22 @@ Related: [Month spec](../specs/month-screen.md) · [Backlog](../specs/todo.md) �
 | T-11 | Budget period hooks | 1 | M-01 | T-02 | S | — |
 | T-12 | Expense hooks (paged, sorted list) | 1 | M-05, M-06 | T-02, T-06 | M | — |
 | T-13 | Income hooks | 1 | M-07 | T-02 | S | — |
-| T-14 | Envelope hooks | 1 | M-04 | T-02 | S | G-5 |
-| T-15 | Installment group hooks | 1 | M-09, M-19 | T-02 | S | G-2 |
+| T-14 | Envelope hooks | 1 | M-04 | T-02 | S | — |
+| T-15 | Installment group hooks | 1 | M-19 | T-02 | S | — |
 | T-16 | Month route and month switcher | 2 Read-only screen | M-01 | T-03, T-11 | M | — |
 | T-17 | Month states: loading, error, not opened, not tracked, closed | 2 | M-01, M-02, M-25 | T-16 | S | — |
-| T-18 | Summary cards | 2 | M-04 | T-05, T-08, T-12–T-14 | S | G-5 |
-| T-19 | Envelopes card (collapsible) | 2 | M-04, M-11 | T-05, T-08, T-14 | M | G-5 |
-| T-20 | Month table and pagination (desktop) | 2 | M-05, M-09, M-10, M-13 | T-05, T-08, T-10, T-12, T-15 | L | G-2, G-3, G-6 |
+| T-18 | Summary cards | 2 | M-04 | T-05, T-08, T-12–T-14 | S | — |
+| T-19 | Envelopes card (collapsible) | 2 | M-04, M-11 | T-05, T-08, T-14 | M | G-12 |
+| T-20 | Month table and pagination (desktop) | 2 | M-05, M-09, M-10, M-13 | T-05, T-08, T-12 | L | — |
 | T-21 | Sortable columns | 2 | M-06 | T-06, T-20 | S | BE-4 |
 | T-22 | Phone layout: list, pagination, envelope strip, add button | 2 | M-05, M-04 | T-18–T-20 | M | — |
 | T-23 | Income panel (read) | 3 Panels | M-07 | T-13, T-18 | M | — |
-| T-24 | Row details panel (read) | 3 | M-08 | T-20 | M | G-3, G-5, G-6 |
+| T-24 | Row details panel (read) | 3 | M-08 | T-20 | M | G-12 |
 | T-25 | Mark paid / unpaid | 4 Actions | M-12 | T-12, T-20, T-24 | S | BE-3 |
 | T-26 | Expense form: shared fields and one-time | 4 | M-14, M-26 | T-07, T-10, T-12 | L | — |
 | T-27 | Expense form: installments | 4 | M-15 | T-26 | M | — |
 | T-28 | Expense form: recurring | 4 | M-16 | T-26 | S | G-4 |
-| T-29 | Edit expense | 4 | M-17 | T-26 | M | G-3 |
+| T-29 | Edit expense | 4 | M-17 | T-26 | M | — |
 | T-30 | Delete expense | 4 | M-18 | T-12, T-24 | S | — |
 | T-31 | Change an installment plan's amount | 4 | M-19 | T-15, T-24 | S | — |
 | T-32 | Add, edit, delete income | 4 | M-20, M-21 | T-13, T-23 | M | — |
@@ -95,15 +95,13 @@ Size: **S** ≈ half a day, **M** ≈ a day, **L** ≈ two days.
 - **Goal:** turn API data into what the screen shows.
 - **Includes:**
   - `rowType(expense)` → one-time / installment / recurring. Envelopes are not table rows.
-  - `buildRows(pageExpenses, lookups, groups)` for **one page**, keeping the API's order (newest first, or the server sort once BE-4 lands).
-  - `isUnpaid`, `isOverdue(row, today)` (unpaid and due before today, any month).
-  - `totals(expenses, envelopes, incomes)` → income, expenses (**expense amounts + envelope spend**, spend = 0 until the API exists), balance, salary base.
+  - `buildRows(pageExpenses, now)` for **one page**, keeping the API's order (newest first, or the server sort once BE-4 lands). Names, plan size and months running come with each expense, so it needs no lookups.
+  - `isUnpaid`, `isOverdue(expense, now)` (unpaid and due before today, any month).
+  - `totals({ expenseTotal, envelopes, incomes })` → income, expenses (**`totalAmount` + envelope `spentAmount`**, a `null` spend counts as 0), balance, salary base, and whether every envelope's spend was available.
   - `envelopeStatus` (spent, allocated, ratio, over budget) and `sortEnvelopes` (over budget first).
-  - `installmentEndDate(group)` = first purchase + (N − 1) × interval days.
+  - `installmentEndDate(plan)` = first purchase + (N − 1) × interval days.
 - **Done when:** tests reproduce the spec examples (Expenses 6,530.48 and Balance 845.19, Hydro overdue on 2026-11-15, Car finance 78 and 79 in one month).
-- **Backend:**
-  - G-5 (envelope spend): until it lands, spend is 0 in `totals` and `envelopeStatus`. Keep spend as one input so the API can be plugged in without changing the callers.
-  - `totals` takes the month's expense total from `totalAmount` (T-02), not from the page on screen.
+- **Backend:** Q-3 pending (see [t-05-backend-requirements.md](../specs/t-05-backend-requirements.md)): if the external spend already includes expenses recorded in envelope categories, the same money is counted in both `totalAmount` and the envelope spend. Until it is answered, `totals` follows spec §2 (expense total + envelope spend); if the answer is yes, `totals` must exclude the overlap. `totals` takes the month's expense total from `totalAmount` (T-02), not from the page on screen.
 
 #### T-06 Sort params for the expenses API (`lib/expense-sort.ts`)
 - **Goal:** turn a header click into the `sortBy` / `sortOrder` params `GET /expenses` accepts, with the three-state cycle (ascending, descending, default).
@@ -148,11 +146,10 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 
 #### T-14 Envelope hooks
 - `use-budget-envelopes.ts`: `useMonthEnvelopes(periodId)`, `useCreateEnvelope`, `useDeleteEnvelope`. No update hook (M-22).
-- **Backend:** G-5 (envelope spend). No spend hook yet. When the API lands, add it here (or extend `useMonthEnvelopes`) and feed it to T-05.
+- Spend comes with each envelope (`spentAmount`, `null` when the spend service is down), so no extra hook. `GET` is cached for 60 s in the backend for the current and future months; the hook refetches on window focus and invalidates after create and delete.
 
 #### T-15 Installment group hooks
-- `use-installment-groups.ts`: `useInstallmentGroups(ids)` (one query per plan in the month) and `useUpdateInstallmentGroup` (invalidates the expenses of every month it touches).
-- **Backend:** G-2 (plan size on expenses). For now, one `GET /installment-groups/:id` per plan. If expenses start returning `totalInstallments`, interval and first purchase date, drop the per-plan reads and keep only the update hook.
+- `use-installment-groups.ts`: `useInstallmentGroup(id)` (read only when **View plan** opens, for the amount per payment, which `expense.installment` doesn't carry) and `useUpdateInstallmentGroup` (invalidates the expenses of every month it touches). `n of N`, interval and first purchase date come with each expense, so there are no per-plan reads.
 
 ### Phase 2 — Read-only Month screen
 
@@ -167,29 +164,26 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 #### T-18 Summary cards (M-04)
 - **Includes:** Income (with View all, wired in T-23), Expenses (with the "Envelope spend not included yet" note while spend is missing) and Balance, in that order; totals from T-05, using `totalAmount` from T-12, so they don't depend on the page on screen.
 - **Done when:** the M-04 acceptance criteria pass.
-- **Backend:** G-5 (envelope spend). Show the "Envelope spend not included yet" note on the Expenses card until spend is available; remove it when it lands.
+- Show the "Envelope spend not included yet" note on the Expenses card only when `totals` reports that some envelope's spend is unavailable.
 
 #### T-19 Envelopes card (M-04, M-11)
 - **Includes:** a 4-column grid with name, spent / allocated and a bar; over-budget first and in the danger colour; the "{n} over budget" pill; Hide / Show remembered in `localStorage` (wrapped in try/catch); spend placeholder "—" until the API exists; clicking an envelope opens its details (wired in T-24).
 - **Done when:** it matches the expanded and collapsed `design.pen` frames, and the over-budget pill stays visible when collapsed.
-- **Backend:** G-5 (envelope spend). Until it lands, every spent value and bar shows "—" and the over-budget pill never appears. Use example spend in tests and stories so the real layout is covered.
+- **Backend:** G-12 (envelopes carry no category name). Names come from the categories lookup (T-10); a category deleted after the envelope's month shows "(deleted)" until the backend returns `category: { id, name }`.
+- An envelope with unavailable spend shows "—" and no bar, and can't count as over budget.
 
 #### T-20 Month table and pagination, desktop (M-05, M-09, M-10, M-13)
 - **Includes:**
   - columns #, Item, Category, Payment, Due, Paid, Amount, plus a row menu; no envelope rows and no Spent column;
-  - the type chip: `n/N` for installments, "Month —" for recurring rows;
+  - the type chip: `n/N` for installments, "Month 11" (`monthsRunning`) for recurring rows;
   - left-aligned cells and no total row;
   - paid rows dimmed, with the checkbox at full strength (read-only until T-25);
   - overdue due dates in red with the alert icon and a screen-reader label;
-  - "(deleted)" for lookups the list no longer returns (gap G-3);
+  - the real names of lookups, even deleted ones (they come with the expense);
   - the empty state "No expenses yet";
   - **pagination** with the existing `Pagination` component (pinned to the bottom on desktop, hidden for a single page); the page kept in the address (`&page=2`); back to page 1 on month change and after adding an expense; the previous page shown when the last one empties;
   - clicking a row selects it (the details panel opens in T-24).
 - **Done when:** the M-05 acceptance criteria pass with a 45-expense fixture (pages of 20, 20 and 5).
-- **Backend:**
-  - G-3 (names of deleted lookups): show "(deleted)" until the backend returns names; then show the real name.
-  - G-6 (recurring months running): the # chip shows "Month —" until the count exists.
-  - G-2 (plan size on expenses): `n/N` comes from T-15's per-plan reads for now (at most 20 plans per page).
 
 #### T-21 Sortable columns (M-06)
 - **Includes:** Item, Due, Paid and Amount headers become sort buttons (reuse `SortableHeader`), three-state cycle, `aria-sort`, sort sent to the server via T-06 and T-12, back to page 1 on change, kept in the address and remembered on this device. #, Category and Payment stay plain labels.
@@ -216,15 +210,13 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 - **Includes:** the panel for expenses and envelopes:
   - type chip, title, category, amount and status pill;
   - Payment, Dates and Recurring bill sections;
-  - for installments, the plan section (`n of N`, interval, first purchase, end date, View plan);
+  - for installments, the plan section (`n of N`, interval, first purchase, end date, View plan); the plan's amount per payment is not on the expense, so it is shown in View plan (T-31), not here;
   - the selected row highlighted;
   - actions hidden in past months.
   Action buttons are wired in T-25, T-29, T-30 and T-31.
 - **Done when:** the M-08 acceptance criteria pass and the panel matches the "Expense details open" frame.
-- **Backend:**
-  - G-3 (names of deleted lookups): Payment type, Bank and Store show "(deleted)" when the lookup is gone.
-  - G-6 (recurring months running): "Months running" shows "—".
-  - G-5 (envelope spend): envelope details show "—" for spent.
+- **Backend:** G-12 (envelopes carry no category name): an envelope whose category was deleted shows "(deleted)".
+- Months running, plan interval and end date come from the expense; only View plan reads the group (T-15).
 
 ### Phase 4 — Actions
 
@@ -254,9 +246,9 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 - **Backend:** G-4 (recurring backfill). Confirm whether the backend also adds the bill to later months that are already open. If yes, invalidate those months' expenses after saving, and keep the note's wording; if no, change the note to say only months opened from now on get it.
 
 #### T-29 Edit expense (M-17)
-- **Includes:** the form prefilled, type locked, clearable Bank and Store; notes for installment and recurring rows; deleted lookups shown as "(deleted)"; only changed fields sent in the `PATCH`.
+- **Includes:** the form prefilled, type locked, clearable Bank and Store; notes for installment and recurring rows; deleted lookups kept selected with their name and a "(deleted)" mark (a lookup is deleted when its id is missing from the active list); only changed fields sent in the `PATCH`.
 - **Done when:** the M-17 acceptance criteria pass.
-- **Backend:** G-3 (names of deleted lookups). A deleted lookup on the row shows as "(deleted)" in its select until the backend returns names.
+- Prefill reads the ids from `expense.category.id`, `expense.paymentType.id`, `expense.bank?.id` and `expense.store?.id`; the request body still sends flat ids.
 
 #### T-30 Delete expense (M-18)
 - **Includes:** `ConfirmDeleteModal` with the three type-specific messages.
@@ -318,13 +310,12 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 
 These don't block any task, but each needs follow-up work once resolved (details in [todo.md](../specs/todo.md)). Each affected task also lists them in its own **Backend** line, with what to do now and what changes when the item lands.
 
+Delivered on 2026-11-03 and no longer waited on: envelope spend (G-5), plan size on expenses (G-2), names of deleted lookups (G-3) and recurring months running (G-6).
+
 | Item | Affects | What changes when it lands |
 |---|---|---|
 | BE-4 sort by row type, category and payment type | T-06, T-21 | Make #, Category and Payment sortable |
-| G-5 envelope spend API | T-05, T-14, T-18, T-19, T-24 | Replace spend = 0 / "—" with real values; drop the "Envelope spend not included yet" note |
-| G-6 recurring months running | T-20, T-24 | Replace "Month —" with the count |
-| G-2 plan size on expenses | T-15, T-20, T-24 | Drop the per-plan requests |
-| G-3 names of deleted lookups | T-20, T-24, T-29 | Replace "(deleted)" with the real name |
+| G-12 category name on envelopes | T-19, T-24 | Replace "(deleted)" with the real category name |
 | G-4 recurring backfill | T-28 | Decide whether later opened months are refreshed after adding a recurring bill |
 | BE-1 salary with the month | T-35, T-37 | Send the salary with `POST /budget-periods` |
 | BE-3 paid date on past months | T-25, T-34 | Allow the paid control in past months |

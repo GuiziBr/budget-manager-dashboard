@@ -1,6 +1,6 @@
 # To Do — Specs Backlog
 
-Last updated: 2026-10-28
+Last updated: 2026-11-03
 
 What's left to specify, decide or ask the backend for. Current focus is the [Month screen](month-screen.md); the screens below are picked up once it's implemented.
 
@@ -29,8 +29,8 @@ Needed alongside the Month screen, since the Month screen lives inside it.
 |---|---|---|---|
 | R-01 | List recurring bills: description, amount, category, payment type, bank, store, start month | Must | Ready |
 | R-02 | Show active and cancelled bills separately (filter or sections) | Should | Ready |
-| R-03 | Months running for each bill ("Month —") | Should | Placeholder (G-6) |
-| R-04 | "Months already paid" starting count on the bill form (disabled, "Coming soon") | Should | Placeholder (G-6) |
+| R-03 | Months running for each bill ("Month 11") | Should | Ready |
+| R-04 | "Months already paid" starting count on the bill form (`monthsAlreadyPaid`) | Should | Ready |
 | R-05 | Edit a bill's description and amount; applies to months opened afterwards only | Must | Ready |
 | R-06 | Cancel a bill from a chosen month (current month or later) | Must | Ready |
 | R-07 | Reactivate a cancelled bill | Should | Gap (BE-2) |
@@ -78,7 +78,7 @@ One tab per lookup, plus appearance. Lists are short and not paginated.
 | Recurring bills that start in a future month | UX brief §12 | Planned backend feature; design when it exists |
 | Remembering the store in the expense form | Month spec §7 (Q-4) | "Fine for now" |
 | % of salary (per row, on the total row and in the summary) | Design review 2026-10-28 | Removed from the Month screen for now; to be addressed later. Salary is still flagged on incomes and the salary base is shown in the income footer |
-| Summary cards for Unpaid and Envelopes | Design review 2026-10-28 | Removed; overdue bills are flagged on their rows only. Envelope spend stays in the table's Spent column (placeholder) |
+| Summary cards for Unpaid and Envelopes | Design review 2026-10-28 | Removed; overdue bills are flagged on their rows only. Envelope spend lives in the Envelopes card |
 | Sorting on the phone | Design review 2026-10-28 | The phone list has no headers and no sort control, so it always shows order of entry |
 
 ### 2.2 Unresolved questions
@@ -94,15 +94,12 @@ U-1 (marking a bill paid after its month ends) moved to BE-3. U-3 (envelope rows
 | ID | Gap | Affects | Suggested fix |
 |---|---|---|---|
 | G-1 | `docs/APIs/expense.md` doesn't document the 422 for changing or deleting a past-month expense, which the software specification requires | M-25 | Confirm the 422 exists and document it |
-| G-2 | Expenses only carry the installment plan's id; `n of N` and the end date need one request per plan | M-08, M-09 | Return `totalInstallments` (and the plan's interval and first purchase date) with each installment expense |
-| G-3 | Lookup lists don't return deleted records, so the names of deleted categories, payment types, banks and stores can't be shown on old expenses | M-05, M-08 | Include names on expenses, or let lookup lists include deleted records on request |
 | G-4 | The software specification says a new recurring expense is also added to months after it that are already opened; the API doc says only months opened afterwards get a copy | M-16 | Confirm which is true and align the docs |
-| G-5 | No source for envelope spend (actual spend from the external API) | M-04, M-11 | Return spend with each envelope, or a spend endpoint per month |
-| G-6 | No months-running count or starting count for recurring bills | M-10, R-03, R-04 | Add a starting count to the template and a count per generated row |
 | G-7 | Lookup names: the software specification says unique ignoring case, the API docs say exact (case-sensitive) match | S-02, S-06, S-09, S-11, S-14 | Confirm which rule applies |
 | G-9 | No endpoint lists installment plans, so plans can only be reached from their expense rows | M-19 | `GET /installment-groups`, if a list of plans is ever wanted |
+| G-12 | `BudgetEnvelope` carries only `categoryId`, so the name of a category deleted after the envelope's month can't be shown (the same problem G-3 had for expenses) | M-04, M-08 | Return `category: { id, name }` on envelopes |
 
-G-8 moved to BE-2, G-10 to BE-5, G-11 to BE-3.
+G-8 moved to BE-2, G-10 to BE-5, G-11 to BE-3. G-2 (plan size on expenses), G-3 (names of deleted lookups), G-5 (envelope spend) and G-6 (months running) were delivered by the backend on 2026-11-03: see [expense.md](../APIs/expense.md), [budget-envelope.md](../APIs/budget-envelope.md) and [recurring-expense.md](../APIs/recurring-expense.md).
 
 ### 2.4 BE API review
 
