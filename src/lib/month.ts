@@ -10,9 +10,10 @@ export type MonthComparison = "past" | "current" | "future"
 
 const PERIOD_PATTERN = /^(\d{4})-(0[1-9]|1[0-2])$/
 
-const labelFormatter = new Intl.DateTimeFormat("en-US", {
+// Intl only names the month: Date.UTC maps years 0-99 to 1900-1999 and Intl
+// renders year 0 as "1", so the year comes from the parsed value instead
+const monthNameFormatter = new Intl.DateTimeFormat("en-US", {
 	month: "long",
-	year: "numeric",
 	timeZone: "UTC"
 })
 
@@ -69,7 +70,8 @@ export function compareMonth(
 }
 
 export function monthLabel({ year, month }: Month): string {
-	return labelFormatter.format(new Date(Date.UTC(year, month - 1, 1)))
+	const name = monthNameFormatter.format(new Date(Date.UTC(2000, month - 1, 1)))
+	return `${name} ${year}`
 }
 
 // The API doesn't guarantee an order, so look the period up instead of indexing

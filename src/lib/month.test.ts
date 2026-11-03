@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import type { BudgetPeriod } from "@/types/budget-period"
 import {
 	compareMonth,
@@ -14,6 +14,16 @@ import {
 } from "./month"
 
 const NOV_2026 = new Date("2026-11-02T12:00:00Z")
+
+// Default-date calls read the system clock, so pin it instead of racing it
+const useClock = (iso: string) => {
+	vi.useFakeTimers()
+	vi.setSystemTime(new Date(iso))
+}
+
+afterEach(() => {
+	vi.useRealTimers()
+})
 
 const period = (year: number, month: number): BudgetPeriod => ({
 	id: `${year}-${month}`,
@@ -41,11 +51,10 @@ describe("currentMonth", () => {
 	})
 
 	it("uses the clock when no date is given", () => {
-		const now = new Date()
-		expect(currentMonth()).toEqual({
-			year: now.getUTCFullYear(),
-			month: now.getUTCMonth() + 1
-		})
+		useClock("2026-10-31T23:59:59Z")
+		expect(currentMonth()).toEqual({ year: 2026, month: 10 })
+		vi.setSystemTime(new Date("2026-11-01T00:00:00Z"))
+		expect(currentMonth()).toEqual({ year: 2026, month: 11 })
 	})
 })
 
@@ -97,7 +106,10 @@ describe("resolveMonth", () => {
 	})
 
 	it("uses the clock when no date is given", () => {
-		expect(resolveMonth(null)).toEqual(currentMonth())
+		useClock("2026-10-31T23:59:59Z")
+		expect(resolveMonth(null)).toEqual({ year: 2026, month: 10 })
+		vi.setSystemTime(new Date("2026-11-01T00:00:00Z"))
+		expect(resolveMonth(null)).toEqual({ year: 2026, month: 11 })
 	})
 })
 
@@ -143,9 +155,13 @@ describe("prevMonth and nextMonth", () => {
 	})
 
 	it("uses the clock when no date is given", () => {
-		const limit = maxMonth()
-		expect(nextMonth(limit)).toBeNull()
-		expect(nextMonth(prevMonth(limit))).toEqual(limit)
+		useClock("2026-12-31T23:59:59Z")
+		const dec2027 = { year: 2027, month: 12 }
+		expect(maxMonth()).toEqual(dec2027)
+		expect(nextMonth(dec2027)).toBeNull()
+		vi.setSystemTime(new Date("2027-01-01T00:00:00Z"))
+		expect(maxMonth()).toEqual({ year: 2028, month: 12 })
+		expect(nextMonth(dec2027)).toEqual({ year: 2028, month: 1 })
 	})
 })
 
@@ -171,7 +187,11 @@ describe("compareMonth", () => {
 	})
 
 	it("uses the clock when no date is given", () => {
-		expect(compareMonth(currentMonth())).toBe("current")
+		useClock("2026-10-31T23:59:59Z")
+		const october = { year: 2026, month: 10 }
+		expect(compareMonth(october)).toBe("current")
+		vi.setSystemTime(new Date("2026-11-01T00:00:00Z"))
+		expect(compareMonth(october)).toBe("past")
 	})
 })
 
@@ -180,6 +200,12 @@ describe("monthLabel", () => {
 		expect(monthLabel({ year: 2026, month: 11 })).toBe("November 2026")
 		expect(monthLabel({ year: 2027, month: 1 })).toBe("January 2027")
 		expect(monthLabel({ year: 2026, month: 12 })).toBe("December 2026")
+	})
+
+	it("takes the year from the value, whatever its size", () => {
+		expect(monthLabel({ year: 99, month: 1 })).toBe("January 99")
+		expect(monthLabel({ year: 1, month: 1 })).toBe("January 1")
+		expect(monthLabel({ year: 0, month: 1 })).toBe("January 0")
 	})
 })
 
