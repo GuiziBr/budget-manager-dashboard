@@ -1,5 +1,5 @@
 import type { PagedResponse } from "@/types"
-import { buildQuery, type QueryParams } from "./build-query"
+import { type QueryParams, withQuery } from "./build-query"
 import { API_BASE_URL } from "./constants"
 
 export class ApiError extends Error {
@@ -99,18 +99,15 @@ class ApiClient {
 	/**
 	 * GET request for lists that put the total in the body
 	 * (`{ data, total, page, limit }`), such as `GET /expenses`.
-	 * Returns the body as is. Undefined params are left out of the query.
+	 * Returns the body as is. Undefined params are left out of the query, and an existing query on
+	 * the endpoint is kept.
 	 */
-	getPage<T extends PagedResponse<unknown>, P extends QueryParams<P> = object>(
+	getPage<T extends PagedResponse<unknown>>(
 		endpoint: string,
-		params?: P,
+		params: QueryParams = {},
 		options?: FetchOptions
 	) {
-		return this.request<T>(
-			`${endpoint}${buildQuery(params ?? {})}`,
-			"GET",
-			options
-		)
+		return this.request<T>(withQuery(endpoint, params), "GET", options)
 	}
 
 	post<T>(endpoint: string, data?: unknown, options?: FetchOptions) {

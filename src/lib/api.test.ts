@@ -151,6 +151,29 @@ describe("ApiClient", () => {
 			)
 		})
 
+		it("rejects unsupported param values", () => {
+			vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(200, page()))
+
+			// @ts-expect-error arrays are not a supported value
+			void api.getPage<ExpensePage>("expenses", { page: [1, 2] })
+		})
+
+		it("keeps a query already on the endpoint", async () => {
+			const fetchMock = vi
+				.spyOn(globalThis, "fetch")
+				.mockResolvedValue(jsonResponse(200, page()))
+
+			await api.getPage<ExpensePage>("expenses?budgetPeriodId=p1", {
+				page: 2
+			})
+
+			const url = new URL(String(fetchMock.mock.calls[0][0]))
+			expect(Object.fromEntries(url.searchParams)).toEqual({
+				budgetPeriodId: "p1",
+				page: "2"
+			})
+		})
+
 		it("omits undefined params", async () => {
 			const fetchMock = vi
 				.spyOn(globalThis, "fetch")

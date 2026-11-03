@@ -86,7 +86,8 @@ export type ExpenseSortBy =
 	| "createdAt"
 	| "updatedAt"
 
-export interface ExpenseListParams {
+/** A type alias, not an interface, so it can be passed as query params. */
+export type ExpenseListParams = {
 	budgetPeriodId?: Id
 	page?: number
 	limit?: number
