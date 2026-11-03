@@ -24,6 +24,18 @@ describe("buildQuery", () => {
 		expect(buildQuery({ offset: 0 })).toBe("?offset=0")
 	})
 
+	it("accepts interfaces and rejects unsupported values", () => {
+		interface Filters {
+			page?: number
+			q?: string
+		}
+		const filters: Filters = { page: 1 }
+		expect(buildQuery(filters)).toBe("?page=1")
+
+		// @ts-expect-error arrays are not a supported value
+		buildQuery({ ids: ["a"] })
+	})
+
 	it("encodes values", () => {
 		expect(buildQuery({ q: "a b&c" })).toBe("?q=a+b%26c")
 	})

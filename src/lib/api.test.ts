@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import type { ExpensePage } from "@/types"
+import type { ExpenseListParams, ExpensePage } from "@/types"
 import { ApiError, api } from "./api"
 
 const jsonResponse = (
@@ -136,6 +136,19 @@ describe("ApiClient", () => {
 				sortBy: "dueAt",
 				sortOrder: "asc"
 			})
+		})
+
+		it("accepts a variable typed as ExpenseListParams", async () => {
+			const fetchMock = vi
+				.spyOn(globalThis, "fetch")
+				.mockResolvedValue(jsonResponse(200, page()))
+			const params: ExpenseListParams = { page: 3, sortOrder: "desc" }
+
+			await api.getPage<ExpensePage>("expenses", params)
+
+			expect(String(fetchMock.mock.calls[0][0])).toMatch(
+				/\/expenses\?page=3&sortOrder=desc$/
+			)
 		})
 
 		it("omits undefined params", async () => {

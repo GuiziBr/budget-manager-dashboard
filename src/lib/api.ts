@@ -101,12 +101,16 @@ class ApiClient {
 	 * (`{ data, total, page, limit }`), such as `GET /expenses`.
 	 * Returns the body as is. Undefined params are left out of the query.
 	 */
-	getPage<T extends PagedResponse<unknown>>(
+	getPage<T extends PagedResponse<unknown>, P extends QueryParams<P> = object>(
 		endpoint: string,
-		params: QueryParams = {},
+		params?: P,
 		options?: FetchOptions
 	) {
-		return this.request<T>(`${endpoint}${buildQuery(params)}`, "GET", options)
+		return this.request<T>(
+			`${endpoint}${buildQuery(params ?? {})}`,
+			"GET",
+			options
+		)
 	}
 
 	post<T>(endpoint: string, data?: unknown, options?: FetchOptions) {
