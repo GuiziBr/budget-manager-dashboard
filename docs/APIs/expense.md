@@ -1,6 +1,6 @@
 # Expense API
 
-Base route: `/expenses`. An expense is a single monetary outflow belonging to one budget period. It is created as one of three types — `one-time`, `recurring` or `installment` — but the stored resource has no `type` field; the type is implied by `installmentGroupId` / `recurringExpenseId`.
+Base route: `/expenses`. An expense is a single monetary outflow belonging to one budget period. It is created as one of three types — `one-time`, `recurring` or `installment` — but the stored resource has no `type` field; the type is implied by `installment` (set for installment expenses) and `recurringExpenseId` (set for recurring expenses); a one-time expense has both `null`.
 
 ## Resource
 

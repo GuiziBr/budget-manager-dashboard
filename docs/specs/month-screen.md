@@ -301,7 +301,7 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 **How it works**
 1. Clicking or tapping a row opens the details: a side panel from the right on desktop, a bottom sheet on the phone. The selected row is highlighted behind it.
 2. Details show the type, item, category, amount and status (paid, unpaid, overdue), a **Mark as paid today** button when unpaid, and every field not shown in the table: payment type, **bank, store**, **purchased**, due and paid dates.
-3. For installments they add the plan: `n of N`, amount per payment, interval, first purchase date, **end date**, and **View plan** (M-19).
+3. For installments they add the plan: `n of N`, interval, first purchase date, **end date**, and **View plan** (M-19). The plan's amount per payment is shown in View plan, which reads the plan; the row's own amount can differ after a single-row edit (M-17).
 4. For recurring rows they add the bill's start month, "Month 11" (M-10) and a link to the bill on the Recurring screen.
 5. Actions: Mark paid / unpaid, Edit, Delete (hidden in past months).
 

@@ -2,7 +2,7 @@
 
 Status: delivered 2026-11-03 · Last updated: 2026-11-03
 
-What the backend needs to provide so the Month screen's row model, totals and envelope status (task **T-05**, see [the plan](../plans/t-05-month-rows.md)) can show real data instead of placeholders.
+What the backend needs to provide so the Month screen's row model, totals and envelope status (task **T-05** of the [implementation plan](../plans/month-screen-implementation.md)) can show real data instead of placeholders.
 
 **Nothing here blocks T-05.** The frontend ships with placeholders and plugs the real values in later. Only **BE-A (envelope spend)** is needed for the feature to be complete; BE-B to BE-D remove the extra requests and placeholders the frontend uses meanwhile.
 
@@ -21,7 +21,7 @@ The backend delivered BE-A to BE-D. The API docs are the source of truth now: [b
 | BE-C lookup names | Nested `category`, `paymentType`, `bank`, `store` objects `{ id, name }`. The flat id fields are **removed** from responses, which is a breaking change for readers of `GET /expenses` |
 | BE-D months running | `monthsRunning` on expenses; `monthsAlreadyPaid` on the recurring template (accepted by `POST /expenses` recurring and by `PATCH /recurring-expenses/:id`) |
 
-Still open: envelopes carry only `categoryId` (backlog G-12).
+Still open: envelopes carry only `categoryId` (backlog G-12), and **Q-3** (does the external spend already include expenses recorded in envelope categories?), which decides whether Total expenses can count the same money twice.
 
 ---
 

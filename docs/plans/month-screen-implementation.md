@@ -92,7 +92,7 @@ Size: **S** ≈ half a day, **M** ≈ a day, **L** ≈ two days.
 - **Done when:** tests cover thousands, rounding to 2 decimals, zero and negatives.
 
 #### T-05 Row model, totals and status (`lib/month-rows.ts`)
-- **Goal:** turn API data into what the screen shows. Detailed plan: [t-05-month-rows.md](t-05-month-rows.md).
+- **Goal:** turn API data into what the screen shows.
 - **Includes:**
   - `rowType(expense)` → one-time / installment / recurring. Envelopes are not table rows.
   - `buildRows(pageExpenses, now)` for **one page**, keeping the API's order (newest first, or the server sort once BE-4 lands). Names, plan size and months running come with each expense, so it needs no lookups.
@@ -101,7 +101,7 @@ Size: **S** ≈ half a day, **M** ≈ a day, **L** ≈ two days.
   - `envelopeStatus` (spent, allocated, ratio, over budget) and `sortEnvelopes` (over budget first).
   - `installmentEndDate(plan)` = first purchase + (N − 1) × interval days.
 - **Done when:** tests reproduce the spec examples (Expenses 6,530.48 and Balance 845.19, Hydro overdue on 2026-11-15, Car finance 78 and 79 in one month).
-- **Backend:** none pending. `totals` takes the month's expense total from `totalAmount` (T-02), not from the page on screen.
+- **Backend:** Q-3 pending (see [t-05-backend-requirements.md](../specs/t-05-backend-requirements.md)): if the external spend already includes expenses recorded in envelope categories, the same money is counted in both `totalAmount` and the envelope spend. Until it is answered, `totals` follows spec §2 (expense total + envelope spend); if the answer is yes, `totals` must exclude the overlap. `totals` takes the month's expense total from `totalAmount` (T-02), not from the page on screen.
 
 #### T-06 Sort params for the expenses API (`lib/expense-sort.ts`)
 - **Goal:** turn a header click into the `sortBy` / `sortOrder` params `GET /expenses` accepts, with the three-state cycle (ascending, descending, default).
@@ -210,7 +210,7 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 - **Includes:** the panel for expenses and envelopes:
   - type chip, title, category, amount and status pill;
   - Payment, Dates and Recurring bill sections;
-  - for installments, the plan section (`n of N`, interval, first purchase, end date, View plan);
+  - for installments, the plan section (`n of N`, interval, first purchase, end date, View plan); the plan's amount per payment is not on the expense, so it is shown in View plan (T-31), not here;
   - the selected row highlighted;
   - actions hidden in past months.
   Action buttons are wired in T-25, T-29, T-30 and T-31.
