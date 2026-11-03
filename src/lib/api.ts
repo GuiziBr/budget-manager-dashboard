@@ -1,3 +1,5 @@
+import type { PagedResponse } from "@/types"
+import { type QueryParams, withQuery } from "./build-query"
 import { API_BASE_URL } from "./constants"
 
 export class ApiError extends Error {
@@ -16,6 +18,7 @@ interface FetchOptions extends RequestInit {
 	data?: unknown
 }
 
+/** Result of `getWithHeaders`: lists whose total is in the `x-total-count` header. */
 export interface PaginatedResponse<T> {
 	data: T
 	totalCount: number
@@ -91,6 +94,20 @@ class ApiClient {
 		const totalCount = Number(response.headers.get("x-total-count") ?? "0")
 
 		return { data, totalCount }
+	}
+
+	/**
+	 * GET request for lists that put the total in the body
+	 * (`{ data, total, page, limit }`), such as `GET /expenses`.
+	 * Returns the body as is. Undefined params are left out of the query, and an existing query on
+	 * the endpoint is kept.
+	 */
+	getPage<T extends PagedResponse<unknown>>(
+		endpoint: string,
+		params: QueryParams = {},
+		options?: FetchOptions
+	) {
+		return this.request<T>(withQuery(endpoint, params), "GET", options)
 	}
 
 	post<T>(endpoint: string, data?: unknown, options?: FetchOptions) {

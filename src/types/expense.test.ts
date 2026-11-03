@@ -3,6 +3,8 @@ import type {
 	CreateExpenseInput,
 	Expense,
 	ExpenseListParams,
+	ExpensePage,
+	ExpenseSortBy,
 	UpdateExpenseInput
 } from "./expense"
 
@@ -106,5 +108,35 @@ test("ExpenseListParams are all optional", () => {
 		budgetPeriodId?: string
 		page?: number
 		limit?: number
+		sortBy?: ExpenseSortBy
+		sortOrder?: "asc" | "desc"
+	}>()
+})
+
+test("ExpenseSortBy lists the keys the API sorts by", () => {
+	expectTypeOf<ExpenseSortBy>().toEqualTypeOf<
+		| "description"
+		| "amount"
+		| "purchasedAt"
+		| "dueAt"
+		| "paidAt"
+		| "installmentNumber"
+		| "createdAt"
+		| "updatedAt"
+	>()
+	const params: ExpenseListParams = {
+		// @ts-expect-error the API can't sort by category yet (BE-4)
+		sortBy: "category"
+	}
+	void params
+})
+
+test("ExpensePage is a page of expenses with the month total", () => {
+	expectTypeOf<ExpensePage>().toEqualTypeOf<{
+		data: Expense[]
+		total: number
+		totalAmount: number
+		page: number
+		limit: number
 	}>()
 })

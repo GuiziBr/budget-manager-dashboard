@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
+import type { ExpenseListParams, ExpensePage } from "@/types"
 import { ApiError, api } from "./api"
 
 const jsonResponse = (
@@ -94,5 +95,122 @@ describe("ApiClient", () => {
 			"PUT",
 			"PATCH"
 		])
+	})
+
+	describe("getPage", () => {
+		const page = (overrides: Partial<ExpensePage> = {}): ExpensePage => ({
+			data: [],
+			total: 0,
+			totalAmount: 0,
+			page: 1,
+			limit: 20,
+			...overrides
+		})
+
+		it("returns the body as is, including totalAmount", async () => {
+			const body = page({ total: 42, totalAmount: 1234.56 })
+			vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(200, body))
+
+			await expect(api.getPage<ExpensePage>("expenses")).resolves.toEqual(body)
+		})
+
+		it("sends the page, sort and filter params", async () => {
+			const fetchMock = vi
+				.spyOn(globalThis, "fetch")
+				.mockResolvedValue(jsonResponse(200, page()))
+
+			await api.getPage<ExpensePage>("expenses", {
+				budgetPeriodId: "p1",
+				page: 2,
+				limit: 20,
+				sortBy: "dueAt",
+				sortOrder: "asc"
+			})
+
+			const url = new URL(String(fetchMock.mock.calls[0][0]))
+			expect(url.pathname).toMatch(/\/expenses$/)
+			expect(Object.fromEntries(url.searchParams)).toEqual({
+				budgetPeriodId: "p1",
+				page: "2",
+				limit: "20",
+				sortBy: "dueAt",
+				sortOrder: "asc"
+			})
+		})
+
+		it("accepts a variable typed as ExpenseListParams", async () => {
+			const fetchMock = vi
+				.spyOn(globalThis, "fetch")
+				.mockResolvedValue(jsonResponse(200, page()))
+			const params: ExpenseListParams = { page: 3, sortOrder: "desc" }
+
+			await api.getPage<ExpensePage>("expenses", params)
+
+			expect(String(fetchMock.mock.calls[0][0])).toMatch(
+				/\/expenses\?page=3&sortOrder=desc$/
+			)
+		})
+
+		it("rejects unsupported param values", () => {
+			vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(200, page()))
+
+			// @ts-expect-error arrays are not a supported value
+			void api.getPage<ExpensePage>("expenses", { page: [1, 2] })
+		})
+
+		it("keeps a query already on the endpoint", async () => {
+			const fetchMock = vi
+				.spyOn(globalThis, "fetch")
+				.mockResolvedValue(jsonResponse(200, page()))
+
+			await api.getPage<ExpensePage>("expenses?budgetPeriodId=p1", {
+				page: 2
+			})
+
+			const url = new URL(String(fetchMock.mock.calls[0][0]))
+			expect(Object.fromEntries(url.searchParams)).toEqual({
+				budgetPeriodId: "p1",
+				page: "2"
+			})
+		})
+
+		it("omits undefined params", async () => {
+			const fetchMock = vi
+				.spyOn(globalThis, "fetch")
+				.mockResolvedValue(jsonResponse(200, page()))
+
+			await api.getPage<ExpensePage>("expenses", {
+				page: 1,
+				sortBy: undefined
+			})
+
+			expect(String(fetchMock.mock.calls[0][0])).toMatch(/\/expenses\?page=1$/)
+		})
+
+		it("returns a last page with fewer rows than the limit", async () => {
+			const body = page({ total: 45, page: 3, data: [] })
+			vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(200, body))
+
+			const result = await api.getPage<ExpensePage>("expenses", { page: 3 })
+			expect(result).toMatchObject({ page: 3, total: 45 })
+		})
+
+		it("returns an empty list", async () => {
+			vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(200, page()))
+
+			await expect(api.getPage<ExpensePage>("expenses")).resolves.toMatchObject(
+				{ data: [], total: 0, totalAmount: 0 }
+			)
+		})
+
+		it("throws an ApiError on a 400", async () => {
+			vi.spyOn(globalThis, "fetch").mockResolvedValue(
+				jsonResponse(400, { message: "Bad Request" })
+			)
+
+			await expect(
+				api.getPage<ExpensePage>("expenses", { limit: 500 })
+			).rejects.toMatchObject({ message: "Bad Request", status: 400 })
+		})
 	})
 })
