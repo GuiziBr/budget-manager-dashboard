@@ -8,11 +8,6 @@ Base route: `/expenses`. An expense is a single monetary outflow belonging to on
 |---|---|---|
 | `id` | uuid | |
 | `budgetPeriodId` | uuid | |
-| `categoryId` | uuid | |
-| `paymentTypeId` | uuid | |
-| `bankId` | uuid \| null | |
-| `storeId` | uuid \| null | |
-| `installmentGroupId` | uuid \| null | set for installment expenses |
 | `recurringExpenseId` | uuid \| null | set for recurring expenses |
 | `description` | string | |
 | `installmentNumber` | integer \| null | 1-based, set for installment expenses |
@@ -20,9 +15,28 @@ Base route: `/expenses`. An expense is a single monetary outflow belonging to on
 | `dueAt` | date \| null | |
 | `paidAt` | date \| null | |
 | `amount` | number | |
+| `category` | object | read-only. `{ id, name }` of the category. Still returned when the category was soft-deleted afterwards |
+| `paymentType` | object | read-only. `{ id, name }` of the payment type. Same behaviour as `category` |
+| `bank` | object \| null | read-only. `{ id, name }`, or `null` when `bankId` is `null`. Still returned when the bank was soft-deleted |
+| `store` | object \| null | read-only. `{ id, name }`, or `null` when `storeId` is `null`. Still returned when the store was soft-deleted |
+| `installment` | object \| null | read-only. `null` for one-time and recurring expenses. See below |
+| `monthsRunning` | integer \| null | read-only, ≥ 1. Set for recurring expenses, `null` otherwise. See below |
 | `createdAt` | date | |
 | `updatedAt` | date | |
 | `deletedAt` | date \| null | always `null` |
+
+`installment` (the plan the expense belongs to):
+
+| Field | Type | Notes |
+|---|---|---|
+| `installment.id` | uuid | id of the installment group |
+| `installment.totalInstallments` | integer | does not change when a payment is deleted |
+| `installment.paymentIntervalDays` | integer | |
+| `installment.firstPurchasedAt` | date | |
+
+`monthsRunning` = the template's `monthsAlreadyPaid` + the calendar months from the template's `startedAt` up to and including the expense's month. It does not depend on how many rows were deleted. Example: a template started in January 2026 with `monthsAlreadyPaid: 0` gives `11` for its November 2026 expense; with `monthsAlreadyPaid: 10` it gives `21`.
+
+Responses carry the lookup ids inside the nested objects (there are no flat `categoryId`, `paymentTypeId`, `bankId`, `storeId` or `installmentGroupId` fields); request bodies still use the flat `categoryId`, `paymentTypeId`, `bankId` and `storeId`. The read-only fields (`category`, `paymentType`, `bank`, `store`, `installment`, `monthsRunning`) are returned by `GET /expenses`, `GET /expenses/:id`, and the responses of `POST` and `PATCH /expenses`. They are resolved in the same query as the page, not one query per row.
 
 ## GET /expenses
 
@@ -95,7 +109,13 @@ Creates one expense in `budgetPeriodId`.
 
 ### type `recurring`
 
-Same fields as `one-time`. Besides the expense, a recurring-expense template is created (see [recurring-expense.md](recurring-expense.md)) with `startedAt` = first day of the budget period's month, and the expense is linked to it via `recurringExpenseId`. Future periods opened via `POST /budget-periods` then receive a copy automatically.
+Same fields as `one-time`, plus:
+
+| Field | Type | Required | Rules |
+|---|---|---|---|
+| `monthsAlreadyPaid` | integer | no | ≥ 0, default `0`. Months the bill was already paid before being registered here. Stored on the template |
+
+Besides the expense, a recurring-expense template is created (see [recurring-expense.md](recurring-expense.md)) with `startedAt` = first day of the budget period's month, and the expense is linked to it via `recurringExpenseId`. Future periods opened via `POST /budget-periods` then receive a copy automatically.
 
 ### type `installment`
 

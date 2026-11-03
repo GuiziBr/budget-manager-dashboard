@@ -19,11 +19,6 @@ test("Expense matches the API resource", () => {
 	expectTypeOf<Expense>().toEqualTypeOf<{
 		id: string
 		budgetPeriodId: string
-		categoryId: string
-		paymentTypeId: string
-		bankId: string | null
-		storeId: string | null
-		installmentGroupId: string | null
 		recurringExpenseId: string | null
 		description: string
 		installmentNumber: number | null
@@ -31,6 +26,17 @@ test("Expense matches the API resource", () => {
 		dueAt: string | null
 		paidAt: string | null
 		amount: number
+		category: { id: string; name: string }
+		paymentType: { id: string; name: string }
+		bank: { id: string; name: string } | null
+		store: { id: string; name: string } | null
+		installment: {
+			id: string
+			totalInstallments: number
+			paymentIntervalDays: number
+			firstPurchasedAt: string
+		} | null
+		monthsRunning: number | null
 		createdAt: string
 		updatedAt: string
 		deletedAt: null
@@ -41,6 +47,14 @@ test("Expense carries no fields the API lacks", () => {
 	expectTypeOf<Expense>().not.toHaveProperty("type")
 	expectTypeOf<Expense>().not.toHaveProperty("totalInstallments")
 	expectTypeOf<Expense>().not.toHaveProperty("categoryName")
+})
+
+test("Expense responses carry nested lookups, not flat ids", () => {
+	expectTypeOf<Expense>().not.toHaveProperty("categoryId")
+	expectTypeOf<Expense>().not.toHaveProperty("paymentTypeId")
+	expectTypeOf<Expense>().not.toHaveProperty("bankId")
+	expectTypeOf<Expense>().not.toHaveProperty("storeId")
+	expectTypeOf<Expense>().not.toHaveProperty("installmentGroupId")
 })
 
 test("CreateExpenseInput narrows on type", () => {
@@ -67,7 +81,8 @@ test("CreateExpenseInput narrows on type", () => {
 		...base,
 		type: "recurring",
 		amount: 25,
-		bankId: null
+		bankId: null,
+		monthsAlreadyPaid: 10
 	}
 	expectTypeOf(recurring).toExtend<CreateExpenseInput>()
 })

@@ -1,11 +1,16 @@
 import type { Id, IsoDate } from "./common"
 
-/** Allocation only: the API returns no actual spend (gap G-5). */
+/**
+ * `spentAmount` is `null` when the external spend API couldn't answer. `PATCH`
+ * responses omit both spend fields, but the app never patches envelopes (M-22).
+ */
 export interface BudgetEnvelope {
 	id: Id
 	budgetPeriodId: Id
 	categoryId: Id
 	allocatedAmount: number
+	spentAmount: number | null
+	spendUpdatedAt: IsoDate | null
 	createdAt: IsoDate
 	updatedAt: IsoDate
 	deletedAt: null

@@ -15,6 +15,7 @@ Base route: `/recurring-expenses`. A recurring expense is a template that is cop
 | `amount` | number | |
 | `startedAt` | date | first day (UTC) of the month of the `budgetPeriodId` selected in the `POST /expenses` request that created it |
 | `cancelledAt` | date \| null | `null` while active |
+| `monthsAlreadyPaid` | integer | ≥ 0, default `0`. Months already paid before the template was registered. Added to the count in the expenses' `monthsRunning` ([expense.md](expense.md)) |
 | `createdAt` | date | |
 | `updatedAt` | date | |
 | `deletedAt` | date \| null | always `null` |
@@ -42,6 +43,7 @@ List all templates (active, cancelled and future). No filtering or pagination.
 | `description` | string | non-empty |
 | `amount` | number | monetary amount |
 | `cancelledAt` | date | must be ≥ first day of the current UTC month |
+| `monthsAlreadyPaid` | integer | ≥ 0 |
 
 At least one field is required. Changes affect only periods opened afterwards; expenses already generated are not modified. `cancelledAt` cannot be set back to `null` through this endpoint.
 

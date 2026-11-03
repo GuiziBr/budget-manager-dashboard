@@ -1,13 +1,17 @@
-import type { Id, IsoDate, PagedResponse, SortOrder } from "./common"
+import type { Id, IsoDate, NamedRef, PagedResponse, SortOrder } from "./common"
 
+/** The plan an installment expense belongs to. The amount per payment is on the group. */
+export interface ExpenseInstallment {
+	id: Id
+	totalInstallments: number
+	paymentIntervalDays: number
+	firstPurchasedAt: IsoDate
+}
+
+/** Responses carry nested lookups; requests still send the flat ids. */
 export interface Expense {
 	id: Id
 	budgetPeriodId: Id
-	categoryId: Id
-	paymentTypeId: Id
-	bankId: Id | null
-	storeId: Id | null
-	installmentGroupId: Id | null
 	recurringExpenseId: Id | null
 	description: string
 	installmentNumber: number | null
@@ -15,6 +19,13 @@ export interface Expense {
 	dueAt: IsoDate | null
 	paidAt: IsoDate | null
 	amount: number
+	category: NamedRef
+	paymentType: NamedRef
+	bank: NamedRef | null
+	store: NamedRef | null
+	installment: ExpenseInstallment | null
+	/** Set for recurring expenses, `null` otherwise. */
+	monthsRunning: number | null
 	createdAt: IsoDate
 	updatedAt: IsoDate
 	deletedAt: null
@@ -48,6 +59,8 @@ export interface CreateRecurringExpenseInput
 	extends CreateExpenseBase,
 		CreateSingleExpenseFields {
 	type: "recurring"
+	/** Months already paid before the bill was registered here. */
+	monthsAlreadyPaid?: number
 }
 
 export interface CreateInstallmentExpenseInput extends CreateExpenseBase {

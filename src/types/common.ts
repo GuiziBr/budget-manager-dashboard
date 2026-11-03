@@ -4,6 +4,12 @@ export type Id = string
 /** ISO 8601 string, as sent over the wire (never a `Date`). */
 export type IsoDate = string
 
+/** Id and name of a lookup record, kept even after the record is deleted. */
+export interface NamedRef {
+	id: Id
+	name: string
+}
+
 /** Body-paged list shape returned by `GET /expenses`. */
 export interface PagedResponse<T> {
 	data: T[]
