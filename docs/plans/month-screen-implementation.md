@@ -92,7 +92,7 @@ Size: **S** ≈ half a day, **M** ≈ a day, **L** ≈ two days.
 - **Done when:** tests cover thousands, rounding to 2 decimals, zero and negatives.
 
 #### T-05 Row model, totals and status (`lib/month-rows.ts`)
-- **Goal:** turn API data into what the screen shows.
+- **Goal:** turn API data into what the screen shows. Detailed plan: [t-05-month-rows.md](t-05-month-rows.md).
 - **Includes:**
   - `rowType(expense)` → one-time / installment / recurring. Envelopes are not table rows.
   - `buildRows(pageExpenses, now)` for **one page**, keeping the API's order (newest first, or the server sort once BE-4 lands). Names, plan size and months running come with each expense, so it needs no lookups.

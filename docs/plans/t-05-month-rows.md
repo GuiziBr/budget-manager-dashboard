@@ -76,4 +76,4 @@ The backend now sends everything a row needs: category, payment type, bank and s
 
 ## 6. Backend
 
-Nothing pending for T-05. One related gap: **G-12**, envelopes carry only `categoryId`, so an envelope whose category was deleted later can't be named. `categoryName` is `null` in that case and the UI shows "(deleted)" until the backend returns `category: { id, name }` on envelopes.
+**Q-3 is pending** ([t-05-backend-requirements.md](../specs/t-05-backend-requirements.md)): if the external spend already includes expenses recorded in envelope categories, the same money is counted in both `totalAmount` and the envelope spend. `totals` follows spec §2 (expense total + envelope spend) until it is answered; if the answer is yes, `totals` must exclude the overlap. Nothing else is pending. One related gap: **G-12**, envelopes carry only `categoryId`, so an envelope whose category was deleted later can't be named. `categoryName` is `null` in that case and the UI shows "(deleted)" until the backend returns `category: { id, name }` on envelopes.
