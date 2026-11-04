@@ -141,6 +141,7 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
   - `useMonthExpensesPage(periodId, page, sort)`: one page of 20 (`getPage`, T-02) with the sort params from T-06 in the query key, keeping the previous page visible while the next loads (`placeholderData`). Built like `usePagedList`, adapted to the API's `{ data, total, totalAmount, page, limit }` body. Exposes `totalAmount` for the summary cards.
   - `useCreateExpense`, `useUpdateExpense`, `useDeleteExpense`, invalidating the month's expense pages.
 - `useUpdateExpense` supports an **optimistic** update, used by mark paid (T-25).
+- **Status: done (2026-11-04).** `useUpdateExpense({ optimistic: true })` patches description, amount and dates in every cached page and restores them on error; lookup changes wait for the server. All expense queries share the `["expenses"]` key, so any mutation refreshes every month and page it may touch.
 
 #### T-13 Income hooks
 - `use-incomes.ts`: `useMonthIncomes(periodId)`, `useCreateIncome`, `useUpdateIncome`, `useDeleteIncome`.
