@@ -30,6 +30,23 @@ export const translations = {
 		emptyTitle: "Nothing here yet",
 		emptyDescription: "Start building your budget manager from this page."
 	},
+	errors: {
+		monthExists: "{month} is already open.",
+		monthNotEmpty: "Remove this month's expenses, incomes and envelopes first.",
+		envelopeExists: "{category} already has an envelope this month.",
+		bankRequired: "Bank is required for this payment type.",
+		noPeriodForInstallments:
+			"Open the month of the first payment before adding this plan.",
+		lookupGone: "{field} no longer exists. Choose another.",
+		monthClosed: "This month is now closed and can't be changed.",
+		generic: "Something went wrong. Try again.",
+		fields: {
+			category: "Category",
+			paymentType: "Payment type",
+			bank: "Bank",
+			store: "Store"
+		}
+	},
 	errorBoundary: {
 		title: "Something went wrong",
 		description: "An unexpected error occurred. Please try again.",

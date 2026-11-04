@@ -1,6 +1,6 @@
 # Month Screen — Implementation Plan
 
-Status: draft 4 (backend delivered: spend, plan size, lookup names, months running) · Last updated: 2026-11-03
+Status: draft 4 (backend delivered: spend, plan size, lookup names, months running) · Last updated: 2026-11-04
 
 Breaks the [Month screen spec](../specs/month-screen.md) and the wireframes in `design.pen` into small tasks. Each task is one pull request to `development`, sized to be reviewed in one sitting.
 
@@ -113,6 +113,7 @@ Size: **S** ≈ half a day, **M** ≈ a day, **L** ≈ two days.
 - **Goal:** map backend errors to the messages in spec §4.
 - **Includes:** 409 (month exists, month not empty, envelope exists), 400 (bank required, no period for installments), 404 (lookup gone), 422 (month closed), network / 500. Builds on `get-error-message.ts`.
 - **Done when:** each row of the spec's §4 table has a test.
+- **Status: done (2026-11-04).** `describeApiError(error, context)` takes what the user was doing (`openMonth`, `deleteMonth`, `createEnvelope`, `saveExpense`, `mutate`), because 409 and 404 mean different things per action. It returns `{ kind, message, field? }`; `getApiErrorMessage` returns the message and `isMonthClosedError` serves T-34. Unmatched errors give the generic message, never the raw backend text. The two 400s are matched on the backend's message text.
 
 #### T-08 UI primitives
 - **Goal:** the building blocks the design uses that `src/components/ui/` lacks.
