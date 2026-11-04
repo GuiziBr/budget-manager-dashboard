@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { ThemeProvider } from "@/providers/theme-provider"
 import { AppSidebar } from "./AppSidebar"
 
-const pathname = vi.hoisted(() => ({ current: "/dashboard" }))
+const pathname = vi.hoisted(() => ({ current: "/month" }))
 vi.mock("next/navigation", () => ({ usePathname: () => pathname.current }))
 
 const setup = () =>
@@ -16,7 +16,7 @@ const setup = () =>
 	)
 
 beforeEach(() => {
-	pathname.current = "/dashboard"
+	pathname.current = "/month"
 	window.localStorage.clear()
 	document.documentElement.className = "dark"
 })
@@ -29,10 +29,27 @@ describe("AppSidebar", () => {
 		expect(screen.getByRole("navigation", { name: "Main" })).toBeVisible()
 	})
 
+	it("links to Month, Recurring and Settings", () => {
+		setup()
+
+		expect(screen.getByRole("link", { name: "Month" })).toHaveAttribute(
+			"href",
+			"/month"
+		)
+		expect(screen.getByRole("link", { name: "Recurring" })).toHaveAttribute(
+			"href",
+			"/recurring"
+		)
+		expect(screen.getByRole("link", { name: "Settings" })).toHaveAttribute(
+			"href",
+			"/settings"
+		)
+	})
+
 	it("marks the current page", () => {
 		setup()
 
-		expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute(
+		expect(screen.getByRole("link", { name: "Month" })).toHaveAttribute(
 			"aria-current",
 			"page"
 		)
@@ -42,7 +59,7 @@ describe("AppSidebar", () => {
 		pathname.current = "/elsewhere"
 		setup()
 
-		expect(screen.getByRole("link", { name: "Dashboard" })).not.toHaveAttribute(
+		expect(screen.getByRole("link", { name: "Month" })).not.toHaveAttribute(
 			"aria-current"
 		)
 	})

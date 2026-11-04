@@ -20,15 +20,18 @@ export const translations = {
 		mainLabel: "Main",
 		tabBarLabel: "Primary",
 		overview: "Overview",
+		items: {
+			month: "Month",
+			recurring: "Recurring",
+			settings: "Settings"
+		},
 		tabs: {
-			dashboard: "Dashboard",
 			more: "More"
 		}
 	},
-	dashboard: {
-		title: "Dashboard",
-		emptyTitle: "Nothing here yet",
-		emptyDescription: "Start building your budget manager from this page."
+	comingSoon: {
+		title: "Coming soon",
+		description: "This screen is not available yet."
 	},
 	errors: {
 		monthExists: "{month} is already open.",
