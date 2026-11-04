@@ -2,7 +2,7 @@
 
 Status: delivered 2026-11-03 · Last updated: 2026-11-03
 
-What the backend needs to provide so the Month screen's row model, totals and envelope status (task **T-05** of the [implementation plan](../plans/month-screen-implementation.md)) can show real data instead of placeholders.
+What the backend needs to provide so the Month screen's row model, totals and envelope status (task **T-05**, see [the plan](../plans/t-05-month-rows.md)) can show real data instead of placeholders.
 
 **Nothing here blocks T-05.** The frontend ships with placeholders and plugs the real values in later. Only **BE-A (envelope spend)** is needed for the feature to be complete; BE-B to BE-D remove the extra requests and placeholders the frontend uses meanwhile.
 
