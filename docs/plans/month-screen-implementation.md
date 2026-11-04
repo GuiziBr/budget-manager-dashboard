@@ -148,6 +148,7 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 #### T-14 Envelope hooks
 - `use-budget-envelopes.ts`: `useMonthEnvelopes(periodId)`, `useCreateEnvelope`, `useDeleteEnvelope`. No update hook (M-22).
 - Spend comes with each envelope (`spentAmount`, `null` when the spend service is down), so no extra hook. `GET` is cached for 60 s in the backend for the current and future months; the hook refetches on window focus and invalidates after create and delete.
+- **Status: done (2026-11-04).** Exports `BUDGET_ENVELOPES_QUERY_KEY`; a month's list is keyed `["budget-envelopes", "month", periodId]` and waits until the period id is known. `spentAmount` is passed through untouched, `null` included. Create and delete invalidate every envelope query.
 
 #### T-15 Installment group hooks
 - `use-installment-groups.ts`: `useInstallmentGroup(id)` (read only when **View plan** opens, for the amount per payment, which `expense.installment` doesn't carry) and `useUpdateInstallmentGroup` (invalidates the expenses of every month it touches). `n of N`, interval and first purchase date come with each expense, so there are no per-plan reads.
