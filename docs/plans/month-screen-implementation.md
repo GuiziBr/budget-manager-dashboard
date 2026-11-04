@@ -135,6 +135,7 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 
 #### T-11 Budget period hooks
 - `use-budget-periods.ts`: `useBudgetPeriods`, `useCreateBudgetPeriod`, `useDeleteBudgetPeriod`.
+- **Status: done (2026-11-04).** Exports `BUDGET_PERIODS_QUERY_KEY`; both mutations invalidate it. The list is a plain array (no pagination), read with `api.get`. Creating or deleting a month doesn't touch expense or envelope queries, because those are keyed by period id.
 
 #### T-12 Expense hooks
 - `use-expenses.ts`:
