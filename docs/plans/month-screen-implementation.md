@@ -28,7 +28,7 @@ Related: [Month spec](../specs/month-screen.md) · [Backlog](../specs/todo.md) �
 | T-03 | Month maths (`lib/month.ts`) | 0 | M-01, M-25 | — | S | — |
 | T-04 | Money formatting (`lib/money.ts`) | 0 | §2 | — | S | — |
 | T-05 | Row model, totals and status (`lib/month-rows.ts`) | 0 | §2, M-05, M-09, M-13 | T-01 | M | — |
-| T-06 | Sort params for the expenses API (`lib/expense-sort.ts`) | 0 | M-06 | T-01 | S | BE-4 |
+| T-06 | Sort params for the expenses API (`lib/expense-sort.ts`) | 0 | M-06 | T-01 | S | — |
 | T-07 | API error messages (`lib/api-error-message.ts`) | 0 | §4 | T-02 | S | — |
 | T-08 | UI primitives: Card, Badge, Checkbox, Progress, Skeleton | 0 | — | — | M | — |
 | T-09 | Navigation: Month, Recurring, Settings | 0 | A-01, A-02 | — | S | — |
@@ -43,7 +43,7 @@ Related: [Month spec](../specs/month-screen.md) · [Backlog](../specs/todo.md) �
 | T-18 | Summary cards | 2 | M-04 | T-05, T-08, T-12–T-14 | S | — |
 | T-19 | Envelopes card (collapsible) | 2 | M-04, M-11 | T-05, T-08, T-14 | M | G-12 |
 | T-20 | Month table and pagination (desktop) | 2 | M-05, M-09, M-10, M-13 | T-05, T-08, T-12 | L | — |
-| T-21 | Sortable columns | 2 | M-06 | T-06, T-20 | S | BE-4 |
+| T-21 | Sortable columns | 2 | M-06 | T-06, T-20 | S | — |
 | T-22 | Phone layout: list, pagination, envelope strip, add button | 2 | M-05, M-04 | T-18–T-20 | M | — |
 | T-23 | Income panel (read) | 3 Panels | M-07 | T-13, T-18 | M | — |
 | T-24 | Row details panel (read) | 3 | M-08 | T-20 | M | G-12 |
@@ -95,7 +95,7 @@ Size: **S** ≈ half a day, **M** ≈ a day, **L** ≈ two days.
 - **Goal:** turn API data into what the screen shows. Detailed plan: [t-05-month-rows.md](t-05-month-rows.md).
 - **Includes:**
   - `rowType(expense)` → one-time / installment / recurring. Envelopes are not table rows.
-  - `buildRows(pageExpenses, now)` for **one page**, keeping the API's order (newest first, or the server sort once BE-4 lands). Names, plan size and months running come with each expense, so it needs no lookups.
+  - `buildRows(pageExpenses, now)` for **one page**, keeping the API's order (newest first, or the server sort). Names, plan size and months running come with each expense, so it needs no lookups.
   - `isUnpaid`, `isOverdue(expense, now)` (unpaid and due before today, any month).
   - `totals({ expenseTotal, envelopes, incomes })` → income, expenses (**`totalAmount` + envelope `spentAmount`**, a `null` spend counts as 0), balance, salary base, and whether every envelope's spend was available.
   - `envelopeStatus` (spent, allocated, ratio, over budget) and `sortEnvelopes` (over budget first).
@@ -104,10 +104,10 @@ Size: **S** ≈ half a day, **M** ≈ a day, **L** ≈ two days.
 - **Backend:** Q-3 pending (see [t-05-backend-requirements.md](../specs/t-05-backend-requirements.md)): if the external spend already includes expenses recorded in envelope categories, the same money is counted in both `totalAmount` and the envelope spend. Until it is answered, `totals` follows spec §2 (expense total + envelope spend); if the answer is yes, `totals` must exclude the overlap. `totals` takes the month's expense total from `totalAmount` (T-02), not from the page on screen.
 
 #### T-06 Sort params for the expenses API (`lib/expense-sort.ts`)
-- **Goal:** turn a header click into the `sortBy` / `sortOrder` params `GET /expenses` accepts, with the three-state cycle (ascending, descending, default).
+- **Goal:** turn a header click into the `sortBy` / `sortOrder` params `GET /expenses` accepts, with the three-state cycle (ascending, descending, default). Detailed plan: [t-06-expense-sort.md](t-06-expense-sort.md); backend changes: [t-06-backend-requirements.md](../specs/t-06-backend-requirements.md).
 - **Includes:** the mapping from M-06 (Item → `description`, Due → `dueAt`, Paid → `paidAt`, Amount → `amount`; default `createdAt` desc), the next-state function, and reading/writing the sort in the address. Sorting is **never** done in the browser on a single page.
 - **Done when:** tests cover the four columns, the default and the reset on the third click.
-- **Backend:** BE-4 (row type, category and payment type sorting). When it lands, add those keys to the mapping and make #, Category and Payment sortable in T-21.
+- **Backend:** BE-4 (category and payment type sorting) is delivered; `categoryName` and `paymentTypeName` are in the mapping. The # column is never sortable.
 
 #### T-07 API error messages (`lib/api-error-message.ts`)
 - **Goal:** map backend errors to the messages in spec §4.
@@ -186,9 +186,9 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 - **Done when:** the M-05 acceptance criteria pass with a 45-expense fixture (pages of 20, 20 and 5).
 
 #### T-21 Sortable columns (M-06)
-- **Includes:** Item, Due, Paid and Amount headers become sort buttons (reuse `SortableHeader`), three-state cycle, `aria-sort`, sort sent to the server via T-06 and T-12, back to page 1 on change, kept in the address and remembered on this device. #, Category and Payment stay plain labels.
+- **Includes:** Item, Category, Payment, Due, Paid and Amount headers become sort buttons (reuse `SortableHeader`), three-state cycle, `aria-sort`, sort sent to the server via T-06 and T-12, back to page 1 on change, kept in the address and remembered on this device. # is never sortable and stays a plain label.
 - **Done when:** the M-06 acceptance criteria pass.
-- **Backend:** BE-4 (row type, category and payment type sorting). When it lands, make #, Category and Payment sortable too.
+- **Backend:** BE-4 (category and payment type sorting) is delivered, so Category and Payment are sortable too. # stays a plain label.
 
 #### T-22 Phone layout (M-05, M-04)
 - **Includes:**
@@ -310,11 +310,10 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 
 These don't block any task, but each needs follow-up work once resolved (details in [todo.md](../specs/todo.md)). Each affected task also lists them in its own **Backend** line, with what to do now and what changes when the item lands.
 
-Delivered on 2026-11-03 and no longer waited on: envelope spend (G-5), plan size on expenses (G-2), names of deleted lookups (G-3) and recurring months running (G-6).
+Delivered on 2026-11-03 and no longer waited on: envelope spend (G-5), plan size on expenses (G-2), names of deleted lookups (G-3), recurring months running (G-6) and sorting by category and payment type name (BE-4).
 
 | Item | Affects | What changes when it lands |
 |---|---|---|
-| BE-4 sort by row type, category and payment type | T-06, T-21 | Make #, Category and Payment sortable |
 | G-12 category name on envelopes | T-19, T-24 | Replace "(deleted)" with the real category name |
 | G-4 recurring backfill | T-28 | Decide whether later opened months are refreshed after adding a recurring bill |
 | BE-1 salary with the month | T-35, T-37 | Send the salary with `POST /budget-periods` |

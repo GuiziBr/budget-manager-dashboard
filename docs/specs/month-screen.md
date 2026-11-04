@@ -24,7 +24,7 @@ Status: **Ready** = the backend supports it today. **Placeholder** = shown, wait
 | **Reading the month** | | | |
 | M-04 | Month summary | Must | Ready |
 | M-05 | Month table | Must | Ready |
-| M-06 | Sort the table | Should | Ready (Category, Payment, #: Gap BE-4) |
+| M-06 | Sort the table | Should | Ready |
 | M-07 | Income list with salary | Must | Ready |
 | M-08 | Row details | Must | Ready |
 | M-09 | Installment progress (`n of N`) | Must | Ready |
@@ -252,18 +252,21 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 *As the budget owner, I want to sort by due date or amount sometimes, without losing my usual order.*
 
 **How it works**
-- These headers are sortable: **Item, Due, Paid, Amount**. Clicking cycles ascending, descending, then back to the default order (newest first). There is no separate sort control.
+- These headers are sortable: **Item, Category, Payment, Due, Paid, Amount**. Clicking cycles ascending, descending, then back to the default order (newest first). There is no separate sort control.
 - Sorting is done **by the server**, across all pages: the frontend sends `sortBy` and `sortOrder` with `GET /expenses`. Sorting only the page on screen is never done.
 
 | Header | `sortBy` |
 |---|---|
 | Item | `description` |
+| Category | `categoryName` |
+| Payment | `paymentTypeName` |
 | Due | `dueAt` |
 | Paid | `paidAt` |
 | Amount | `amount` |
 
 - Rows without a value (no due date, unpaid) go **last in both directions**, as the API does.
-- **#, Category and Payment** are plain labels with no sort control: the API has no sort key for row type or for the category and payment type names (BE-4).
+- Item, Category and Payment sort case-insensitively.
+- **#** is a plain label and is never sortable.
 - Changing the sort goes back to page 1. The sort is kept in the address with the month and page, and remembered on this device.
 - The phone list has no headers, so it can't be sorted for now.
 
@@ -271,7 +274,7 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 - *Given* a month with 45 expenses, *when* I sort by Due, *then* page 1 holds the 20 earliest due dates of the whole month, and rows without a due date are on the last page.
 - *Given* a sort by Paid, ascending or descending, *then* unpaid rows are at the end.
 - *Given* a sorted table, *when* I click the header a third time, *then* the default order is restored and page 1 is shown.
-- *Given* the table, *then* #, Category and Payment headers have no sort control.
+- *Given* the table, *then* the # header has no sort control.
 
 #### M-07 Income list with salary
 
@@ -663,7 +666,7 @@ G-2, G-3, G-5 and G-6 were delivered by the backend on 2026-11-03 (plan size, lo
 | Which incomes can be copied when opening a month? | Only last month's salary incomes (M-02) |
 | Simplification (2026-10-30) | Incomes move off the page into an income panel opened from the Income card (M-07). Bank, Store and Purchased leave the table for the row details panel, opened by clicking a row (M-05, M-08). Envelopes stay mixed in the list; their spend shows under the item, and the Spent column is removed (M-11). Paid rows are dimmed (M-05, M-12) |
 | Design tweaks (2026-10-30) | No "Current month" badge. Summary order: Income, Expenses, Balance (M-04). Category gets its own column and Item is narrower; the Spent column returns, right of Amount; expense amounts use the regular text colour instead of red (M-05, M-11). All table cells are left-aligned; the spend bar sits above the spent amount. No total row: the Expenses card holds the total (M-05). Every column is sortable (M-06). An Envelopes card under the summary shows all envelopes' spent vs allocated at once, instead of one card per envelope or a carousel (M-04) |
-| Server-side pagination (2026-11-02) | The table is paginated on the server, 20 rows per page, newest first (M-05). Envelope rows and the Spent column leave the table; envelopes live in the Envelopes card (resolves U-3). The API sorts across pages (`sortBy`, `sortOrder`), so Item, Due, Paid and Amount are sortable; #, Category and Payment wait for BE-4 (M-06). The Expenses card uses `totalAmount` from the expenses response, with no extra request (M-04) |
+| Server-side pagination (2026-11-02) | The table is paginated on the server, 20 rows per page, newest first (M-05). Envelope rows and the Spent column leave the table; envelopes live in the Envelopes card (resolves U-3). The API sorts across pages (`sortBy`, `sortOrder`), so every header except # is sortable; Category and Payment use the names BE-4 delivered (M-06). The Expenses card uses `totalAmount` from the expenses response, with no extra request (M-04) |
 | Backend delivered (2026-11-03) | Envelope spend, installment plan size, lookup names and months running come from the API (M-08 to M-11). Spend can be `null` when the external service is down; the screen shows "—" and keeps the note on the Expenses card |
 | Envelope budgets and totals (2026-10-30) | Envelope budgets can't be edited (M-22). Total expenses and balance count envelope **spend**, not envelope budgets (section 2, M-11). Spend will come from a backend API |
 | Design review of the wireframes (2026-10-28) | Summary keeps Balance, Income and Expenses only, with no sub-labels (M-04). No Unpaid or Envelopes cards; overdue is shown on rows only (M-13). No table title bar or sort dropdown; sorting by column headers on desktop only (M-05, M-06). % of salary removed for now (todo.md). Expense amounts shown without a minus sign |

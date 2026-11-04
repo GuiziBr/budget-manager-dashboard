@@ -1,6 +1,6 @@
 # Expense API
 
-Base route: `/expenses`. An expense is a single monetary outflow belonging to one budget period. It is created as one of three types — `one-time`, `recurring` or `installment` — but the stored resource has no `type` field; the type is implied by `installment` (set for installment expenses) and `recurringExpenseId` (set for recurring expenses); a one-time expense has both `null`.
+Base route: `/expenses`. An expense is a single monetary outflow belonging to one budget period. It is created as one of three types — `one-time`, `recurring` or `installment` — but the stored resource has no `type` field; the type is implied by `installment` (set for installment expenses, with the group id in `installment.id`) and `recurringExpenseId` (set for recurring expenses); a one-time expense has both `null`. `installmentGroupId` is a persistence field only: it is stored with the expense but never returned in responses.
 
 ## Resource
 
@@ -47,10 +47,15 @@ Paginated, sortable list. Defaults to newest first (`createdAt` descending).
 | `budgetPeriodId` | uuid | – | filter by period |
 | `page` | integer | `1` | ≥ 1 |
 | `limit` | integer | `20` | 1–100 |
-| `sortBy` | string | `createdAt` | one of `description`, `amount`, `purchasedAt`, `dueAt`, `paidAt`, `installmentNumber`, `createdAt`, `updatedAt` |
+| `sortBy` | string | `createdAt` | one of `description`, `categoryName`, `paymentTypeName`, `amount`, `purchasedAt`, `dueAt`, `paidAt`, `installmentNumber`, `createdAt`, `updatedAt` |
 | `sortOrder` | string | `desc` | `asc` or `desc` |
 
 Nullable fields (`purchasedAt`, `dueAt`, `paidAt`, `installmentNumber`) sort nulls last in both directions. Ties are broken by `id`, so paging is stable.
+
+- `description`, `categoryName` (the category's name) and `paymentTypeName` (the payment type's name) sort **case-insensitively**, A to Z for `asc`. Names are the ones returned in `category.name` / `paymentType.name`, including soft-deleted lookups.
+- `amount` sorts numerically.
+- Sorting applies to the whole filtered set before it is paged; `total` and `totalAmount` do not depend on `sortBy`.
+- For `desc`, the `id` tie-break is also descending.
 
 - **200**
   ```json

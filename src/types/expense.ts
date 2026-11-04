@@ -88,7 +88,7 @@ export interface UpdateExpenseInput {
 	paidAt?: IsoDate | null
 }
 
-/** Keys `GET /expenses` can sort by. No key for row type, category or payment type yet (BE-4). */
+/** Keys `GET /expenses` can sort by. The two name keys come from BE-4. */
 export type ExpenseSortBy =
 	| "description"
 	| "amount"
@@ -98,6 +98,8 @@ export type ExpenseSortBy =
 	| "installmentNumber"
 	| "createdAt"
 	| "updatedAt"
+	| "categoryName"
+	| "paymentTypeName"
 
 /** A type alias, not an interface, so it can be passed as query params. */
 export type ExpenseListParams = {
