@@ -151,6 +151,7 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 
 #### T-15 Installment group hooks
 - `use-installment-groups.ts`: `useInstallmentGroup(id)` (read only when **View plan** opens, for the amount per payment, which `expense.installment` doesn't carry) and `useUpdateInstallmentGroup` (invalidates the expenses of every month it touches). `n of N`, interval and first purchase date come with each expense, so there are no per-plan reads.
+- **Status: done (2026-11-04).** `useInstallmentGroup(id)` stays idle while `id` is `undefined`, so View plan can pass the id only when it opens. `useUpdateInstallmentGroup` takes `{ id, amountPerInstallment }` and invalidates the plan and the root `["expenses"]` key, which covers every month and page. The key is a local copy until the expense hooks are merged; switch it to `EXPENSES_QUERY_KEY` then.
 
 ### Phase 2 — Read-only Month screen
 
