@@ -19,19 +19,25 @@ const indicatorVariants = cva("h-full w-full transition-transform", {
 })
 
 export interface ProgressProps
-	extends React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root>,
+	extends Omit<
+			React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root>,
+			"asChild" | "children"
+		>,
 		VariantProps<typeof indicatorVariants> {}
 
-// The value is clamped to 0-100, so an over-budget ratio just shows a full bar.
+// A numeric value is clamped to 0-max, so an over-budget ratio just shows a
+// full bar; `null` (or no value) is passed through as Radix's indeterminate
+// state instead of being forced to 0.
 const Progress = React.forwardRef<
 	React.ComponentRef<typeof ProgressPrimitive.Root>,
 	ProgressProps
->(({ className, value, variant, ...props }, ref) => {
-	const clamped = Math.min(100, Math.max(0, value ?? 0))
+>(({ className, value, max = 100, variant, ...props }, ref) => {
+	const clamped = value == null ? null : Math.min(max, Math.max(0, value))
 	return (
 		<ProgressPrimitive.Root
 			ref={ref}
 			value={clamped}
+			max={max}
 			className={cn(
 				"relative h-2 w-full overflow-hidden rounded-full bg-muted",
 				className
@@ -41,7 +47,11 @@ const Progress = React.forwardRef<
 			<ProgressPrimitive.Indicator
 				data-variant={variant ?? "default"}
 				className={indicatorVariants({ variant })}
-				style={{ transform: `translateX(-${100 - clamped}%)` }}
+				style={
+					clamped == null
+						? undefined
+						: { transform: `translateX(-${100 - (clamped / max) * 100}%)` }
+				}
 			/>
 		</ProgressPrimitive.Root>
 	)

@@ -24,13 +24,40 @@ describe("Progress", () => {
 		expect(indicator().style.transform).toBe("translateX(-0%)")
 	})
 
-	it("clamps a negative or missing value to empty", () => {
-		const { rerender } = render(<Progress value={-5} aria-label="Low" />)
-		expect(indicator().style.transform).toBe("translateX(-100%)")
-
-		rerender(<Progress aria-label="Low" />)
+	it("clamps a negative value to empty", () => {
+		render(<Progress value={-5} aria-label="Low" />)
 
 		expect(indicator().style.transform).toBe("translateX(-100%)")
+	})
+
+	it("treats a null or missing value as indeterminate, not zero", () => {
+		const { rerender } = render(<Progress value={null} aria-label="Loading" />)
+		expect(screen.getByRole("progressbar")).toHaveAttribute(
+			"data-state",
+			"indeterminate"
+		)
+		expect(indicator().style.transform).toBe("")
+
+		rerender(<Progress aria-label="Loading" />)
+
+		expect(screen.getByRole("progressbar")).toHaveAttribute(
+			"data-state",
+			"indeterminate"
+		)
+		expect(indicator().style.transform).toBe("")
+	})
+
+	it("scales the indicator by a custom max", () => {
+		render(<Progress value={50} max={200} aria-label="Quarter" />)
+
+		expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuemax", "200")
+		expect(indicator().style.transform).toBe("translateX(-75%)")
+	})
+
+	it("clamps a value above a custom max to a full bar", () => {
+		render(<Progress value={999} max={200} aria-label="Over" />)
+
+		expect(indicator().style.transform).toBe("translateX(-0%)")
 	})
 
 	it("uses the accent colour by default and danger on request", () => {
