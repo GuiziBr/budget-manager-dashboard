@@ -138,9 +138,11 @@ test("ExpenseSortBy lists the keys the API sorts by", () => {
 		| "installmentNumber"
 		| "createdAt"
 		| "updatedAt"
+		| "categoryName"
+		| "paymentTypeName"
 	>()
 	const params: ExpenseListParams = {
-		// @ts-expect-error the API can't sort by category yet (BE-4)
+		// @ts-expect-error the API sorts by category name, not by the nested object
 		sortBy: "category"
 	}
 	void params
