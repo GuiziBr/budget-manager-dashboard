@@ -132,6 +132,7 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 
 #### T-10 Lookup hooks
 - `use-categories.ts`, `use-payment-types.ts`, `use-banks.ts`, `use-stores.ts` (reads only for now; long cache time, the lists rarely change).
+- **Status: done (2026-11-04).** `useCategories`, `usePaymentTypes`, `useBanks` and `useStores` each export their query key (`CATEGORIES_QUERY_KEY`, …) for the future mutations to invalidate. The cache time is `LOOKUP_STALE_TIME_MS` (10 minutes) in `src/lib/constants.ts`.
 
 #### T-11 Budget period hooks
 - `use-budget-periods.ts`: `useBudgetPeriods`, `useCreateBudgetPeriod`, `useDeleteBudgetPeriod`.
