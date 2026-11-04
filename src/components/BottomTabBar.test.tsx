@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { ThemeProvider } from "@/providers/theme-provider"
 import { BottomTabBar } from "./BottomTabBar"
 
-const pathname = vi.hoisted(() => ({ current: "/dashboard" }))
+const pathname = vi.hoisted(() => ({ current: "/month" }))
 vi.mock("next/navigation", () => ({ usePathname: () => pathname.current }))
 
 const setup = () =>
@@ -16,7 +16,7 @@ const setup = () =>
 	)
 
 beforeEach(() => {
-	pathname.current = "/dashboard"
+	pathname.current = "/month"
 	window.localStorage.clear()
 	document.documentElement.className = "dark"
 })
@@ -26,7 +26,7 @@ describe("BottomTabBar", () => {
 		setup()
 
 		expect(screen.getByRole("navigation", { name: "Primary" })).toBeVisible()
-		expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute(
+		expect(screen.getByRole("link", { name: "Month" })).toHaveAttribute(
 			"aria-current",
 			"page"
 		)
@@ -37,7 +37,7 @@ describe("BottomTabBar", () => {
 		pathname.current = "/elsewhere"
 		setup()
 
-		expect(screen.getByRole("link", { name: "Dashboard" })).not.toHaveAttribute(
+		expect(screen.getByRole("link", { name: "Month" })).not.toHaveAttribute(
 			"aria-current"
 		)
 	})

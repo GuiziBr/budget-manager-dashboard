@@ -1,4 +1,4 @@
-import { LayoutDashboard, type LucideIcon } from "lucide-react"
+import { CalendarDays, type LucideIcon, Repeat, Settings } from "lucide-react"
 import { translations } from "@/constants/translations"
 
 export interface NavItem {
@@ -13,7 +13,11 @@ export interface NavGroup {
 	items: NavItem[]
 }
 
-export const DEFAULT_PATH = "/dashboard"
+export const MONTH_PATH = "/month"
+export const RECURRING_PATH = "/recurring"
+export const SETTINGS_PATH = "/settings"
+
+export const DEFAULT_PATH = MONTH_PATH
 
 export const NAV_GROUPS: NavGroup[] = [
 	{
@@ -21,9 +25,19 @@ export const NAV_GROUPS: NavGroup[] = [
 		label: translations.navigation.overview,
 		items: [
 			{
-				label: translations.dashboard.title,
-				href: DEFAULT_PATH,
-				icon: LayoutDashboard
+				label: translations.navigation.items.month,
+				href: MONTH_PATH,
+				icon: CalendarDays
+			},
+			{
+				label: translations.navigation.items.recurring,
+				href: RECURRING_PATH,
+				icon: Repeat
+			},
+			{
+				label: translations.navigation.items.settings,
+				href: SETTINGS_PATH,
+				icon: Settings
 			}
 		]
 	}
@@ -48,4 +62,4 @@ export const isMoreTabActive = (pathname: string | null) =>
 
 export const getPageTitle = (pathname: string | null) =>
 	MAIN_NAV_ITEMS.find((item) => item.href === pathname)?.label ??
-	translations.dashboard.title
+	translations.navigation.items.month
