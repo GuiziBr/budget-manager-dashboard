@@ -1,10 +1,14 @@
 "use client"
 
 import { usePathname } from "next/navigation"
-import { getPageTitle } from "@/lib/navigation"
+import { getPageTitle, MONTH_PATH } from "@/lib/navigation"
 
 export function TopBar() {
-	const title = getPageTitle(usePathname())
+	const pathname = usePathname()
+	const title = getPageTitle(pathname)
+
+	// The Month screen has no page title: its month switcher is the header
+	if (pathname === MONTH_PATH) return null
 
 	return (
 		<div className="md:mx-auto md:flex md:w-full md:max-w-[1120px] md:shrink-0 md:items-center md:justify-between md:px-5 md:pb-6">

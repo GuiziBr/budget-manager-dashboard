@@ -5,6 +5,7 @@ import {
 	currentMonth,
 	findPeriod,
 	formatMonth,
+	groupPeriodsByYear,
 	maxMonth,
 	monthLabel,
 	nextMonth,
@@ -220,5 +221,29 @@ describe("findPeriod", () => {
 	it("returns undefined when the month isn't opened", () => {
 		expect(findPeriod(periods, { year: 2026, month: 12 })).toBeUndefined()
 		expect(findPeriod([], { year: 2026, month: 11 })).toBeUndefined()
+	})
+})
+
+describe("groupPeriodsByYear", () => {
+	const make = (year: number, month: number) =>
+		({ id: `${year}-${month}`, year, month }) as BudgetPeriod
+
+	it("groups newest year first and newest month first", () => {
+		const groups = groupPeriodsByYear([
+			make(2026, 3),
+			make(2025, 12),
+			make(2026, 11),
+			make(2025, 1)
+		])
+		expect(groups.map((g) => g.year)).toEqual([2026, 2025])
+		expect(groups[0].periods.map((p) => p.month)).toEqual([11, 3])
+		expect(groups[1].periods.map((p) => p.month)).toEqual([12, 1])
+	})
+
+	it("returns an empty list for no periods and doesn't mutate the input", () => {
+		expect(groupPeriodsByYear([])).toEqual([])
+		const input = [make(2025, 1), make(2026, 1)]
+		groupPeriodsByYear(input)
+		expect(input[0].year).toBe(2025)
 	})
 })
