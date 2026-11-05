@@ -7,6 +7,7 @@ import {
 	MAIN_NAV_ITEMS,
 	MOBILE_TAB_ITEMS,
 	MONTH_PATH,
+	monthHref,
 	RECURRING_PATH,
 	SETTINGS_PATH
 } from "./navigation"
@@ -48,5 +49,11 @@ describe("navigation", () => {
 		for (const item of MAIN_NAV_ITEMS) {
 			expect(isMoreTabActive(item.href)).toBe(false)
 		}
+	})
+})
+
+describe("monthHref", () => {
+	it("builds the month address with a padded month", () => {
+		expect(monthHref({ year: 2026, month: 3 })).toBe("/month?period=2026-03")
 	})
 })

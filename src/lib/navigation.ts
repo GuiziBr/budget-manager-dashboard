@@ -1,5 +1,6 @@
 import { CalendarDays, type LucideIcon, Repeat, Settings } from "lucide-react"
 import { translations } from "@/constants/translations"
+import { formatMonth, type Month } from "@/lib/month"
 
 export interface NavItem {
 	label: string
@@ -18,6 +19,10 @@ export const RECURRING_PATH = "/recurring"
 export const SETTINGS_PATH = "/settings"
 
 export const DEFAULT_PATH = MONTH_PATH
+
+export function monthHref(month: Month): string {
+	return `${MONTH_PATH}?period=${formatMonth(month)}`
+}
 
 export const NAV_GROUPS: NavGroup[] = [
 	{

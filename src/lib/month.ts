@@ -83,3 +83,22 @@ export function findPeriod(
 		(period) => period.year === year && period.month === month
 	)
 }
+
+export interface PeriodYearGroup {
+	year: number
+	periods: BudgetPeriod[]
+}
+
+// Newest year first, newest month first inside each year (the API order is not guaranteed)
+export function groupPeriodsByYear(periods: BudgetPeriod[]): PeriodYearGroup[] {
+	const sorted = [...periods].sort(
+		(a, b) => b.year - a.year || b.month - a.month
+	)
+	const groups: PeriodYearGroup[] = []
+	for (const period of sorted) {
+		const last = groups[groups.length - 1]
+		if (last && last.year === period.year) last.periods.push(period)
+		else groups.push({ year: period.year, periods: [period] })
+	}
+	return groups
+}

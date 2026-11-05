@@ -33,6 +33,13 @@ export const translations = {
 		title: "Coming soon",
 		description: "This screen is not available yet."
 	},
+	month: {
+		previous: "Previous month: {month}",
+		next: "Next month: {month}",
+		switcherLabel: "Choose a month",
+		moreActions: "Month actions",
+		noOpenedMonths: "No opened months yet"
+	},
 	errors: {
 		monthExists: "{month} is already open.",
 		monthNotEmpty: "Remove this month's expenses, incomes and envelopes first.",
