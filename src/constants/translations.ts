@@ -36,7 +36,7 @@ export const translations = {
 	month: {
 		previous: "Previous month: {month}",
 		next: "Next month: {month}",
-		switcherLabel: "Choose a month",
+		switcherLabel: "{month}, choose a month",
 		moreActions: "Month actions",
 		noOpenedMonths: "No opened months yet"
 	},

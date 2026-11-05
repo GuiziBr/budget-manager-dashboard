@@ -63,7 +63,9 @@ describe("MonthHeader", () => {
 	it("lists opened months grouped by year and picks one", async () => {
 		const user = setup()
 		await waitFor(() => expect(api.get).toHaveBeenCalled())
-		await user.click(screen.getByRole("button", { name: "Choose a month" }))
+		await user.click(
+			screen.getByRole("button", { name: "November 2026, choose a month" })
+		)
 		const items = await screen.findAllByRole("menuitem")
 		expect(items.map((i) => i.textContent)).toEqual([
 			"November 2026",

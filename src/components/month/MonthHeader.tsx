@@ -35,7 +35,7 @@ export function MonthHeader() {
 						<Button
 							variant="ghost"
 							className="order-1 mr-auto min-w-0 gap-1 px-0 lg:order-2 lg:mr-0 lg:flex-1 lg:gap-1.5 lg:px-1.5"
-							aria-label={t.switcherLabel}
+							aria-label={t.switcherLabel.replace("{month}", monthLabel(month))}
 						>
 							<span className="font-serif text-[22px] font-bold tracking-[-0.4px] lg:text-2xl">
 								{monthLabel(month)}
