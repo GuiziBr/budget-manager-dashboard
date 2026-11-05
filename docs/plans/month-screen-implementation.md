@@ -147,6 +147,7 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 
 #### T-13 Income hooks
 - `use-incomes.ts`: `useMonthIncomes(periodId)`, `useCreateIncome`, `useUpdateIncome`, `useDeleteIncome`.
+- **Status: done (2026-11-04).** Exports `INCOMES_QUERY_KEY`; a month's list is keyed `["incomes", "month", periodId]` and waits until the period id is known. All three mutations invalidate every income query. `useUpdateIncome` takes `{ id, ...fields }` and sends only the fields given (`receivedAt: null` clears the date).
 
 #### T-14 Envelope hooks
 - `use-budget-envelopes.ts`: `useMonthEnvelopes(periodId)`, `useCreateEnvelope`, `useDeleteEnvelope`. No update hook (M-22).
