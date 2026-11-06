@@ -140,7 +140,7 @@ describe("EnvelopesCard on a phone", () => {
 			removeEventListener: () => {}
 		}))
 
-	it("shows a sideways strip with the short pill and what is left", async () => {
+	it("shows a sideways strip with the short pill", async () => {
 		stubPhone()
 		mockApi([env("e1", "c1", 350, 192.54), env("e2", "c2", 190, 214.6)])
 		const onSelect = vi.fn()
@@ -149,7 +149,7 @@ describe("EnvelopesCard on a phone", () => {
 		expect(items[0]).toHaveTextContent("Dining")
 		expect(items[0]).toHaveTextContent("214.60/ 190.00")
 		expect(screen.getByText("1 over")).toBeInTheDocument()
-		expect(screen.getByText("132.86 left")).toBeInTheDocument()
+		expect(screen.queryByText(/left/)).not.toBeInTheDocument()
 		expect(
 			screen.queryByRole("button", { name: /Hide|Show/ })
 		).not.toBeInTheDocument()

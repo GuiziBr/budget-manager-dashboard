@@ -198,10 +198,6 @@ export function EnvelopesCard({
 	const bodyId = "month-envelopes-body"
 
 	if (isPhone) {
-		const left = statuses.reduce(
-			(sum, s) => sum + s.allocated - (s.spent ?? 0),
-			0
-		)
 		return (
 			<section aria-label={t.label} className="flex flex-col gap-2.5">
 				<div className="flex items-center justify-between pt-1">
@@ -215,9 +211,6 @@ export function EnvelopesCard({
 							</Badge>
 						)}
 					</div>
-					<span className="text-[13px] font-medium text-muted-foreground">
-						{t.left.replace("{amount}", money(left))}
-					</span>
 				</div>
 				<ul className="flex gap-2.5 overflow-x-auto">
 					{statuses.map((status) => (
