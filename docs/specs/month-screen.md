@@ -204,7 +204,7 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 *As the budget owner, I want the month's expenses in one table, a page at a time, so the screen stays fast and focused.*
 
 **How it works**
-1. The table lists the month's **expenses**, **20 per page**, fetched from the server one page at a time (`GET /expenses?budgetPeriodId=&page=&limit=20&sortBy=&sortOrder=`).
+1. The table lists the month's **expenses**, **10 per page**, fetched from the server one page at a time (`GET /expenses?budgetPeriodId=&page=&limit=10&sortBy=&sortOrder=`).
 2. Rows appear **newest first** by default (`sortBy=createdAt&sortOrder=desc`). The server can also return oldest first (`sortOrder=asc`) if the spreadsheet's order is wanted as the default later.
 3. Columns:
 
@@ -226,7 +226,7 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 9. **Paid rows are dimmed** (muted text, half opacity) but stay in place; the paid control stays at full strength. Unpaid rows stand out.
 
 **Pagination**
-- The design system's pagination: "Page X of N" with first, previous, next and last buttons, disabled at the ends. On desktop it is pinned to the bottom of the viewport; on the phone it sits under the list.
+- The design system's pagination is a footer at the bottom of the table card. On desktop it shows "Showing 1–10 of 45 expenses" on the left and previous, numbered pages (with an ellipsis for long runs) and next on the right. On the phone it shows previous, "Page X of N" and next under the list. Previous and next are disabled at the ends. With a single page only the count remains, on desktop.
 - It is hidden when the month fits in one page.
 - The page lives in the address with the month (`?period=2026-11&page=2`), so back and refresh keep it.
 - Changing month goes back to page 1. Adding an expense goes to page 1, where the new expense appears first.
@@ -241,7 +241,7 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 - Error: an inline message with **Retry**.
 
 **Acceptance criteria**
-- *Given* a month with 45 expenses, *then* the table shows 20 rows, the pagination reads "Page 1 of 3", and the last page has 5 rows.
+- *Given* a month with 45 expenses, *then* the table shows 10 rows, the pagination reads "Page 1 of 5", and the last page has 5 rows.
 - *Given* a month with 45 expenses, *then* the Expenses card shows the sum of all 45 plus the envelope spend, whatever page is shown.
 - *Given* I'm on page 2 and add an expense, *then* page 1 is shown with the new expense first.
 - *Given* a month with 12 expenses, *then* no pagination is shown.
@@ -271,7 +271,7 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 - The phone list has no headers, so it can't be sorted for now.
 
 **Acceptance criteria**
-- *Given* a month with 45 expenses, *when* I sort by Due, *then* page 1 holds the 20 earliest due dates of the whole month, and rows without a due date are on the last page.
+- *Given* a month with 45 expenses, *when* I sort by Due, *then* page 1 holds the 10 earliest due dates of the whole month, and rows without a due date are on the last page.
 - *Given* a sort by Paid, ascending or descending, *then* unpaid rows are at the end.
 - *Given* a sorted table, *when* I click the header a third time, *then* the default order is restored and page 1 is shown.
 - *Given* the table, *then* the # header has no sort control.
@@ -666,7 +666,7 @@ G-2, G-3, G-5 and G-6 were delivered by the backend on 2026-11-03 (plan size, lo
 | Which incomes can be copied when opening a month? | Only last month's salary incomes (M-02) |
 | Simplification (2026-10-30) | Incomes move off the page into an income panel opened from the Income card (M-07). Bank, Store and Purchased leave the table for the row details panel, opened by clicking a row (M-05, M-08). Envelopes stay mixed in the list; their spend shows under the item, and the Spent column is removed (M-11). Paid rows are dimmed (M-05, M-12) |
 | Design tweaks (2026-10-30) | No "Current month" badge. Summary order: Income, Expenses, Balance (M-04). Category gets its own column and Item is narrower; the Spent column returns, right of Amount; expense amounts use the regular text colour instead of red (M-05, M-11). All table cells are left-aligned; the spend bar sits above the spent amount. No total row: the Expenses card holds the total (M-05). Every column is sortable (M-06). An Envelopes card under the summary shows all envelopes' spent vs allocated at once, instead of one card per envelope or a carousel (M-04) |
-| Server-side pagination (2026-11-02) | The table is paginated on the server, 20 rows per page, newest first (M-05). Envelope rows and the Spent column leave the table; envelopes live in the Envelopes card (resolves U-3). The API sorts across pages (`sortBy`, `sortOrder`), so every header except # is sortable; Category and Payment use the names BE-4 delivered (M-06). The Expenses card uses `totalAmount` from the expenses response, with no extra request (M-04) |
+| Server-side pagination (2026-11-02) | The table is paginated on the server, 10 rows per page, newest first (M-05). Envelope rows and the Spent column leave the table; envelopes live in the Envelopes card (resolves U-3). The API sorts across pages (`sortBy`, `sortOrder`), so every header except # is sortable; Category and Payment use the names BE-4 delivered (M-06). The Expenses card uses `totalAmount` from the expenses response, with no extra request (M-04) |
 | Backend delivered (2026-11-03) | Envelope spend, installment plan size, lookup names and months running come from the API (M-08 to M-11). Spend can be `null` when the external service is down; the screen shows "—" and keeps the note on the Expenses card |
 | Envelope budgets and totals (2026-10-30) | Envelope budgets can't be edited (M-22). Total expenses and balance count envelope **spend**, not envelope budgets (section 2, M-11). Spend will come from a backend API |
 | Design review of the wireframes (2026-10-28) | Summary keeps Balance, Income and Expenses only, with no sub-labels (M-04). No Unpaid or Envelopes cards; overdue is shown on rows only (M-13). No table title bar or sort dropdown; sorting by column headers on desktop only (M-05, M-06). % of salary removed for now (todo.md). Expense amounts shown without a minus sign |

@@ -185,8 +185,8 @@ Every authenticated page lives in the `(app)` route group, whose layout renders 
 - **Sidebar** (`AppSidebar`): logo and name, nav groups, and the theme toggle pinned to the bottom. The current page uses `bg-primary-soft text-primary-text` and `aria-current="page"`.
 - **Bottom tab bar** (`BottomTabBar`): fixed, 44px-high targets, safe-area padding. **More** opens a bottom sheet with the remaining pages and **Theme**.
 - **Top bar** (`TopBar`): the page title (`h1`).
-- **Scrolling**: from `lg` the page scrolls inside a fixed-height region beside the sidebar. A table card can scroll on its own with a pinned header, so summary cards, filters and pagination stay in view. Below `lg` the whole page scrolls.
-- **Pagination** is pinned to the bottom of the viewport on desktop, centred in the area beside the sidebar. On smaller screens it sits under the table.
+- **Scrolling**: from `lg` the page scrolls inside a fixed-height region beside the sidebar. A table card can scroll on its own with a pinned header, so summary cards and filters stay in view; the pagination footer is part of the card. Below `lg` the whole page scrolls.
+- **Pagination** is a footer inside the table card, separated by a border. From `lg` it shows the count and numbered pages; below `lg` it shows previous, "Page X of N" and next.
 
 Page content pattern:
 

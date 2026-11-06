@@ -140,7 +140,7 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 
 #### T-12 Expense hooks
 - `use-expenses.ts`:
-  - `useMonthExpensesPage(periodId, page, sort)`: one page of 20 (`getPage`, T-02) with the sort params from T-06 in the query key, keeping the previous page visible while the next loads (`placeholderData`). Built like `usePagedList`, adapted to the API's `{ data, total, totalAmount, page, limit }` body. Exposes `totalAmount` for the summary cards.
+  - `useMonthExpensesPage(periodId, page, sort)`: one page of 10 (`getPage`, T-02) with the sort params from T-06 in the query key, keeping the previous page visible while the next loads (`placeholderData`). Built like `usePagedList`, adapted to the API's `{ data, total, totalAmount, page, limit }` body. Exposes `totalAmount` for the summary cards.
   - `useCreateExpense`, `useUpdateExpense`, `useDeleteExpense`, invalidating the month's expense pages.
 - `useUpdateExpense` supports an **optimistic** update, used by mark paid (T-25).
 - **Status: done (2026-11-04).** `useUpdateExpense({ optimistic: true })` patches description, amount and dates in every cached page and restores them on error; lookup changes wait for the server. All expense queries share the `["expenses"]` key, so any mutation refreshes every month and page it may touch.
@@ -189,9 +189,9 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
   - overdue due dates in red with the alert icon and a screen-reader label;
   - the real names of lookups, even deleted ones (they come with the expense);
   - the empty state "No expenses yet";
-  - **pagination** with the existing `Pagination` component (pinned to the bottom on desktop, hidden for a single page); the page kept in the address (`&page=2`); back to page 1 on month change and after adding an expense; the previous page shown when the last one empties;
+  - **pagination** with the existing `Pagination` component (a footer inside the table card with the count and numbered pages; with a single page only the count remains); the page kept in the address (`&page=2`); back to page 1 on month change and after adding an expense; the previous page shown when the last one empties;
   - clicking a row selects it (the details panel opens in T-24).
-- **Done when:** the M-05 acceptance criteria pass with a 45-expense fixture (pages of 20, 20 and 5).
+- **Done when:** the M-05 acceptance criteria pass with a 45-expense fixture (pages of 10, 10, 10, 10 and 5).
 
 #### T-21 Sortable columns (M-06)
 - **Includes:** Item, Category, Payment, Due, Paid and Amount headers become sort buttons (reuse `SortableHeader`), three-state cycle, `aria-sort`, sort sent to the server via T-06 and T-12, back to page 1 on change, kept in the address and remembered on this device. # is never sortable and stays a plain label.
@@ -201,7 +201,7 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 #### T-22 Phone layout (M-05, M-04)
 - **Includes:**
   - below `lg`, the table becomes the list from the phone frame: checkbox, item, type chip, "Due / Paid / Overdue" line, and the amount on the right;
-  - the pagination under the list (not pinned);
+  - the pagination footer under the list inside the card;
   - the Balance card holds Income and Expenses;
   - the envelope strip scrolls sideways;
   - the floating add button;

@@ -47,7 +47,7 @@ function makePage(data: Expense[], overrides: Partial<ExpensePage> = {}) {
 		total: data.length,
 		totalAmount: 100 * data.length,
 		page: 1,
-		limit: 20,
+		limit: 10,
 		...overrides
 	}
 }
@@ -67,7 +67,7 @@ describe("useMonthExpensesPage", () => {
 		expect(getPage).toHaveBeenCalledWith("expenses", {
 			budgetPeriodId: "p1",
 			page: 2,
-			limit: 20,
+			limit: 10,
 			sortBy: "createdAt",
 			sortOrder: "desc"
 		})

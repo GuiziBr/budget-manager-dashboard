@@ -21,7 +21,7 @@ import type {
 /** Every expense query starts with this key, so invalidating it refreshes all of them. */
 export const EXPENSES_QUERY_KEY = ["expenses"] as const
 
-export const EXPENSES_PAGE_SIZE = 20
+export const EXPENSES_PAGE_SIZE = 10
 
 export function monthExpensesQueryKey(
 	periodId: Id | undefined,
