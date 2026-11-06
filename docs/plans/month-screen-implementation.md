@@ -168,9 +168,10 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 - **Done when:** each state matches its `design.pen` frame (Not opened, Past month).
 
 #### T-18 Summary cards (M-04)
-- **Includes:** Income (with View all, wired in T-23), Expenses (with the "Envelope spend not included yet" note while spend is missing) and Balance, in that order; totals from T-05, using `totalAmount` from T-12, so they don't depend on the page on screen.
+- **Includes:** Income (with View all, wired in T-23), Expenses and Balance, in that order; totals from T-05, using `totalAmount` from T-12, so they don't depend on the page on screen.
 - **Done when:** the M-04 acceptance criteria pass.
-- Show the "Envelope spend not included yet" note on the Expenses card only when `totals` reports that some envelope's spend is unavailable.
+- No note on the Expenses card when envelope spend is missing (dropped 2026-11-05); a `null` spend counts as 0. Amounts show "$" with 30px values, as in `design.pen`.
+- **Status: done (2026-11-05).** `useMonthSummary(periodId)` combines page 1 of the expenses (`totalAmount`), the incomes and the envelopes into `totals`; `SummaryCards` renders for open and closed months. The Income card shows no `+` sign. The phone layout (Balance holding Income and Expenses) is T-22.
 
 #### T-19 Envelopes card (M-04, M-11)
 - **Includes:** a 4-column grid with name, spent / allocated and a bar; over-budget first and in the danger colour; the "{n} over budget" pill; Hide / Show remembered in `localStorage` (wrapped in try/catch); spend placeholder "—" until the API exists; clicking an envelope opens its details (wired in T-24).

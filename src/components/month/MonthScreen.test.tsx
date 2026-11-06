@@ -50,12 +50,19 @@ describe("MonthScreen states", () => {
 			.spyOn(api, "get")
 			.mockRejectedValueOnce(new ApiError("boom", 500))
 			.mockResolvedValue([make(2026, 11)])
+		vi.spyOn(api, "getPage").mockReturnValue(new Promise(() => {}))
 		const user = setup()
 		expect(await screen.findByRole("alert")).toHaveTextContent(
 			"Something went wrong. Try again."
 		)
 		await user.click(screen.getByRole("button", { name: "Retry" }))
-		await vi.waitFor(() => expect(get).toHaveBeenCalledTimes(2))
+		await vi.waitFor(() =>
+			expect(
+				get.mock.calls.filter(([endpoint]) =>
+					String(endpoint).includes("budget-periods")
+				)
+			).toHaveLength(2)
+		)
 		await vi.waitFor(() =>
 			expect(screen.queryByRole("alert")).not.toBeInTheDocument()
 		)
@@ -102,8 +109,58 @@ describe("MonthScreen states", () => {
 		).toBeInTheDocument()
 	})
 
+	it("offers a Closed pill that explains the closed month", async () => {
+		nav.search = "period=2026-10"
+		vi.spyOn(api, "get").mockResolvedValue([make(2026, 10)])
+		const user = setup()
+		await user.click(await screen.findByRole("button", { name: "Closed" }))
+		expect(
+			await screen.findAllByText(
+				"October 2026 is closed. You can view it but not change it."
+			)
+		).toHaveLength(2)
+	})
+
+	it("shows the summary cards for an opened month, also a closed one", async () => {
+		vi.spyOn(api, "getPage").mockResolvedValue({
+			data: [],
+			total: 0,
+			totalAmount: 0,
+			page: 1,
+			limit: 20
+		} as never)
+		vi.spyOn(api, "get").mockImplementation(((endpoint: string) =>
+			Promise.resolve(
+				endpoint.includes("budget-periods")
+					? [make(2026, 11), make(2026, 10)]
+					: []
+			)) as never)
+		nav.search = "period=2026-10"
+		setup()
+		expect(
+			await screen.findByRole("region", { name: "Month summary" })
+		).toBeInTheDocument()
+	})
+
+	it("shows no summary cards for a month that isn't opened", async () => {
+		vi.spyOn(api, "get").mockResolvedValue([])
+		setup()
+		await screen.findByText(/hasn't been opened/)
+		expect(screen.queryByRole("region", { name: "Month summary" })).toBeNull()
+	})
+
 	it("shows no state message for an opened current month", async () => {
-		vi.spyOn(api, "get").mockResolvedValue([make(2026, 11)])
+		vi.spyOn(api, "getPage").mockResolvedValue({
+			data: [],
+			total: 0,
+			totalAmount: 0,
+			page: 1,
+			limit: 20
+		} as never)
+		vi.spyOn(api, "get").mockImplementation(((endpoint: string) =>
+			Promise.resolve(
+				endpoint.includes("budget-periods") ? [make(2026, 11)] : []
+			)) as never)
 		setup()
 		await vi.waitFor(() =>
 			expect(screen.queryByRole("status")).not.toBeInTheDocument()
