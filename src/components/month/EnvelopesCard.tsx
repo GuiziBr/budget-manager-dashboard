@@ -31,7 +31,8 @@ interface EnvelopesCardProps {
 	onSelectEnvelope?: (envelope: BudgetEnvelope) => void
 }
 
-const money = (value: number) => formatCad(value, { compact: true })
+const money = (value: number) =>
+	`${translations.month.summary.currency}${formatCad(value, { compact: true })}`
 
 type NamedEnvelopeStatus = EnvelopeStatus & { categoryName: string }
 
