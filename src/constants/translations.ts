@@ -38,7 +38,16 @@ export const translations = {
 		next: "Next month: {month}",
 		switcherLabel: "{month}, choose a month",
 		moreActions: "Month actions",
-		noOpenedMonths: "No opened months yet"
+		noOpenedMonths: "No opened months yet",
+		states: {
+			loading: "Loading month",
+			errorTitle: "Couldn't load your months",
+			retry: "Retry",
+			notOpenedTitle: "{month} hasn't been opened yet",
+			openMonth: "Open {month}",
+			notTracked: "{month} wasn't tracked in the app",
+			closedBanner: "{month} is closed. You can view it but not change it."
+		}
 	},
 	errors: {
 		monthExists: "{month} is already open.",
