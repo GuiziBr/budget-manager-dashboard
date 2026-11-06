@@ -49,6 +49,18 @@ export const translations = {
 			currency: "$",
 			viewAll: "View all"
 		},
+		envelopes: {
+			label: "Envelopes",
+			title: "Envelopes",
+			loading: "Loading envelopes",
+			loadError: "Couldn't load the envelopes",
+			hide: "Hide",
+			show: "Show",
+			overBudget: "{n} over budget",
+			unavailable: "—",
+			deletedCategory: "(deleted)",
+			ofAllocated: "{spent} / {allocated}"
+		},
 		states: {
 			loading: "Loading month",
 			errorTitle: "Couldn't load your months",
