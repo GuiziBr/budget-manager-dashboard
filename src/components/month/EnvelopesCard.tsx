@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { translations } from "@/constants/translations"
 import { useMonthEnvelopes } from "@/hooks/use-budget-envelopes"
 import { useCategories } from "@/hooks/use-categories"
+import { PHONE_QUERY, useMediaQuery } from "@/hooks/use-media-query"
 import { usePersistedBoolean } from "@/hooks/use-persisted-boolean"
 import { getApiErrorMessage } from "@/lib/api-error-message"
 import { formatCad } from "@/lib/money"
@@ -84,6 +85,55 @@ function EnvelopeTile({
 	)
 }
 
+function PhoneEnvelopeTile({
+	status,
+	onSelect
+}: {
+	status: NamedEnvelopeStatus
+	onSelect?: (envelope: BudgetEnvelope) => void
+}) {
+	const t = translations.month.envelopes
+	const { categoryName, allocated, spent, ratio, overBudget, envelope } = status
+
+	return (
+		<li className="shrink-0">
+			<button
+				type="button"
+				onClick={() => onSelect?.(envelope)}
+				className={cn(
+					"flex w-[136px] flex-col gap-2 rounded-[14px] border bg-card p-3.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+					overBudget ? "border-danger" : "border-border"
+				)}
+			>
+				<span className="truncate text-[13px] font-medium text-foreground">
+					{categoryName}
+				</span>
+				<span className="flex items-end gap-[3px]">
+					<span
+						className={cn(
+							"text-base font-semibold font-[family-name:var(--font-roboto)]",
+							overBudget ? "text-danger" : "text-foreground"
+						)}
+					>
+						{spent === null ? t.unavailable : money(spent)}
+					</span>
+					<span className="text-[11px] text-muted-foreground">
+						/ {money(allocated)}
+					</span>
+				</span>
+				{ratio !== null && (
+					<Progress
+						value={ratio * 100}
+						variant={overBudget ? "danger" : "default"}
+						aria-label={categoryName}
+						className="h-[5px]"
+					/>
+				)}
+			</button>
+		</li>
+	)
+}
+
 export function EnvelopesCard({
 	periodId,
 	onSelectEnvelope
@@ -91,6 +141,7 @@ export function EnvelopesCard({
 	const t = translations.month.envelopes
 	const envelopes = useMonthEnvelopes(periodId)
 	const categories = useCategories()
+	const isPhone = useMediaQuery(PHONE_QUERY)
 	const [collapsed, setCollapsed] = usePersistedBoolean(
 		ENVELOPES_COLLAPSED_KEY,
 		false
@@ -145,6 +196,41 @@ export function EnvelopesCard({
 
 	const overCount = statuses.filter((s) => s.overBudget).length
 	const bodyId = "month-envelopes-body"
+
+	if (isPhone) {
+		const left = statuses.reduce(
+			(sum, s) => sum + s.allocated - (s.spent ?? 0),
+			0
+		)
+		return (
+			<section aria-label={t.label} className="flex flex-col gap-2.5">
+				<div className="flex items-center justify-between pt-1">
+					<div className="flex items-center gap-2">
+						<h2 className="text-base font-semibold text-foreground">
+							{t.title}
+						</h2>
+						{overCount > 0 && (
+							<Badge variant="danger" className="px-2 font-semibold">
+								{t.overBudgetShort.replace("{n}", String(overCount))}
+							</Badge>
+						)}
+					</div>
+					<span className="text-[13px] font-medium text-muted-foreground">
+						{t.left.replace("{amount}", money(left))}
+					</span>
+				</div>
+				<ul className="flex gap-2.5 overflow-x-auto">
+					{statuses.map((status) => (
+						<PhoneEnvelopeTile
+							key={status.envelope.id}
+							status={status}
+							onSelect={onSelectEnvelope}
+						/>
+					))}
+				</ul>
+			</section>
+		)
+	}
 
 	return (
 		<section aria-label={t.label}>

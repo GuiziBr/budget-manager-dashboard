@@ -128,3 +128,32 @@ describe("EnvelopesCard", () => {
 		await vi.waitFor(() => expect(spy.mock.calls.length).toBeGreaterThan(calls))
 	})
 })
+
+describe("EnvelopesCard on a phone", () => {
+	afterEach(() => vi.unstubAllGlobals())
+
+	const stubPhone = () =>
+		vi.stubGlobal("matchMedia", (query: string) => ({
+			matches: true,
+			media: query,
+			addEventListener: () => {},
+			removeEventListener: () => {}
+		}))
+
+	it("shows a sideways strip with the short pill and what is left", async () => {
+		stubPhone()
+		mockApi([env("e1", "c1", 350, 192.54), env("e2", "c2", 190, 214.6)])
+		const onSelect = vi.fn()
+		setup(onSelect)
+		const items = await screen.findAllByRole("listitem")
+		expect(items[0]).toHaveTextContent("Dining")
+		expect(items[0]).toHaveTextContent("214.60/ 190.00")
+		expect(screen.getByText("1 over")).toBeInTheDocument()
+		expect(screen.getByText("132.86 left")).toBeInTheDocument()
+		expect(
+			screen.queryByRole("button", { name: /Hide|Show/ })
+		).not.toBeInTheDocument()
+		await userEvent.click(screen.getByRole("button", { name: /Groceries/ }))
+		expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ id: "e1" }))
+	})
+})
