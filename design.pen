@@ -819,7 +819,7 @@
                                       "id": "a84XZ",
                                       "name": "Spent",
                                       "fill": "$danger",
-                                      "content": "214.60",
+                                      "content": "$214.60",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -829,7 +829,7 @@
                                       "id": "BiH2R",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 190.00",
+                                      "content": "/ $190.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -902,7 +902,7 @@
                                       "id": "oYGZ5",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "192.54",
+                                      "content": "$192.54",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -912,7 +912,7 @@
                                       "id": "Ma2yf",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 350.00",
+                                      "content": "/ $350.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -985,7 +985,7 @@
                                       "id": "CDE0g",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "32.44",
+                                      "content": "$32.44",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -995,7 +995,7 @@
                                       "id": "mC7C4",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 82.00",
+                                      "content": "/ $82.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -1068,7 +1068,7 @@
                                       "id": "ajodt",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "60.48",
+                                      "content": "$60.48",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -1078,7 +1078,7 @@
                                       "id": "DtY14",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 300.00",
+                                      "content": "/ $300.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -1160,7 +1160,7 @@
                                       "id": "HbMRh",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "12.30",
+                                      "content": "$12.30",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -1170,7 +1170,7 @@
                                       "id": "sHz5M",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 25.00",
+                                      "content": "/ $25.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -1243,7 +1243,7 @@
                                       "id": "eCI7E",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "4.50",
+                                      "content": "$4.50",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -1253,7 +1253,7 @@
                                       "id": "rALa1",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 7.00",
+                                      "content": "/ $7.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -1326,7 +1326,7 @@
                                       "id": "WPAfJ",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "0.00",
+                                      "content": "$0.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -1336,7 +1336,7 @@
                                       "id": "CNzQj",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 2.00",
+                                      "content": "/ $2.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -4809,6 +4809,41 @@
                           ]
                         }
                       ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "FCUA4",
+                      "name": "Collapse Toggle",
+                      "height": 32,
+                      "cornerRadius": 10,
+                      "gap": 6,
+                      "padding": [
+                        0,
+                        10
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "r1kZs3",
+                          "name": "Label",
+                          "fill": "$muted-foreground",
+                          "content": "Hide",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "LoCNP",
+                          "name": "Chevron",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "chevron-up",
+                          "library": "lucide",
+                          "fill": "$muted-foreground"
+                        }
+                      ]
                     }
                   ]
                 },
@@ -4824,7 +4859,7 @@
                       "type": "frame",
                       "id": "V6uzsW",
                       "name": "Envelope Restaurants",
-                      "width": 136,
+                      "width": 160,
                       "fill": "$card",
                       "cornerRadius": 14,
                       "stroke": "$danger",
@@ -4855,7 +4890,7 @@
                               "id": "gPa9W",
                               "name": "Spent",
                               "fill": "$danger",
-                              "content": "214.60",
+                              "content": "$214.60",
                               "fontFamily": "$font-metric",
                               "fontSize": 16,
                               "fontWeight": "600"
@@ -4865,7 +4900,7 @@
                               "id": "U7h4ts",
                               "name": "Allocated",
                               "fill": "$muted-foreground",
-                              "content": "/ 190.00",
+                              "content": "/ $190.00",
                               "fontFamily": "$font-body",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -4877,7 +4912,7 @@
                           "id": "Ajeay",
                           "name": "Track",
                           "clip": true,
-                          "width": 108,
+                          "width": 132,
                           "height": 5,
                           "fill": "$muted",
                           "cornerRadius": 3,
@@ -4891,7 +4926,7 @@
                               "y": 0,
                               "name": "Bar",
                               "fill": "$danger",
-                              "width": 108,
+                              "width": 132,
                               "height": 5
                             }
                           ]
@@ -4902,7 +4937,7 @@
                       "type": "frame",
                       "id": "MUHUd",
                       "name": "Envelope Grocery",
-                      "width": 136,
+                      "width": 160,
                       "fill": "$card",
                       "cornerRadius": 14,
                       "stroke": "$border",
@@ -4933,7 +4968,7 @@
                               "id": "tqdS8",
                               "name": "Spent",
                               "fill": "$foreground",
-                              "content": "192.54",
+                              "content": "$192.54",
                               "fontFamily": "$font-metric",
                               "fontSize": 16,
                               "fontWeight": "600"
@@ -4943,7 +4978,7 @@
                               "id": "hUyO3",
                               "name": "Allocated",
                               "fill": "$muted-foreground",
-                              "content": "/ 350.00",
+                              "content": "/ $350.00",
                               "fontFamily": "$font-body",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -4955,7 +4990,7 @@
                           "id": "ChKcw",
                           "name": "Track",
                           "clip": true,
-                          "width": 108,
+                          "width": 132,
                           "height": 5,
                           "fill": "$muted",
                           "cornerRadius": 3,
@@ -4969,7 +5004,7 @@
                               "y": 0,
                               "name": "Bar",
                               "fill": "$primary-text",
-                              "width": 59,
+                              "width": 72,
                               "height": 5
                             }
                           ]
@@ -4980,7 +5015,7 @@
                       "type": "frame",
                       "id": "K0RRBN",
                       "name": "Envelope Fuel",
-                      "width": 136,
+                      "width": 160,
                       "fill": "$card",
                       "cornerRadius": 14,
                       "stroke": "$border",
@@ -5011,7 +5046,7 @@
                               "id": "Fp42K",
                               "name": "Spent",
                               "fill": "$foreground",
-                              "content": "32.44",
+                              "content": "$32.44",
                               "fontFamily": "$font-metric",
                               "fontSize": 16,
                               "fontWeight": "600"
@@ -5021,7 +5056,7 @@
                               "id": "BaGD3",
                               "name": "Allocated",
                               "fill": "$muted-foreground",
-                              "content": "/ 82.00",
+                              "content": "/ $82.00",
                               "fontFamily": "$font-body",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -5033,7 +5068,7 @@
                           "id": "Emlkr",
                           "name": "Track",
                           "clip": true,
-                          "width": 108,
+                          "width": 132,
                           "height": 5,
                           "fill": "$muted",
                           "cornerRadius": 3,
@@ -5047,7 +5082,7 @@
                               "y": 0,
                               "name": "Bar",
                               "fill": "$primary-text",
-                              "width": 43,
+                              "width": 53,
                               "height": 5
                             }
                           ]
@@ -5058,7 +5093,7 @@
                       "type": "frame",
                       "id": "Ue6HO",
                       "name": "Envelope Baby Stuff",
-                      "width": 136,
+                      "width": 160,
                       "fill": "$card",
                       "cornerRadius": 14,
                       "stroke": "$border",
@@ -5089,7 +5124,7 @@
                               "id": "PwcU5",
                               "name": "Spent",
                               "fill": "$foreground",
-                              "content": "60.48",
+                              "content": "$60.48",
                               "fontFamily": "$font-metric",
                               "fontSize": 16,
                               "fontWeight": "600"
@@ -5099,7 +5134,7 @@
                               "id": "nYVSC",
                               "name": "Allocated",
                               "fill": "$muted-foreground",
-                              "content": "/ 300.00",
+                              "content": "/ $300.00",
                               "fontFamily": "$font-body",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -5111,7 +5146,7 @@
                           "id": "TCvIK",
                           "name": "Track",
                           "clip": true,
-                          "width": 108,
+                          "width": 132,
                           "height": 5,
                           "fill": "$muted",
                           "cornerRadius": 3,
@@ -5125,7 +5160,7 @@
                               "y": 0,
                               "name": "Bar",
                               "fill": "$primary-text",
-                              "width": 22,
+                              "width": 27,
                               "height": 5
                             }
                           ]
@@ -5136,7 +5171,7 @@
                       "type": "frame",
                       "id": "l3oQj",
                       "name": "Envelope Shopping",
-                      "width": 136,
+                      "width": 160,
                       "fill": "$card",
                       "cornerRadius": 14,
                       "stroke": "$border",
@@ -5167,7 +5202,7 @@
                               "id": "CQd7L",
                               "name": "Spent",
                               "fill": "$foreground",
-                              "content": "12.30",
+                              "content": "$12.30",
                               "fontFamily": "$font-metric",
                               "fontSize": 16,
                               "fontWeight": "600"
@@ -5177,7 +5212,7 @@
                               "id": "V1ZId",
                               "name": "Allocated",
                               "fill": "$muted-foreground",
-                              "content": "/ 25.00",
+                              "content": "/ $25.00",
                               "fontFamily": "$font-body",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -5189,7 +5224,7 @@
                           "id": "nfNv8",
                           "name": "Track",
                           "clip": true,
-                          "width": 108,
+                          "width": 132,
                           "height": 5,
                           "fill": "$muted",
                           "cornerRadius": 3,
@@ -5203,7 +5238,7 @@
                               "y": 0,
                               "name": "Bar",
                               "fill": "$primary-text",
-                              "width": 53,
+                              "width": 65,
                               "height": 5
                             }
                           ]
@@ -5214,7 +5249,7 @@
                       "type": "frame",
                       "id": "DSk8o",
                       "name": "Envelope Pharmacy",
-                      "width": 136,
+                      "width": 160,
                       "fill": "$card",
                       "cornerRadius": 14,
                       "stroke": "$border",
@@ -5245,7 +5280,7 @@
                               "id": "P8XQTw",
                               "name": "Spent",
                               "fill": "$foreground",
-                              "content": "4.50",
+                              "content": "$4.50",
                               "fontFamily": "$font-metric",
                               "fontSize": 16,
                               "fontWeight": "600"
@@ -5255,7 +5290,7 @@
                               "id": "xl2Kz",
                               "name": "Allocated",
                               "fill": "$muted-foreground",
-                              "content": "/ 7.00",
+                              "content": "/ $7.00",
                               "fontFamily": "$font-body",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -5267,7 +5302,7 @@
                           "id": "b0E5cj",
                           "name": "Track",
                           "clip": true,
-                          "width": 108,
+                          "width": 132,
                           "height": 5,
                           "fill": "$muted",
                           "cornerRadius": 3,
@@ -5281,7 +5316,7 @@
                               "y": 0,
                               "name": "Bar",
                               "fill": "$primary-text",
-                              "width": 69,
+                              "width": 84,
                               "height": 5
                             }
                           ]
@@ -5292,7 +5327,7 @@
                       "type": "frame",
                       "id": "jGR5O",
                       "name": "Envelope Parking",
-                      "width": 136,
+                      "width": 160,
                       "fill": "$card",
                       "cornerRadius": 14,
                       "stroke": "$border",
@@ -5323,7 +5358,7 @@
                               "id": "C40DqS",
                               "name": "Spent",
                               "fill": "$foreground",
-                              "content": "0.00",
+                              "content": "$0.00",
                               "fontFamily": "$font-metric",
                               "fontSize": 16,
                               "fontWeight": "600"
@@ -5333,7 +5368,7 @@
                               "id": "w1Gcv",
                               "name": "Allocated",
                               "fill": "$muted-foreground",
-                              "content": "/ 2.00",
+                              "content": "/ $2.00",
                               "fontFamily": "$font-body",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -5345,7 +5380,7 @@
                           "id": "sb9Is",
                           "name": "Track",
                           "clip": true,
-                          "width": 108,
+                          "width": 132,
                           "height": 5,
                           "fill": "$muted",
                           "cornerRadius": 3,
@@ -7841,7 +7876,7 @@
                                       "id": "jV0eq",
                                       "name": "Spent",
                                       "fill": "$danger",
-                                      "content": "214.60",
+                                      "content": "$214.60",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -7851,7 +7886,7 @@
                                       "id": "JOmNp",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 190.00",
+                                      "content": "/ $190.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -7924,7 +7959,7 @@
                                       "id": "qhsOx",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "192.54",
+                                      "content": "$192.54",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -7934,7 +7969,7 @@
                                       "id": "mfbY5",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 350.00",
+                                      "content": "/ $350.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -8007,7 +8042,7 @@
                                       "id": "UIEkc",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "32.44",
+                                      "content": "$32.44",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -8017,7 +8052,7 @@
                                       "id": "o96qn",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 82.00",
+                                      "content": "/ $82.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -8090,7 +8125,7 @@
                                       "id": "IejY9",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "60.48",
+                                      "content": "$60.48",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -8100,7 +8135,7 @@
                                       "id": "i3uS8",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 300.00",
+                                      "content": "/ $300.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -8182,7 +8217,7 @@
                                       "id": "JxrmO",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "12.30",
+                                      "content": "$12.30",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -8192,7 +8227,7 @@
                                       "id": "cPY8r",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 25.00",
+                                      "content": "/ $25.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -8265,7 +8300,7 @@
                                       "id": "skefS",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "4.50",
+                                      "content": "$4.50",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -8275,7 +8310,7 @@
                                       "id": "AFzEj",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 7.00",
+                                      "content": "/ $7.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -8348,7 +8383,7 @@
                                       "id": "iBLCo",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "0.00",
+                                      "content": "$0.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -8358,7 +8393,7 @@
                                       "id": "j4Pdt9",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 2.00",
+                                      "content": "/ $2.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -12854,7 +12889,7 @@
                                       "id": "i5vTLk",
                                       "name": "Spent",
                                       "fill": "$danger",
-                                      "content": "214.60",
+                                      "content": "$214.60",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -12864,7 +12899,7 @@
                                       "id": "lmbic",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 190.00",
+                                      "content": "/ $190.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -12937,7 +12972,7 @@
                                       "id": "umUvK",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "192.54",
+                                      "content": "$192.54",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -12947,7 +12982,7 @@
                                       "id": "T4HkmN",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 350.00",
+                                      "content": "/ $350.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -13020,7 +13055,7 @@
                                       "id": "y1mCy4",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "32.44",
+                                      "content": "$32.44",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -13030,7 +13065,7 @@
                                       "id": "Cykgn",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 82.00",
+                                      "content": "/ $82.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -13103,7 +13138,7 @@
                                       "id": "jez1r",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "60.48",
+                                      "content": "$60.48",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -13113,7 +13148,7 @@
                                       "id": "R1Wwca",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 300.00",
+                                      "content": "/ $300.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -13195,7 +13230,7 @@
                                       "id": "wViII",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "12.30",
+                                      "content": "$12.30",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -13205,7 +13240,7 @@
                                       "id": "kEa00",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 25.00",
+                                      "content": "/ $25.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -13278,7 +13313,7 @@
                                       "id": "bXWY9",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "4.50",
+                                      "content": "$4.50",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -13288,7 +13323,7 @@
                                       "id": "xeVpC",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 7.00",
+                                      "content": "/ $7.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -13361,7 +13396,7 @@
                                       "id": "gvtVv",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "0.00",
+                                      "content": "$0.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -13371,7 +13406,7 @@
                                       "id": "X3saE",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 2.00",
+                                      "content": "/ $2.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -18072,7 +18107,7 @@
                                       "id": "MJHdV",
                                       "name": "Spent",
                                       "fill": "$danger",
-                                      "content": "214.60",
+                                      "content": "$214.60",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -18082,7 +18117,7 @@
                                       "id": "Cs02M",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 190.00",
+                                      "content": "/ $190.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -18155,7 +18190,7 @@
                                       "id": "r4dmiE",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "192.54",
+                                      "content": "$192.54",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -18165,7 +18200,7 @@
                                       "id": "nfUGD",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 350.00",
+                                      "content": "/ $350.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -18238,7 +18273,7 @@
                                       "id": "DYKQU",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "32.44",
+                                      "content": "$32.44",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -18248,7 +18283,7 @@
                                       "id": "mmr51",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 82.00",
+                                      "content": "/ $82.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -18321,7 +18356,7 @@
                                       "id": "o27Vz",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "60.48",
+                                      "content": "$60.48",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -18331,7 +18366,7 @@
                                       "id": "zyAW1",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 300.00",
+                                      "content": "/ $300.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -18413,7 +18448,7 @@
                                       "id": "fyDCE",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "12.30",
+                                      "content": "$12.30",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -18423,7 +18458,7 @@
                                       "id": "bzYcL",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 25.00",
+                                      "content": "/ $25.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -18496,7 +18531,7 @@
                                       "id": "AeVTf",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "4.50",
+                                      "content": "$4.50",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -18506,7 +18541,7 @@
                                       "id": "iV8FN",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 7.00",
+                                      "content": "/ $7.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -18579,7 +18614,7 @@
                                       "id": "UbBw6",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "0.00",
+                                      "content": "$0.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -18589,7 +18624,7 @@
                                       "id": "K15lnh",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 2.00",
+                                      "content": "/ $2.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -25800,7 +25835,7 @@
                                       "id": "qldHy",
                                       "name": "Spent",
                                       "fill": "$danger",
-                                      "content": "214.60",
+                                      "content": "$214.60",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -25810,7 +25845,7 @@
                                       "id": "Xi70Z",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 190.00",
+                                      "content": "/ $190.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -25883,7 +25918,7 @@
                                       "id": "yxkWd",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "192.54",
+                                      "content": "$192.54",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -25893,7 +25928,7 @@
                                       "id": "nWu9D",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 350.00",
+                                      "content": "/ $350.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -25966,7 +26001,7 @@
                                       "id": "ggWTP",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "32.44",
+                                      "content": "$32.44",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -25976,7 +26011,7 @@
                                       "id": "rUM1b",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 82.00",
+                                      "content": "/ $82.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -26049,7 +26084,7 @@
                                       "id": "Qp9Ix",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "60.48",
+                                      "content": "$60.48",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -26059,7 +26094,7 @@
                                       "id": "Ve0iQ",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 300.00",
+                                      "content": "/ $300.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -26141,7 +26176,7 @@
                                       "id": "D6fNO",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "12.30",
+                                      "content": "$12.30",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -26151,7 +26186,7 @@
                                       "id": "XKART",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 25.00",
+                                      "content": "/ $25.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -26224,7 +26259,7 @@
                                       "id": "nGbiJ",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "4.50",
+                                      "content": "$4.50",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -26234,7 +26269,7 @@
                                       "id": "eDrKO",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 7.00",
+                                      "content": "/ $7.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -26307,7 +26342,7 @@
                                       "id": "pphxS",
                                       "name": "Spent",
                                       "fill": "$foreground",
-                                      "content": "0.00",
+                                      "content": "$0.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "600"
@@ -26317,7 +26352,7 @@
                                       "id": "iFlFN",
                                       "name": "Allocated",
                                       "fill": "$muted-foreground",
-                                      "content": "/ 2.00",
+                                      "content": "/ $2.00",
                                       "fontFamily": "$font-body",
                                       "fontSize": 12,
                                       "fontWeight": "normal"
@@ -29790,6 +29825,41 @@
                           ]
                         }
                       ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Nc6eZ",
+                      "name": "Collapse Toggle",
+                      "height": 32,
+                      "cornerRadius": 10,
+                      "gap": 6,
+                      "padding": [
+                        0,
+                        10
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "OkhlV",
+                          "name": "Label",
+                          "fill": "$muted-foreground",
+                          "content": "Hide",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "X6QFTF",
+                          "name": "Chevron",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "chevron-up",
+                          "library": "lucide",
+                          "fill": "$muted-foreground"
+                        }
+                      ]
                     }
                   ]
                 },
@@ -29805,7 +29875,7 @@
                       "type": "frame",
                       "id": "c47Iz",
                       "name": "Envelope Restaurants",
-                      "width": 136,
+                      "width": 160,
                       "fill": "$card",
                       "cornerRadius": 14,
                       "stroke": "$danger",
@@ -29836,7 +29906,7 @@
                               "id": "bWuua",
                               "name": "Spent",
                               "fill": "$danger",
-                              "content": "214.60",
+                              "content": "$214.60",
                               "fontFamily": "$font-metric",
                               "fontSize": 16,
                               "fontWeight": "600"
@@ -29846,7 +29916,7 @@
                               "id": "htoT4",
                               "name": "Allocated",
                               "fill": "$muted-foreground",
-                              "content": "/ 190.00",
+                              "content": "/ $190.00",
                               "fontFamily": "$font-body",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -29858,7 +29928,7 @@
                           "id": "zF25m",
                           "name": "Track",
                           "clip": true,
-                          "width": 108,
+                          "width": 132,
                           "height": 5,
                           "fill": "$muted",
                           "cornerRadius": 3,
@@ -29872,7 +29942,7 @@
                               "y": 0,
                               "name": "Bar",
                               "fill": "$danger",
-                              "width": 108,
+                              "width": 132,
                               "height": 5
                             }
                           ]
@@ -29883,7 +29953,7 @@
                       "type": "frame",
                       "id": "U7IGkn",
                       "name": "Envelope Grocery",
-                      "width": 136,
+                      "width": 160,
                       "fill": "$card",
                       "cornerRadius": 14,
                       "stroke": "$border",
@@ -29914,7 +29984,7 @@
                               "id": "Y6hogD",
                               "name": "Spent",
                               "fill": "$foreground",
-                              "content": "192.54",
+                              "content": "$192.54",
                               "fontFamily": "$font-metric",
                               "fontSize": 16,
                               "fontWeight": "600"
@@ -29924,7 +29994,7 @@
                               "id": "IyrLi",
                               "name": "Allocated",
                               "fill": "$muted-foreground",
-                              "content": "/ 350.00",
+                              "content": "/ $350.00",
                               "fontFamily": "$font-body",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -29936,7 +30006,7 @@
                           "id": "Rv286",
                           "name": "Track",
                           "clip": true,
-                          "width": 108,
+                          "width": 132,
                           "height": 5,
                           "fill": "$muted",
                           "cornerRadius": 3,
@@ -29950,7 +30020,7 @@
                               "y": 0,
                               "name": "Bar",
                               "fill": "$primary-text",
-                              "width": 59,
+                              "width": 72,
                               "height": 5
                             }
                           ]
@@ -29961,7 +30031,7 @@
                       "type": "frame",
                       "id": "qwaW7",
                       "name": "Envelope Fuel",
-                      "width": 136,
+                      "width": 160,
                       "fill": "$card",
                       "cornerRadius": 14,
                       "stroke": "$border",
@@ -29992,7 +30062,7 @@
                               "id": "g1Dot",
                               "name": "Spent",
                               "fill": "$foreground",
-                              "content": "32.44",
+                              "content": "$32.44",
                               "fontFamily": "$font-metric",
                               "fontSize": 16,
                               "fontWeight": "600"
@@ -30002,7 +30072,7 @@
                               "id": "w16QP",
                               "name": "Allocated",
                               "fill": "$muted-foreground",
-                              "content": "/ 82.00",
+                              "content": "/ $82.00",
                               "fontFamily": "$font-body",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -30014,7 +30084,7 @@
                           "id": "nuM8I",
                           "name": "Track",
                           "clip": true,
-                          "width": 108,
+                          "width": 132,
                           "height": 5,
                           "fill": "$muted",
                           "cornerRadius": 3,
@@ -30028,7 +30098,7 @@
                               "y": 0,
                               "name": "Bar",
                               "fill": "$primary-text",
-                              "width": 43,
+                              "width": 53,
                               "height": 5
                             }
                           ]
@@ -30039,7 +30109,7 @@
                       "type": "frame",
                       "id": "hqFV2",
                       "name": "Envelope Baby Stuff",
-                      "width": 136,
+                      "width": 160,
                       "fill": "$card",
                       "cornerRadius": 14,
                       "stroke": "$border",
@@ -30070,7 +30140,7 @@
                               "id": "DlXFZ",
                               "name": "Spent",
                               "fill": "$foreground",
-                              "content": "60.48",
+                              "content": "$60.48",
                               "fontFamily": "$font-metric",
                               "fontSize": 16,
                               "fontWeight": "600"
@@ -30080,7 +30150,7 @@
                               "id": "sa80V",
                               "name": "Allocated",
                               "fill": "$muted-foreground",
-                              "content": "/ 300.00",
+                              "content": "/ $300.00",
                               "fontFamily": "$font-body",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -30092,7 +30162,7 @@
                           "id": "v3hHq",
                           "name": "Track",
                           "clip": true,
-                          "width": 108,
+                          "width": 132,
                           "height": 5,
                           "fill": "$muted",
                           "cornerRadius": 3,
@@ -30106,7 +30176,7 @@
                               "y": 0,
                               "name": "Bar",
                               "fill": "$primary-text",
-                              "width": 22,
+                              "width": 27,
                               "height": 5
                             }
                           ]
@@ -30117,7 +30187,7 @@
                       "type": "frame",
                       "id": "uJ10t",
                       "name": "Envelope Shopping",
-                      "width": 136,
+                      "width": 160,
                       "fill": "$card",
                       "cornerRadius": 14,
                       "stroke": "$border",
@@ -30148,7 +30218,7 @@
                               "id": "DA6fd",
                               "name": "Spent",
                               "fill": "$foreground",
-                              "content": "12.30",
+                              "content": "$12.30",
                               "fontFamily": "$font-metric",
                               "fontSize": 16,
                               "fontWeight": "600"
@@ -30158,7 +30228,7 @@
                               "id": "IzMrq",
                               "name": "Allocated",
                               "fill": "$muted-foreground",
-                              "content": "/ 25.00",
+                              "content": "/ $25.00",
                               "fontFamily": "$font-body",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -30170,7 +30240,7 @@
                           "id": "T7HMjD",
                           "name": "Track",
                           "clip": true,
-                          "width": 108,
+                          "width": 132,
                           "height": 5,
                           "fill": "$muted",
                           "cornerRadius": 3,
@@ -30184,7 +30254,7 @@
                               "y": 0,
                               "name": "Bar",
                               "fill": "$primary-text",
-                              "width": 53,
+                              "width": 65,
                               "height": 5
                             }
                           ]
@@ -30195,7 +30265,7 @@
                       "type": "frame",
                       "id": "Gk9tA",
                       "name": "Envelope Pharmacy",
-                      "width": 136,
+                      "width": 160,
                       "fill": "$card",
                       "cornerRadius": 14,
                       "stroke": "$border",
@@ -30226,7 +30296,7 @@
                               "id": "je6Bx",
                               "name": "Spent",
                               "fill": "$foreground",
-                              "content": "4.50",
+                              "content": "$4.50",
                               "fontFamily": "$font-metric",
                               "fontSize": 16,
                               "fontWeight": "600"
@@ -30236,7 +30306,7 @@
                               "id": "nceN5",
                               "name": "Allocated",
                               "fill": "$muted-foreground",
-                              "content": "/ 7.00",
+                              "content": "/ $7.00",
                               "fontFamily": "$font-body",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -30248,7 +30318,7 @@
                           "id": "kfAmr",
                           "name": "Track",
                           "clip": true,
-                          "width": 108,
+                          "width": 132,
                           "height": 5,
                           "fill": "$muted",
                           "cornerRadius": 3,
@@ -30262,7 +30332,7 @@
                               "y": 0,
                               "name": "Bar",
                               "fill": "$primary-text",
-                              "width": 69,
+                              "width": 84,
                               "height": 5
                             }
                           ]
@@ -30273,7 +30343,7 @@
                       "type": "frame",
                       "id": "GHWV9",
                       "name": "Envelope Parking",
-                      "width": 136,
+                      "width": 160,
                       "fill": "$card",
                       "cornerRadius": 14,
                       "stroke": "$border",
@@ -30304,7 +30374,7 @@
                               "id": "R57h8E",
                               "name": "Spent",
                               "fill": "$foreground",
-                              "content": "0.00",
+                              "content": "$0.00",
                               "fontFamily": "$font-metric",
                               "fontSize": 16,
                               "fontWeight": "600"
@@ -30314,7 +30384,7 @@
                               "id": "yfE4S",
                               "name": "Allocated",
                               "fill": "$muted-foreground",
-                              "content": "/ 2.00",
+                              "content": "/ $2.00",
                               "fontFamily": "$font-body",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -30326,7 +30396,7 @@
                           "id": "vcJRB",
                           "name": "Track",
                           "clip": true,
-                          "width": 108,
+                          "width": 132,
                           "height": 5,
                           "fill": "$muted",
                           "cornerRadius": 3,
@@ -36177,6 +36247,41 @@
                           ]
                         }
                       ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "apZRB",
+                      "name": "Collapse Toggle",
+                      "height": 32,
+                      "cornerRadius": 10,
+                      "gap": 6,
+                      "padding": [
+                        0,
+                        10
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ITFog",
+                          "name": "Label",
+                          "fill": "$muted-foreground",
+                          "content": "Hide",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "mOkwc",
+                          "name": "Chevron",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "chevron-up",
+                          "library": "lucide",
+                          "fill": "$muted-foreground"
+                        }
+                      ]
                     }
                   ]
                 },
@@ -36192,7 +36297,7 @@
                       "type": "frame",
                       "id": "b0oXdG",
                       "name": "Envelope Restaurants",
-                      "width": 136,
+                      "width": 160,
                       "fill": "$card",
                       "cornerRadius": 14,
                       "stroke": "$danger",
@@ -36223,7 +36328,7 @@
                               "id": "njyDF",
                               "name": "Spent",
                               "fill": "$danger",
-                              "content": "214.60",
+                              "content": "$214.60",
                               "fontFamily": "$font-metric",
                               "fontSize": 16,
                               "fontWeight": "600"
@@ -36233,7 +36338,7 @@
                               "id": "MKtaI",
                               "name": "Allocated",
                               "fill": "$muted-foreground",
-                              "content": "/ 190.00",
+                              "content": "/ $190.00",
                               "fontFamily": "$font-body",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -36245,7 +36350,7 @@
                           "id": "fZA9T",
                           "name": "Track",
                           "clip": true,
-                          "width": 108,
+                          "width": 132,
                           "height": 5,
                           "fill": "$muted",
                           "cornerRadius": 3,
@@ -36259,7 +36364,7 @@
                               "y": 0,
                               "name": "Bar",
                               "fill": "$danger",
-                              "width": 108,
+                              "width": 132,
                               "height": 5
                             }
                           ]
@@ -36270,7 +36375,7 @@
                       "type": "frame",
                       "id": "ZfczO",
                       "name": "Envelope Grocery",
-                      "width": 136,
+                      "width": 160,
                       "fill": "$card",
                       "cornerRadius": 14,
                       "stroke": "$border",
@@ -36301,7 +36406,7 @@
                               "id": "Ej3jJ",
                               "name": "Spent",
                               "fill": "$foreground",
-                              "content": "192.54",
+                              "content": "$192.54",
                               "fontFamily": "$font-metric",
                               "fontSize": 16,
                               "fontWeight": "600"
@@ -36311,7 +36416,7 @@
                               "id": "i5VtI",
                               "name": "Allocated",
                               "fill": "$muted-foreground",
-                              "content": "/ 350.00",
+                              "content": "/ $350.00",
                               "fontFamily": "$font-body",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -36323,7 +36428,7 @@
                           "id": "I56qVg",
                           "name": "Track",
                           "clip": true,
-                          "width": 108,
+                          "width": 132,
                           "height": 5,
                           "fill": "$muted",
                           "cornerRadius": 3,
@@ -36337,7 +36442,7 @@
                               "y": 0,
                               "name": "Bar",
                               "fill": "$primary-text",
-                              "width": 59,
+                              "width": 72,
                               "height": 5
                             }
                           ]
@@ -36348,7 +36453,7 @@
                       "type": "frame",
                       "id": "aABiU",
                       "name": "Envelope Fuel",
-                      "width": 136,
+                      "width": 160,
                       "fill": "$card",
                       "cornerRadius": 14,
                       "stroke": "$border",
@@ -36379,7 +36484,7 @@
                               "id": "Q8XuAn",
                               "name": "Spent",
                               "fill": "$foreground",
-                              "content": "32.44",
+                              "content": "$32.44",
                               "fontFamily": "$font-metric",
                               "fontSize": 16,
                               "fontWeight": "600"
@@ -36389,7 +36494,7 @@
                               "id": "E7l9v",
                               "name": "Allocated",
                               "fill": "$muted-foreground",
-                              "content": "/ 82.00",
+                              "content": "/ $82.00",
                               "fontFamily": "$font-body",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -36401,7 +36506,7 @@
                           "id": "x8f7El",
                           "name": "Track",
                           "clip": true,
-                          "width": 108,
+                          "width": 132,
                           "height": 5,
                           "fill": "$muted",
                           "cornerRadius": 3,
@@ -36415,7 +36520,7 @@
                               "y": 0,
                               "name": "Bar",
                               "fill": "$primary-text",
-                              "width": 43,
+                              "width": 53,
                               "height": 5
                             }
                           ]
@@ -36426,7 +36531,7 @@
                       "type": "frame",
                       "id": "MpW9l",
                       "name": "Envelope Baby Stuff",
-                      "width": 136,
+                      "width": 160,
                       "fill": "$card",
                       "cornerRadius": 14,
                       "stroke": "$border",
@@ -36457,7 +36562,7 @@
                               "id": "GWl4X",
                               "name": "Spent",
                               "fill": "$foreground",
-                              "content": "60.48",
+                              "content": "$60.48",
                               "fontFamily": "$font-metric",
                               "fontSize": 16,
                               "fontWeight": "600"
@@ -36467,7 +36572,7 @@
                               "id": "LqmWP",
                               "name": "Allocated",
                               "fill": "$muted-foreground",
-                              "content": "/ 300.00",
+                              "content": "/ $300.00",
                               "fontFamily": "$font-body",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -36479,7 +36584,7 @@
                           "id": "n6FTa",
                           "name": "Track",
                           "clip": true,
-                          "width": 108,
+                          "width": 132,
                           "height": 5,
                           "fill": "$muted",
                           "cornerRadius": 3,
@@ -36493,7 +36598,7 @@
                               "y": 0,
                               "name": "Bar",
                               "fill": "$primary-text",
-                              "width": 22,
+                              "width": 27,
                               "height": 5
                             }
                           ]
@@ -36504,7 +36609,7 @@
                       "type": "frame",
                       "id": "YvD3A",
                       "name": "Envelope Shopping",
-                      "width": 136,
+                      "width": 160,
                       "fill": "$card",
                       "cornerRadius": 14,
                       "stroke": "$border",
@@ -36535,7 +36640,7 @@
                               "id": "Rlr5k",
                               "name": "Spent",
                               "fill": "$foreground",
-                              "content": "12.30",
+                              "content": "$12.30",
                               "fontFamily": "$font-metric",
                               "fontSize": 16,
                               "fontWeight": "600"
@@ -36545,7 +36650,7 @@
                               "id": "U7q5L",
                               "name": "Allocated",
                               "fill": "$muted-foreground",
-                              "content": "/ 25.00",
+                              "content": "/ $25.00",
                               "fontFamily": "$font-body",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -36557,7 +36662,7 @@
                           "id": "gew2J",
                           "name": "Track",
                           "clip": true,
-                          "width": 108,
+                          "width": 132,
                           "height": 5,
                           "fill": "$muted",
                           "cornerRadius": 3,
@@ -36571,7 +36676,7 @@
                               "y": 0,
                               "name": "Bar",
                               "fill": "$primary-text",
-                              "width": 53,
+                              "width": 65,
                               "height": 5
                             }
                           ]
@@ -36582,7 +36687,7 @@
                       "type": "frame",
                       "id": "QaC5T",
                       "name": "Envelope Pharmacy",
-                      "width": 136,
+                      "width": 160,
                       "fill": "$card",
                       "cornerRadius": 14,
                       "stroke": "$border",
@@ -36613,7 +36718,7 @@
                               "id": "Nkdvx",
                               "name": "Spent",
                               "fill": "$foreground",
-                              "content": "4.50",
+                              "content": "$4.50",
                               "fontFamily": "$font-metric",
                               "fontSize": 16,
                               "fontWeight": "600"
@@ -36623,7 +36728,7 @@
                               "id": "qpDqI",
                               "name": "Allocated",
                               "fill": "$muted-foreground",
-                              "content": "/ 7.00",
+                              "content": "/ $7.00",
                               "fontFamily": "$font-body",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -36635,7 +36740,7 @@
                           "id": "Gy2HN",
                           "name": "Track",
                           "clip": true,
-                          "width": 108,
+                          "width": 132,
                           "height": 5,
                           "fill": "$muted",
                           "cornerRadius": 3,
@@ -36649,7 +36754,7 @@
                               "y": 0,
                               "name": "Bar",
                               "fill": "$primary-text",
-                              "width": 69,
+                              "width": 84,
                               "height": 5
                             }
                           ]
@@ -36660,7 +36765,7 @@
                       "type": "frame",
                       "id": "oIzVy",
                       "name": "Envelope Parking",
-                      "width": 136,
+                      "width": 160,
                       "fill": "$card",
                       "cornerRadius": 14,
                       "stroke": "$border",
@@ -36691,7 +36796,7 @@
                               "id": "VUJYt",
                               "name": "Spent",
                               "fill": "$foreground",
-                              "content": "0.00",
+                              "content": "$0.00",
                               "fontFamily": "$font-metric",
                               "fontSize": 16,
                               "fontWeight": "600"
@@ -36701,7 +36806,7 @@
                               "id": "HdV2D",
                               "name": "Allocated",
                               "fill": "$muted-foreground",
-                              "content": "/ 2.00",
+                              "content": "/ $2.00",
                               "fontFamily": "$font-body",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -36713,7 +36818,7 @@
                           "id": "GUhQi",
                           "name": "Track",
                           "clip": true,
-                          "width": 108,
+                          "width": 132,
                           "height": 5,
                           "fill": "$muted",
                           "cornerRadius": 3,
@@ -38696,6 +38801,41 @@
                           ]
                         }
                       ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "v7DcJq",
+                      "name": "Collapse Toggle",
+                      "height": 32,
+                      "cornerRadius": 10,
+                      "gap": 6,
+                      "padding": [
+                        0,
+                        10
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "hz0WA",
+                          "name": "Label",
+                          "fill": "$muted-foreground",
+                          "content": "Hide",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "SCp3H",
+                          "name": "Chevron",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "chevron-up",
+                          "library": "lucide",
+                          "fill": "$muted-foreground"
+                        }
+                      ]
                     }
                   ]
                 },
@@ -38711,7 +38851,7 @@
                       "type": "frame",
                       "id": "k6CjM",
                       "name": "Envelope Restaurants",
-                      "width": 136,
+                      "width": 160,
                       "fill": "$card",
                       "cornerRadius": 14,
                       "stroke": "$danger",
@@ -38742,7 +38882,7 @@
                               "id": "lSmt8",
                               "name": "Spent",
                               "fill": "$danger",
-                              "content": "214.60",
+                              "content": "$214.60",
                               "fontFamily": "$font-metric",
                               "fontSize": 16,
                               "fontWeight": "600"
@@ -38752,7 +38892,7 @@
                               "id": "Tk426",
                               "name": "Allocated",
                               "fill": "$muted-foreground",
-                              "content": "/ 190.00",
+                              "content": "/ $190.00",
                               "fontFamily": "$font-body",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -38764,7 +38904,7 @@
                           "id": "O7mhu2",
                           "name": "Track",
                           "clip": true,
-                          "width": 108,
+                          "width": 132,
                           "height": 5,
                           "fill": "$muted",
                           "cornerRadius": 3,
@@ -38778,7 +38918,7 @@
                               "y": 0,
                               "name": "Bar",
                               "fill": "$danger",
-                              "width": 108,
+                              "width": 132,
                               "height": 5
                             }
                           ]
@@ -38789,7 +38929,7 @@
                       "type": "frame",
                       "id": "FwJ3G",
                       "name": "Envelope Grocery",
-                      "width": 136,
+                      "width": 160,
                       "fill": "$card",
                       "cornerRadius": 14,
                       "stroke": "$border",
@@ -38820,7 +38960,7 @@
                               "id": "T6PnYU",
                               "name": "Spent",
                               "fill": "$foreground",
-                              "content": "192.54",
+                              "content": "$192.54",
                               "fontFamily": "$font-metric",
                               "fontSize": 16,
                               "fontWeight": "600"
@@ -38830,7 +38970,7 @@
                               "id": "L6u73",
                               "name": "Allocated",
                               "fill": "$muted-foreground",
-                              "content": "/ 350.00",
+                              "content": "/ $350.00",
                               "fontFamily": "$font-body",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -38842,7 +38982,7 @@
                           "id": "eApit",
                           "name": "Track",
                           "clip": true,
-                          "width": 108,
+                          "width": 132,
                           "height": 5,
                           "fill": "$muted",
                           "cornerRadius": 3,
@@ -38856,7 +38996,7 @@
                               "y": 0,
                               "name": "Bar",
                               "fill": "$primary-text",
-                              "width": 59,
+                              "width": 72,
                               "height": 5
                             }
                           ]
@@ -38867,7 +39007,7 @@
                       "type": "frame",
                       "id": "czIeK",
                       "name": "Envelope Fuel",
-                      "width": 136,
+                      "width": 160,
                       "fill": "$card",
                       "cornerRadius": 14,
                       "stroke": "$border",
@@ -38898,7 +39038,7 @@
                               "id": "LNsCe",
                               "name": "Spent",
                               "fill": "$foreground",
-                              "content": "32.44",
+                              "content": "$32.44",
                               "fontFamily": "$font-metric",
                               "fontSize": 16,
                               "fontWeight": "600"
@@ -38908,7 +39048,7 @@
                               "id": "EqzkI",
                               "name": "Allocated",
                               "fill": "$muted-foreground",
-                              "content": "/ 82.00",
+                              "content": "/ $82.00",
                               "fontFamily": "$font-body",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -38920,7 +39060,7 @@
                           "id": "CpkrO",
                           "name": "Track",
                           "clip": true,
-                          "width": 108,
+                          "width": 132,
                           "height": 5,
                           "fill": "$muted",
                           "cornerRadius": 3,
@@ -38934,7 +39074,7 @@
                               "y": 0,
                               "name": "Bar",
                               "fill": "$primary-text",
-                              "width": 43,
+                              "width": 53,
                               "height": 5
                             }
                           ]
@@ -38945,7 +39085,7 @@
                       "type": "frame",
                       "id": "ZYUrj",
                       "name": "Envelope Baby Stuff",
-                      "width": 136,
+                      "width": 160,
                       "fill": "$card",
                       "cornerRadius": 14,
                       "stroke": "$border",
@@ -38976,7 +39116,7 @@
                               "id": "O8XcZ",
                               "name": "Spent",
                               "fill": "$foreground",
-                              "content": "60.48",
+                              "content": "$60.48",
                               "fontFamily": "$font-metric",
                               "fontSize": 16,
                               "fontWeight": "600"
@@ -38986,7 +39126,7 @@
                               "id": "bY0dp",
                               "name": "Allocated",
                               "fill": "$muted-foreground",
-                              "content": "/ 300.00",
+                              "content": "/ $300.00",
                               "fontFamily": "$font-body",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -38998,7 +39138,7 @@
                           "id": "XFsny",
                           "name": "Track",
                           "clip": true,
-                          "width": 108,
+                          "width": 132,
                           "height": 5,
                           "fill": "$muted",
                           "cornerRadius": 3,
@@ -39012,7 +39152,7 @@
                               "y": 0,
                               "name": "Bar",
                               "fill": "$primary-text",
-                              "width": 22,
+                              "width": 27,
                               "height": 5
                             }
                           ]
@@ -39023,7 +39163,7 @@
                       "type": "frame",
                       "id": "PzcGw",
                       "name": "Envelope Shopping",
-                      "width": 136,
+                      "width": 160,
                       "fill": "$card",
                       "cornerRadius": 14,
                       "stroke": "$border",
@@ -39054,7 +39194,7 @@
                               "id": "zltFQ",
                               "name": "Spent",
                               "fill": "$foreground",
-                              "content": "12.30",
+                              "content": "$12.30",
                               "fontFamily": "$font-metric",
                               "fontSize": 16,
                               "fontWeight": "600"
@@ -39064,7 +39204,7 @@
                               "id": "v4kwL",
                               "name": "Allocated",
                               "fill": "$muted-foreground",
-                              "content": "/ 25.00",
+                              "content": "/ $25.00",
                               "fontFamily": "$font-body",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -39076,7 +39216,7 @@
                           "id": "EYgo0",
                           "name": "Track",
                           "clip": true,
-                          "width": 108,
+                          "width": 132,
                           "height": 5,
                           "fill": "$muted",
                           "cornerRadius": 3,
@@ -39090,7 +39230,7 @@
                               "y": 0,
                               "name": "Bar",
                               "fill": "$primary-text",
-                              "width": 53,
+                              "width": 65,
                               "height": 5
                             }
                           ]
@@ -39101,7 +39241,7 @@
                       "type": "frame",
                       "id": "HSWNS",
                       "name": "Envelope Pharmacy",
-                      "width": 136,
+                      "width": 160,
                       "fill": "$card",
                       "cornerRadius": 14,
                       "stroke": "$border",
@@ -39132,7 +39272,7 @@
                               "id": "XCqfm",
                               "name": "Spent",
                               "fill": "$foreground",
-                              "content": "4.50",
+                              "content": "$4.50",
                               "fontFamily": "$font-metric",
                               "fontSize": 16,
                               "fontWeight": "600"
@@ -39142,7 +39282,7 @@
                               "id": "WQa5O",
                               "name": "Allocated",
                               "fill": "$muted-foreground",
-                              "content": "/ 7.00",
+                              "content": "/ $7.00",
                               "fontFamily": "$font-body",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -39154,7 +39294,7 @@
                           "id": "t769yY",
                           "name": "Track",
                           "clip": true,
-                          "width": 108,
+                          "width": 132,
                           "height": 5,
                           "fill": "$muted",
                           "cornerRadius": 3,
@@ -39168,7 +39308,7 @@
                               "y": 0,
                               "name": "Bar",
                               "fill": "$primary-text",
-                              "width": 69,
+                              "width": 84,
                               "height": 5
                             }
                           ]
@@ -39179,7 +39319,7 @@
                       "type": "frame",
                       "id": "vUEgb",
                       "name": "Envelope Parking",
-                      "width": 136,
+                      "width": 160,
                       "fill": "$card",
                       "cornerRadius": 14,
                       "stroke": "$border",
@@ -39210,7 +39350,7 @@
                               "id": "A34C35",
                               "name": "Spent",
                               "fill": "$foreground",
-                              "content": "0.00",
+                              "content": "$0.00",
                               "fontFamily": "$font-metric",
                               "fontSize": 16,
                               "fontWeight": "600"
@@ -39220,7 +39360,7 @@
                               "id": "E8MjW",
                               "name": "Allocated",
                               "fill": "$muted-foreground",
-                              "content": "/ 2.00",
+                              "content": "/ $2.00",
                               "fontFamily": "$font-body",
                               "fontSize": 11,
                               "fontWeight": "normal"
@@ -39232,7 +39372,7 @@
                           "id": "RXba2",
                           "name": "Track",
                           "clip": true,
-                          "width": 108,
+                          "width": 132,
                           "height": 5,
                           "fill": "$muted",
                           "cornerRadius": 3,
