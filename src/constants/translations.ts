@@ -3,10 +3,9 @@ export const translations = {
 		appName: "Budget Manager",
 		page: "Page",
 		of: "of",
-		firstPage: "First page",
 		previousPage: "Previous page",
 		nextPage: "Next page",
-		lastPage: "Last page",
+		pageNumber: "Page {n}",
 		pagination: "Pagination",
 		cancel: "Cancel",
 		save: "Save",
@@ -50,8 +49,8 @@ export const translations = {
 			viewAll: "View all"
 		},
 		envelopes: {
-			label: "Envelopes",
-			title: "Envelopes",
+			label: "Categories",
+			title: "Categories",
 			loading: "Loading envelopes",
 			loadError: "Couldn't load the envelopes",
 			hide: "Hide",
@@ -60,6 +59,35 @@ export const translations = {
 			overBudgetShort: "{n} over",
 			unavailable: "—",
 			ofAllocated: "{spent} / {allocated}"
+		},
+		table: {
+			label: "Expenses",
+			loading: "Loading expenses",
+			loadError: "Couldn't load the expenses",
+			retry: "Retry",
+			showing: "Showing {from}–{to} of {total} expenses",
+			emptyTitle: "No expenses yet",
+			addExpense: "Add expense",
+			columns: {
+				number: "#",
+				item: "Item",
+				category: "Category",
+				payment: "Payment Type",
+				due: "Due",
+				paid: "Paid",
+				amount: "Amount",
+				actions: "Actions"
+			},
+			noDate: "—",
+			installment: "{n}/{total}",
+			recurring: "{n}",
+			overdue: "Overdue",
+			dueOn: "Due {date}",
+			paidOn: "Paid {date}",
+			overdueOn: "Overdue · {date}",
+			paidState: "Paid: {item}",
+			unpaidState: "Not paid: {item}",
+			rowActions: "Actions for {item}"
 		},
 		states: {
 			loading: "Loading month",

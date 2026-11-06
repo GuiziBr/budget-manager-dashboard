@@ -6,10 +6,14 @@ import { ApiError, api } from "@/lib/api"
 import { createQueryWrapper } from "@/test/query-wrapper"
 import { MonthScreen } from "./MonthScreen"
 
-const nav = vi.hoisted(() => ({ search: "", push: vi.fn() }))
+const nav = vi.hoisted(() => ({
+	search: "",
+	push: vi.fn(),
+	replace: vi.fn()
+}))
 vi.mock("next/navigation", () => ({
 	useSearchParams: () => new URLSearchParams(nav.search),
-	useRouter: () => ({ push: nav.push })
+	useRouter: () => ({ push: nav.push, replace: nav.replace })
 }))
 
 const make = (year: number, month: number) => ({
@@ -127,7 +131,7 @@ describe("MonthScreen states", () => {
 			total: 0,
 			totalAmount: 0,
 			page: 1,
-			limit: 20
+			limit: 10
 		} as never)
 		vi.spyOn(api, "get").mockImplementation(((endpoint: string) =>
 			Promise.resolve(
@@ -155,7 +159,7 @@ describe("MonthScreen states", () => {
 			total: 0,
 			totalAmount: 0,
 			page: 1,
-			limit: 20
+			limit: 10
 		} as never)
 		vi.spyOn(api, "get").mockImplementation(((endpoint: string) =>
 			Promise.resolve(

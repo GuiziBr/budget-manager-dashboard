@@ -28,7 +28,7 @@ function mockApi({
 		total: 0,
 		totalAmount: expenseTotal,
 		page: 1,
-		limit: 20
+		limit: 10
 	} as never)
 	return vi
 		.spyOn(api, "get")

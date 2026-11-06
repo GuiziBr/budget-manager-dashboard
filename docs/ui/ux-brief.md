@@ -163,7 +163,7 @@ The detailed requirements for the Month screen now live in [`docs/specs/month-sc
 
 ### Design system
 - Follow `DESIGN_SYSTEM.md`: semantic tokens only, light and dark, desktop and 390px.
-- The Month table uses the design system's **pagination** (pinned to the bottom on desktop, under the list on the phone), with 20 rows per page fetched from the server one page at a time.
+- The Month table uses the design system's **pagination** (a footer inside the table card: count and numbered pages on desktop, previous / "Page X of N" / next on the phone), with 10 rows per page fetched from the server one page at a time.
 - **Deviation:** the table has up to 11 columns, more than the 1120px page column comfortably holds. Columns hide progressively by breakpoint, and the details view holds the rest.
 
 ### API
