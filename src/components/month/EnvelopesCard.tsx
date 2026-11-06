@@ -158,7 +158,26 @@ export function EnvelopesCard({
 						aria-controls={bodyId}
 						onClick={() => setCollapsed(!collapsed)}
 					>
-						{collapsed ? t.show : t.hide}
+						<span className="grid text-right">
+							<span
+								aria-hidden={collapsed}
+								className={cn(
+									"col-start-1 row-start-1",
+									collapsed && "invisible"
+								)}
+							>
+								{t.hide}
+							</span>
+							<span
+								aria-hidden={!collapsed}
+								className={cn(
+									"col-start-1 row-start-1",
+									!collapsed && "invisible"
+								)}
+							>
+								{t.show}
+							</span>
+						</span>
 						{collapsed ? (
 							<ChevronDown aria-hidden="true" className="size-4" />
 						) : (
