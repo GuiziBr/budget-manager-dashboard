@@ -134,6 +134,47 @@ function PhoneEnvelopeTile({
 	)
 }
 
+function CollapseToggle({
+	collapsed,
+	controls,
+	onToggle
+}: {
+	collapsed: boolean
+	controls: string
+	onToggle: () => void
+}) {
+	const t = translations.month.envelopes
+	return (
+		<Button
+			variant="ghost"
+			className="h-8 gap-1.5 rounded-[10px] px-2.5 text-[13px] font-medium text-muted-foreground"
+			aria-expanded={!collapsed}
+			aria-controls={controls}
+			onClick={onToggle}
+		>
+			<span className="grid text-right">
+				<span
+					aria-hidden={collapsed}
+					className={cn("col-start-1 row-start-1", collapsed && "invisible")}
+				>
+					{t.hide}
+				</span>
+				<span
+					aria-hidden={!collapsed}
+					className={cn("col-start-1 row-start-1", !collapsed && "invisible")}
+				>
+					{t.show}
+				</span>
+			</span>
+			{collapsed ? (
+				<ChevronDown aria-hidden="true" className="size-4" />
+			) : (
+				<ChevronUp aria-hidden="true" className="size-4" />
+			)}
+		</Button>
+	)
+}
+
 export function EnvelopesCard({
 	periodId,
 	onSelectEnvelope
@@ -200,7 +241,7 @@ export function EnvelopesCard({
 	if (isPhone) {
 		return (
 			<section aria-label={t.label} className="flex flex-col gap-2.5">
-				<div className="flex items-center justify-between pt-1">
+				<div className="flex items-center justify-between">
 					<div className="flex items-center gap-2">
 						<h2 className="text-base font-semibold text-foreground">
 							{t.title}
@@ -211,16 +252,23 @@ export function EnvelopesCard({
 							</Badge>
 						)}
 					</div>
+					<CollapseToggle
+						collapsed={collapsed}
+						controls={bodyId}
+						onToggle={() => setCollapsed(!collapsed)}
+					/>
 				</div>
-				<ul className="flex gap-2.5 overflow-x-auto">
-					{statuses.map((status) => (
-						<PhoneEnvelopeTile
-							key={status.envelope.id}
-							status={status}
-							onSelect={onSelectEnvelope}
-						/>
-					))}
-				</ul>
+				{!collapsed && (
+					<ul id={bodyId} className="flex gap-2.5 overflow-x-auto">
+						{statuses.map((status) => (
+							<PhoneEnvelopeTile
+								key={status.envelope.id}
+								status={status}
+								onSelect={onSelectEnvelope}
+							/>
+						))}
+					</ul>
+				)}
 			</section>
 		)
 	}
@@ -238,39 +286,11 @@ export function EnvelopesCard({
 							</Badge>
 						)}
 					</div>
-					<Button
-						variant="ghost"
-						className="h-8 gap-1.5 rounded-[10px] px-2.5 text-[13px] font-medium text-muted-foreground"
-						aria-expanded={!collapsed}
-						aria-controls={bodyId}
-						onClick={() => setCollapsed(!collapsed)}
-					>
-						<span className="grid text-right">
-							<span
-								aria-hidden={collapsed}
-								className={cn(
-									"col-start-1 row-start-1",
-									collapsed && "invisible"
-								)}
-							>
-								{t.hide}
-							</span>
-							<span
-								aria-hidden={!collapsed}
-								className={cn(
-									"col-start-1 row-start-1",
-									!collapsed && "invisible"
-								)}
-							>
-								{t.show}
-							</span>
-						</span>
-						{collapsed ? (
-							<ChevronDown aria-hidden="true" className="size-4" />
-						) : (
-							<ChevronUp aria-hidden="true" className="size-4" />
-						)}
-					</Button>
+					<CollapseToggle
+						collapsed={collapsed}
+						controls={bodyId}
+						onToggle={() => setCollapsed(!collapsed)}
+					/>
 				</div>
 				{!collapsed && (
 					<ul id={bodyId} className="grid grid-cols-4 gap-x-7 gap-y-4">

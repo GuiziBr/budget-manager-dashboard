@@ -150,10 +150,20 @@ describe("EnvelopesCard on a phone", () => {
 		expect(items[0]).toHaveTextContent("214.60/ 190.00")
 		expect(screen.getByText("1 over")).toBeInTheDocument()
 		expect(screen.queryByText(/left/)).not.toBeInTheDocument()
-		expect(
-			screen.queryByRole("button", { name: /Hide|Show/ })
-		).not.toBeInTheDocument()
 		await userEvent.click(screen.getByRole("button", { name: /Groceries/ }))
 		expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ id: "e1" }))
+	})
+
+	it("collapses like the desktop card and keeps the pill", async () => {
+		stubPhone()
+		mockApi([env("e1", "c2", 200, 250)])
+		setup()
+		await screen.findByRole("listitem")
+		await userEvent.click(screen.getByRole("button", { name: /Hide/ }))
+		expect(screen.queryByRole("listitem")).not.toBeInTheDocument()
+		expect(screen.getByText("1 over")).toBeInTheDocument()
+		expect(window.localStorage.getItem("month.envelopes.collapsed")).toBe(
+			"true"
+		)
 	})
 })
