@@ -32,16 +32,21 @@ interface EnvelopesCardProps {
 
 const money = (value: number) => formatCad(value, { compact: true })
 
+type NamedEnvelopeStatus = EnvelopeStatus & { categoryName: string }
+
+const hasCategory = (status: EnvelopeStatus): status is NamedEnvelopeStatus =>
+	status.categoryName !== null
+
 function EnvelopeTile({
 	status,
 	onSelect
 }: {
-	status: EnvelopeStatus
+	status: NamedEnvelopeStatus
 	onSelect?: (envelope: BudgetEnvelope) => void
 }) {
 	const t = translations.month.envelopes
 	const { categoryName, allocated, spent, ratio, overBudget, envelope } = status
-	const name = categoryName ?? t.deletedCategory
+	const name = categoryName
 
 	return (
 		<li>
@@ -94,7 +99,10 @@ export function EnvelopesCard({
 	const statuses = useMemo(() => {
 		if (!envelopes.data || !categories.data) return null
 		const names = new Map(categories.data.map((c) => [c.id, c.name]))
-		return sortEnvelopes(envelopes.data.map((e) => envelopeStatus(e, names)))
+		// An envelope whose category isn't in the lookup has no name to show, so it is left out
+		return sortEnvelopes(
+			envelopes.data.map((e) => envelopeStatus(e, names))
+		).filter(hasCategory)
 	}, [envelopes.data, categories.data])
 
 	const failed = [envelopes, categories].find((q) => q.isError)

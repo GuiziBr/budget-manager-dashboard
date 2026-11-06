@@ -58,7 +58,6 @@ export const translations = {
 			show: "Show",
 			overBudget: "{n} over budget",
 			unavailable: "—",
-			deletedCategory: "(deleted)",
 			ofAllocated: "{spent} / {allocated}"
 		},
 		states: {

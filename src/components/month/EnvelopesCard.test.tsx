@@ -62,10 +62,13 @@ describe("EnvelopesCard", () => {
 		expect(screen.queryByText(/over budget/)).not.toBeInTheDocument()
 	})
 
-	it("marks a category missing from the lookup as deleted", async () => {
-		mockApi([env("e1", "gone", 500, 10)])
+	it("leaves out an envelope whose category isn't in the lookup", async () => {
+		mockApi([env("e1", "gone", 500, 900), env("e2", "c1", 500, 100)])
 		setup()
-		expect(await screen.findByText("(deleted)")).toBeInTheDocument()
+		const items = await screen.findAllByRole("listitem")
+		expect(items).toHaveLength(1)
+		expect(items[0]).toHaveTextContent("Groceries")
+		expect(screen.queryByText(/over budget/)).not.toBeInTheDocument()
 	})
 
 	it("collapses, keeps the pill, and remembers the choice", async () => {
