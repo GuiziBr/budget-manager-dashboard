@@ -1,6 +1,7 @@
 "use client"
 
 import { ChevronDown, ChevronLeft, ChevronRight, Ellipsis } from "lucide-react"
+import { ClosedBanner, ClosedPill } from "@/components/month/ClosedBanner"
 import { Button } from "@/components/ui/button"
 import {
 	DropdownMenu,
@@ -10,16 +11,16 @@ import {
 	DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { translations } from "@/constants/translations"
-import { useSelectedMonth } from "@/hooks/use-selected-month"
+import { useMonthAccess } from "@/hooks/use-month-access"
 import { groupPeriodsByYear, monthLabel } from "@/lib/month"
 
 export function MonthHeader() {
-	const { month, periods, prev, next, select } = useSelectedMonth()
+	const { month, periods, prev, next, select, state } = useMonthAccess()
 	const groups = groupPeriodsByYear(periods)
 	const t = translations.month
 
 	return (
-		<header className="flex items-center justify-between gap-2">
+		<header className="flex flex-wrap items-center gap-2 lg:flex-nowrap lg:gap-3 lg:pb-2">
 			<div className="flex w-full min-w-0 items-center gap-2 lg:w-76 lg:shrink lg:gap-1">
 				<Button
 					variant="outline"
@@ -34,7 +35,7 @@ export function MonthHeader() {
 					<DropdownMenuTrigger asChild>
 						<Button
 							variant="ghost"
-							className="order-1 mr-auto min-w-0 gap-1 px-0 lg:order-2 lg:mr-0 lg:flex-1 lg:gap-1.5 lg:px-1.5"
+							className={`order-1 min-w-0 gap-1 px-0 lg:order-2 lg:mr-0 lg:flex-1 lg:gap-1.5 lg:px-1.5 ${state === "closed" ? "" : "mr-auto"}`}
 							aria-label={t.switcherLabel.replace("{month}", monthLabel(month))}
 						>
 							<span className="font-serif text-[22px] font-bold tracking-[-0.4px] lg:text-2xl">
@@ -73,6 +74,7 @@ export function MonthHeader() {
 						)}
 					</DropdownMenuContent>
 				</DropdownMenu>
+				{state === "closed" && <ClosedPill label={monthLabel(month)} />}
 				<Button
 					variant="outline"
 					size="icon"
@@ -88,12 +90,17 @@ export function MonthHeader() {
 					<ChevronRight className="size-[18px] lg:size-4" />
 				</Button>
 			</div>
+			{state === "closed" && (
+				<div className="hidden min-w-0 lg:block lg:flex-1">
+					<ClosedBanner label={monthLabel(month)} />
+				</div>
+			)}
 			{/* Placeholder: Delete month arrives with T-38 */}
 			<Button
 				variant="outline"
 				size="icon"
 				disabled
-				className="hidden rounded-[10px] shadow-none lg:inline-flex"
+				className="ml-auto hidden rounded-[10px] shadow-none lg:inline-flex"
 				aria-label={t.moreActions}
 			>
 				<Ellipsis className="size-4" />

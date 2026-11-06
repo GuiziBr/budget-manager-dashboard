@@ -39,6 +39,16 @@ export const translations = {
 		switcherLabel: "{month}, choose a month",
 		moreActions: "Month actions",
 		noOpenedMonths: "No opened months yet",
+		summary: {
+			label: "Month summary",
+			loading: "Loading summary",
+			loadError: "Couldn't load the month summary",
+			income: "Income",
+			expenses: "Expenses",
+			balance: "Balance",
+			currency: "$",
+			viewAll: "View all"
+		},
 		states: {
 			loading: "Loading month",
 			errorTitle: "Couldn't load your months",
@@ -46,6 +56,7 @@ export const translations = {
 			notOpenedTitle: "{month} hasn't been opened yet",
 			openMonth: "Open {month}",
 			notTracked: "{month} wasn't tracked in the app",
+			closedBadge: "Closed",
 			closedBanner: "{month} is closed. You can view it but not change it."
 		}
 	},
