@@ -102,14 +102,14 @@ function PhoneEnvelopeTile({
 				type="button"
 				onClick={() => onSelect?.(envelope)}
 				className={cn(
-					"flex w-[136px] flex-col gap-2 rounded-[14px] border bg-card p-3.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+					"flex w-[160px] flex-col gap-2 rounded-[14px] border bg-card p-3.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
 					overBudget ? "border-danger" : "border-border"
 				)}
 			>
 				<span className="truncate text-[13px] font-medium text-foreground">
 					{categoryName}
 				</span>
-				<span className="flex items-end gap-[3px]">
+				<span className="flex items-end gap-[3px] whitespace-nowrap">
 					<span
 						className={cn(
 							"text-base font-semibold font-[family-name:var(--font-roboto)]",
