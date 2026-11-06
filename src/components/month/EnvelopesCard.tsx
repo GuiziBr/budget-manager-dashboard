@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronDown, ChevronUp } from "lucide-react"
+import { ChevronDown, ChevronUp, WalletCards } from "lucide-react"
 import { useMemo } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -30,8 +30,7 @@ interface EnvelopesCardProps {
 	onSelectEnvelope?: (envelope: BudgetEnvelope) => void
 }
 
-const money = (value: number) =>
-	`${translations.month.summary.currency}${formatCad(value, { compact: true })}`
+const money = (value: number) => formatCad(value, { compact: true })
 
 function EnvelopeTile({
 	status,
@@ -42,34 +41,37 @@ function EnvelopeTile({
 }) {
 	const t = translations.month.envelopes
 	const { categoryName, allocated, spent, ratio, overBudget, envelope } = status
+	const name = categoryName ?? t.deletedCategory
 
 	return (
 		<li>
 			<button
 				type="button"
 				onClick={() => onSelect?.(envelope)}
-				className="flex w-full flex-col gap-2 rounded-[10px] border border-border bg-background p-3 text-left hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+				className="flex w-full flex-col gap-2 rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 			>
-				<span className="truncate text-[13px] font-medium text-foreground">
-					{categoryName ?? t.deletedCategory}
-				</span>
-				<span
-					className={cn(
-						"text-sm font-semibold font-[family-name:var(--font-roboto)]",
-						overBudget ? "text-danger" : "text-foreground"
-					)}
-				>
-					{spent === null ? t.unavailable : money(spent)}
-					<span className="font-normal text-muted-foreground">
-						{" / "}
-						{money(allocated)}
+				<span className="flex w-full items-center justify-between gap-2">
+					<span className="truncate text-[13px] font-medium text-foreground">
+						{name}
+					</span>
+					<span className="flex shrink-0 items-end gap-[3px] text-xs">
+						<span
+							className={cn(
+								"font-semibold",
+								overBudget ? "text-danger" : "text-foreground"
+							)}
+						>
+							{spent === null ? t.unavailable : money(spent)}
+						</span>
+						<span className="text-muted-foreground">/ {money(allocated)}</span>
 					</span>
 				</span>
 				{ratio !== null && (
 					<Progress
 						value={ratio * 100}
 						variant={overBudget ? "danger" : "default"}
-						aria-label={categoryName ?? t.deletedCategory}
+						aria-label={name}
+						className="h-1.5"
 					/>
 				)}
 			</button>
@@ -138,32 +140,36 @@ export function EnvelopesCard({
 
 	return (
 		<section aria-label={t.label}>
-			<Card className="flex flex-col gap-3 p-5">
-				<div className="flex items-center gap-2">
-					<h2 className="text-sm font-semibold text-foreground">{t.title}</h2>
-					{overCount > 0 && (
-						<Badge variant="danger">
-							{t.overBudget.replace("{n}", String(overCount))}
-						</Badge>
-					)}
+			<Card
+				className={cn("flex flex-col gap-4", collapsed ? "px-5 py-3.5" : "p-5")}
+			>
+				<div className="flex items-center justify-between">
+					<div className="flex items-center gap-2 text-muted-foreground">
+						<WalletCards aria-hidden="true" className="size-3.5" />
+						<h2 className="text-[13px] font-medium">{t.title}</h2>
+						{overCount > 0 && (
+							<Badge variant="danger" className="px-2 font-semibold">
+								{t.overBudget.replace("{n}", String(overCount))}
+							</Badge>
+						)}
+					</div>
 					<Button
 						variant="ghost"
-						size="sm"
-						className="ml-auto h-auto gap-1 p-0 text-xs font-semibold text-primary-text hover:bg-transparent hover:text-primary-text hover:underline"
+						className="h-8 gap-1.5 rounded-[10px] px-2.5 text-[13px] font-medium text-muted-foreground"
 						aria-expanded={!collapsed}
 						aria-controls={bodyId}
 						onClick={() => setCollapsed(!collapsed)}
 					>
 						{collapsed ? t.show : t.hide}
 						{collapsed ? (
-							<ChevronDown aria-hidden="true" className="size-3.5" />
+							<ChevronDown aria-hidden="true" className="size-4" />
 						) : (
-							<ChevronUp aria-hidden="true" className="size-3.5" />
+							<ChevronUp aria-hidden="true" className="size-4" />
 						)}
 					</Button>
 				</div>
 				{!collapsed && (
-					<ul id={bodyId} className="grid grid-cols-4 gap-3">
+					<ul id={bodyId} className="grid grid-cols-4 gap-x-7 gap-y-4">
 						{statuses.map((status) => (
 							<EnvelopeTile
 								key={status.envelope.id}

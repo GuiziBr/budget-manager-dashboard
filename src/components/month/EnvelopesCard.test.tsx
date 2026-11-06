@@ -48,7 +48,7 @@ describe("EnvelopesCard", () => {
 		setup()
 		const items = await screen.findAllByRole("listitem")
 		expect(items[0]).toHaveTextContent("Dining")
-		expect(items[0]).toHaveTextContent("$250.00 / $200.00")
+		expect(items[0]).toHaveTextContent("250.00/ 200.00")
 		expect(items[1]).toHaveTextContent("Groceries")
 		expect(screen.getByText("1 over budget")).toBeInTheDocument()
 	})
