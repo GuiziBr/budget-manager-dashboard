@@ -140,9 +140,7 @@ export function EnvelopesCard({
 
 	return (
 		<section aria-label={t.label}>
-			<Card
-				className={cn("flex flex-col gap-4", collapsed ? "px-5 py-3.5" : "p-5")}
-			>
+			<Card className="flex flex-col gap-4 px-5 py-3.5">
 				<div className="flex items-center justify-between">
 					<div className="flex items-center gap-2 text-muted-foreground">
 						<WalletCards aria-hidden="true" className="size-3.5" />
