@@ -62,11 +62,11 @@ describe("Progress", () => {
 
 	it("uses the accent colour by default and danger on request", () => {
 		const { rerender } = render(<Progress value={50} aria-label="Bar" />)
-		expect(indicator()).toHaveClass("bg-primary")
+		expect(indicator()).toHaveClass("bg-primary-text")
 
 		rerender(<Progress value={50} variant="danger" aria-label="Bar" />)
 
 		expect(indicator()).toHaveClass("bg-danger")
-		expect(indicator()).not.toHaveClass("bg-primary")
+		expect(indicator()).not.toHaveClass("bg-primary-text")
 	})
 })

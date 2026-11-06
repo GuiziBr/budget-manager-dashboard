@@ -1,5 +1,6 @@
 "use client"
 
+import { EnvelopesCard } from "@/components/month/EnvelopesCard"
 import { MonthError } from "@/components/month/MonthError"
 import { MonthHeader } from "@/components/month/MonthHeader"
 import { MonthNotOpened } from "@/components/month/MonthNotOpened"
@@ -25,9 +26,12 @@ export function MonthScreen() {
 			{state === "not-opened" && <MonthNotOpened label={label} />}
 			{state === "not-tracked" && <MonthNotTracked label={label} />}
 			{(state === "open" || state === "closed") && period && (
-				<SummaryCards periodId={period.id} />
+				<>
+					<SummaryCards periodId={period.id} />
+					<EnvelopesCard periodId={period.id} />
+				</>
 			)}
-			{/* Envelopes and the table arrive with T-19 onwards */}
+			{/* The table arrives with T-20 */}
 		</main>
 	)
 }

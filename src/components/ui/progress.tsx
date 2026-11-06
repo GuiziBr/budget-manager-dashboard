@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils"
 const indicatorVariants = cva("h-full w-full transition-transform", {
 	variants: {
 		variant: {
-			default: "bg-primary",
+			default: "bg-primary-text",
 			danger: "bg-danger"
 		}
 	},
