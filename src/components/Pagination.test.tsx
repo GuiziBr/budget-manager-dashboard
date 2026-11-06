@@ -95,7 +95,8 @@ describe("Pagination", () => {
 		setup(1, 3)
 		const nav = screen.getByRole("navigation", { name: "Pagination" })
 
-		expect(nav).not.toHaveClass("fixed", "lg:fixed")
+		expect(nav).not.toHaveClass("fixed")
+		expect(nav).not.toHaveClass("lg:fixed")
 		expect(nav).toHaveClass("border-t")
 	})
 })
