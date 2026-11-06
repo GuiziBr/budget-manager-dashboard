@@ -135,44 +135,62 @@ function PhoneEnvelopeTile({
 	)
 }
 
-function CollapseToggle({
+function CollapseHeader({
 	collapsed,
 	controls,
-	onToggle
+	onToggle,
+	className,
+	children
 }: {
 	collapsed: boolean
 	controls: string
 	onToggle: () => void
+	className?: string
+	children: React.ReactNode
 }) {
 	const t = translations.month.envelopes
 	return (
-		<Button
-			variant="ghost"
-			className="h-8 gap-1.5 rounded-[10px] px-2.5 text-[13px] font-medium text-muted-foreground"
-			aria-expanded={!collapsed}
-			aria-controls={controls}
-			onClick={onToggle}
-		>
-			<span className="grid text-right">
-				<span
-					aria-hidden={collapsed}
-					className={cn("col-start-1 row-start-1", collapsed && "invisible")}
-				>
-					{t.hide}
+		<h2 className="m-0">
+			<button
+				type="button"
+				aria-expanded={!collapsed}
+				aria-controls={controls}
+				onClick={onToggle}
+				className={cn(
+					"group flex w-full items-center justify-between text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+					className
+				)}
+			>
+				<span className="flex items-center gap-2">{children}</span>
+				<span className="inline-flex h-8 items-center gap-1.5 rounded-[10px] px-2.5 text-[13px] font-medium text-muted-foreground group-hover:bg-muted">
+					<span className="grid text-right">
+						<span
+							aria-hidden={collapsed}
+							className={cn(
+								"col-start-1 row-start-1",
+								collapsed && "invisible"
+							)}
+						>
+							{t.hide}
+						</span>
+						<span
+							aria-hidden={!collapsed}
+							className={cn(
+								"col-start-1 row-start-1",
+								!collapsed && "invisible"
+							)}
+						>
+							{t.show}
+						</span>
+					</span>
+					{collapsed ? (
+						<ChevronDown aria-hidden="true" className="size-4" />
+					) : (
+						<ChevronUp aria-hidden="true" className="size-4" />
+					)}
 				</span>
-				<span
-					aria-hidden={!collapsed}
-					className={cn("col-start-1 row-start-1", !collapsed && "invisible")}
-				>
-					{t.show}
-				</span>
-			</span>
-			{collapsed ? (
-				<ChevronDown aria-hidden="true" className="size-4" />
-			) : (
-				<ChevronUp aria-hidden="true" className="size-4" />
-			)}
-		</Button>
+			</button>
+		</h2>
 	)
 }
 
@@ -242,23 +260,20 @@ export function EnvelopesCard({
 	if (isPhone) {
 		return (
 			<section aria-label={t.label} className="flex flex-col gap-2.5">
-				<div className="flex items-center justify-between">
-					<div className="flex items-center gap-2">
-						<h2 className="text-base font-semibold text-foreground">
-							{t.title}
-						</h2>
-						{overCount > 0 && (
-							<Badge variant="danger" className="px-2 font-semibold">
-								{t.overBudgetShort.replace("{n}", String(overCount))}
-							</Badge>
-						)}
-					</div>
-					<CollapseToggle
-						collapsed={collapsed}
-						controls={bodyId}
-						onToggle={() => setCollapsed(!collapsed)}
-					/>
-				</div>
+				<CollapseHeader
+					collapsed={collapsed}
+					controls={bodyId}
+					onToggle={() => setCollapsed(!collapsed)}
+				>
+					<span className="text-base font-semibold text-foreground">
+						{t.title}
+					</span>
+					{overCount > 0 && (
+						<Badge variant="danger" className="px-2 font-semibold">
+							{t.overBudgetShort.replace("{n}", String(overCount))}
+						</Badge>
+					)}
+				</CollapseHeader>
 				{!collapsed && (
 					<ul id={bodyId} className="flex gap-2.5 overflow-x-auto">
 						{statuses.map((status) => (
@@ -276,25 +291,31 @@ export function EnvelopesCard({
 
 	return (
 		<section aria-label={t.label}>
-			<Card className="flex flex-col gap-4 px-5 py-3.5">
-				<div className="flex items-center justify-between">
-					<div className="flex items-center gap-2 text-muted-foreground">
-						<WalletCards aria-hidden="true" className="size-3.5" />
-						<h2 className="text-[13px] font-medium">{t.title}</h2>
-						{overCount > 0 && (
-							<Badge variant="danger" className="px-2 font-semibold">
-								{t.overBudget.replace("{n}", String(overCount))}
-							</Badge>
-						)}
-					</div>
-					<CollapseToggle
-						collapsed={collapsed}
-						controls={bodyId}
-						onToggle={() => setCollapsed(!collapsed)}
+			<Card className="flex flex-col p-0">
+				<CollapseHeader
+					collapsed={collapsed}
+					controls={bodyId}
+					onToggle={() => setCollapsed(!collapsed)}
+					className="rounded-[14px] px-5 py-3.5"
+				>
+					<WalletCards
+						aria-hidden="true"
+						className="size-3.5 text-muted-foreground"
 					/>
-				</div>
+					<span className="text-[13px] font-medium text-muted-foreground">
+						{t.title}
+					</span>
+					{overCount > 0 && (
+						<Badge variant="danger" className="px-2 font-semibold">
+							{t.overBudget.replace("{n}", String(overCount))}
+						</Badge>
+					)}
+				</CollapseHeader>
 				{!collapsed && (
-					<ul id={bodyId} className="grid grid-cols-4 gap-x-7 gap-y-4">
+					<ul
+						id={bodyId}
+						className="grid grid-cols-4 gap-x-7 gap-y-4 px-5 pt-0.5 pb-3.5"
+					>
 						{statuses.map((status) => (
 							<EnvelopeTile
 								key={status.envelope.id}
