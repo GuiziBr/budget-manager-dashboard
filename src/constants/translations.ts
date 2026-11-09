@@ -69,6 +69,7 @@ export const translations = {
 			emptyTitle: "No expenses yet",
 			addExpense: "Add expense",
 			addButton: "Add",
+			addButtonHint: "Drag to move, or use the arrow keys",
 			columns: {
 				number: "#",
 				item: "Item",
