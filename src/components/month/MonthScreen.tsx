@@ -1,7 +1,9 @@
 "use client"
 
+import { useRef, useState } from "react"
 import { AddFab } from "@/components/month/AddFab"
 import { EnvelopesCard } from "@/components/month/EnvelopesCard"
+import { IncomePanel } from "@/components/month/IncomePanel"
 import { MonthError } from "@/components/month/MonthError"
 import { MonthHeader } from "@/components/month/MonthHeader"
 import { MonthNotOpened } from "@/components/month/MonthNotOpened"
@@ -18,6 +20,9 @@ export function MonthScreen() {
 	const { month, period, state, canEdit, error, refetch } = useMonthAccess()
 	const label = monthLabel(month)
 	const isPhone = useMediaQuery(PHONE_QUERY)
+	// Tied to a month, so changing month closes the panel
+	const [incomeFor, setIncomeFor] = useState<string | null>(null)
+	const incomeOpener = useRef<HTMLElement | null>(null)
 
 	return (
 		<main className="mx-auto flex max-w-[1120px] flex-col gap-3 px-4 pt-4 lg:h-full lg:px-5 lg:pt-6">
@@ -31,7 +36,22 @@ export function MonthScreen() {
 			{state === "not-tracked" && <MonthNotTracked label={label} />}
 			{(state === "open" || state === "closed") && period && (
 				<>
-					<SummaryCards periodId={period.id} />
+					<SummaryCards
+						periodId={period.id}
+						onViewIncome={() => {
+							incomeOpener.current =
+								document.activeElement as HTMLElement | null
+							setIncomeFor(period.id)
+						}}
+					/>
+					<IncomePanel
+						open={incomeFor === period.id}
+						onOpenChange={(open) => setIncomeFor(open ? period.id : null)}
+						periodId={period.id}
+						month={month}
+						canEdit={canEdit}
+						returnFocusRef={incomeOpener}
+					/>
 					<EnvelopesCard periodId={period.id} />
 					<MonthTable periodId={period.id} canEdit={canEdit} />
 					{isPhone && canEdit && <AddFab />}

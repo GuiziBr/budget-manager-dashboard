@@ -215,6 +215,7 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 #### T-23 Income panel, read (M-07)
 - **Includes:** a side sheet on desktop and a bottom sheet on the phone, opened from the Income card or the phone's Income figure; total and "of this is salary"; the list with Salary badges and received dates; "No salary this month"; closes on X, Escape or the dimmed page. Add, edit and delete buttons are present but wired in T-32.
 - **Done when:** the M-07 acceptance criteria pass.
+- **Status: done (2026-11-09).** `IncomePanel` is opened from the Income card and the phone's Income figure; it is a 440px right sheet on desktop and a bottom sheet on the phone. Incomes are sorted salary first, then by received date (undated last) in `lib/month-incomes.ts`. The panel reads the summary's cached incomes, so opening it adds no request. Focus lands on the panel and returns to the opener on close. Add, Edit and Delete take optional handlers and do nothing until T-32; they are hidden in closed months.
 
 #### T-24 Row details panel, read (M-08)
 - **Includes:** the panel for expenses and envelopes:
