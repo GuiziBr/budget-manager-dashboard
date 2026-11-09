@@ -20,8 +20,14 @@ export function MonthScreen() {
 	const { month, period, state, canEdit, error, refetch } = useMonthAccess()
 	const label = monthLabel(month)
 	const isPhone = useMediaQuery(PHONE_QUERY)
-	// Tied to a month, so changing month closes the panel
 	const [incomeFor, setIncomeFor] = useState<string | null>(null)
+	// Changing month clears the panel, so coming back to a month doesn't reopen it
+	const monthKey = `${month.year}-${month.month}`
+	const [panelMonth, setPanelMonth] = useState(monthKey)
+	if (panelMonth !== monthKey) {
+		setPanelMonth(monthKey)
+		setIncomeFor(null)
+	}
 	const incomeOpener = useRef<HTMLElement | null>(null)
 
 	return (

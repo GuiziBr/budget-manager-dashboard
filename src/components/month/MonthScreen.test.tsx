@@ -276,6 +276,41 @@ describe("MonthScreen income panel", () => {
 		await vi.waitFor(() => expect(viewAll).toHaveFocus())
 	})
 
+	it("doesn't reopen the panel when coming back to a month", async () => {
+		open()
+		const { wrapper } = createQueryWrapper()
+		const { rerender } = render(<MonthScreen />, { wrapper })
+		const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+		await user.click(await screen.findByRole("button", { name: /View all/ }))
+		await screen.findByText("Pay day")
+
+		// Back and forward leave the panel open's month, then return to it
+		nav.search = "period=2026-10"
+		rerender(<MonthScreen />)
+		await vi.waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+		nav.search = ""
+		rerender(<MonthScreen />)
+		await screen.findByRole("region", { name: "Month summary" })
+		expect(screen.queryByRole("dialog")).toBeNull()
+	})
+
+	it("doesn't reopen the panel after a month that isn't opened", async () => {
+		open()
+		const { wrapper } = createQueryWrapper()
+		const { rerender } = render(<MonthScreen />, { wrapper })
+		const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+		await user.click(await screen.findByRole("button", { name: /View all/ }))
+		await screen.findByText("Pay day")
+
+		nav.search = "period=2027-03"
+		rerender(<MonthScreen />)
+		await screen.findByText(/hasn't been opened/)
+		nav.search = ""
+		rerender(<MonthScreen />)
+		await screen.findByRole("region", { name: "Month summary" })
+		expect(screen.queryByRole("dialog")).toBeNull()
+	})
+
 	it("has no edit controls in a closed month", async () => {
 		open("period=2026-10")
 		const user = setup()
