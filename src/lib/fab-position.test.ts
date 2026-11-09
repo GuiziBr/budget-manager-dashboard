@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest"
-import { clampOffset, FAB_MARGIN, parseOffset } from "./fab-position"
+import {
+	clampOffset,
+	FAB_MARGIN,
+	nearestSide,
+	parseOffset,
+	sideOffset,
+	snapToSide
+} from "./fab-position"
 
 const viewport = { width: 390, height: 800 }
 
@@ -57,5 +64,31 @@ describe("parseOffset", () => {
 		"null"
 	])("rejects %s", (raw) => {
 		expect(parseOffset(raw)).toBeNull()
+	})
+})
+
+describe("sides", () => {
+	it("gives the offset for each side", () => {
+		expect(sideOffset("right", 390)).toBe(16)
+		expect(sideOffset("left", 390)).toBe(390 - 56 - 16)
+		expect(sideOffset("left", 40)).toBe(16)
+	})
+
+	it("finds the closest side from the button's centre", () => {
+		expect(nearestSide({ right: 16, bottom: 100 }, 390)).toBe("right")
+		expect(nearestSide({ right: 300, bottom: 100 }, 390)).toBe("left")
+		// Centre at 195 exactly is the right side
+		expect(nearestSide({ right: 195 - 28, bottom: 100 }, 390)).toBe("right")
+	})
+
+	it("snaps sideways and keeps the height", () => {
+		expect(snapToSide({ right: 250, bottom: 321 }, 390)).toEqual({
+			right: 318,
+			bottom: 321
+		})
+		expect(snapToSide({ right: 120, bottom: 321 }, 390)).toEqual({
+			right: 16,
+			bottom: 321
+		})
 	})
 })

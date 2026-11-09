@@ -12,7 +12,9 @@ import {
 	FAB_POSITION_KEY,
 	FAB_TAB_BAR_FALLBACK,
 	type FabOffset,
-	parseOffset
+	parseOffset,
+	sideOffset,
+	snapToSide
 } from "@/lib/fab-position"
 
 interface AddFabProps {
@@ -35,9 +37,15 @@ const restingMinBottom = () => {
 	return window.innerHeight - top + FAB_MARGIN
 }
 
-/** A position the button can rest at: on screen and clear of the tab bar. */
-const settle = (offset: FabOffset) =>
-	clampOffset(offset, viewport(), restingMinBottom())
+/** A position the button can rest at: against the closest side, on screen and clear of the tab bar. */
+const settle = (offset: FabOffset) => {
+	const { width, height } = viewport()
+	return clampOffset(
+		snapToSide(clampOffset(offset, { width, height }), width),
+		{ width, height },
+		restingMinBottom()
+	)
+}
 
 const readOffset = (): FabOffset => {
 	try {
@@ -58,8 +66,8 @@ const saveOffset = (offset: FabOffset) => {
 }
 
 /**
- * The phone's floating add button. Drag it anywhere on the page (or move it with the
- * arrow keys); the position is remembered on this device. The caller shows it only
+ * The phone's floating add button. Drag it anywhere, and it settles against the closest
+ * side when let go (the arrow keys switch sides or move it up and down); the position is remembered on this device. The caller shows it only
  * where editing is allowed.
  */
 export function AddFab({ onAdd }: AddFabProps) {
@@ -120,25 +128,23 @@ export function AddFab({ onAdd }: AddFabProps) {
 		setTimeout(() => {
 			justDragged.current = false
 		}, 0)
-		// Dropped over the tab bar: slide up to just above it
+		// Let go: slide to the closest side, and up to just above the tab bar if it is over it
 		const resting = settle(offset)
 		setOffset(resting)
 		saveOffset(resting)
 	}
 
 	const onKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
-		const step = {
-			ArrowLeft: { right: FAB_KEY_STEP, bottom: 0 },
-			ArrowRight: { right: -FAB_KEY_STEP, bottom: 0 },
-			ArrowUp: { right: 0, bottom: FAB_KEY_STEP },
-			ArrowDown: { right: 0, bottom: -FAB_KEY_STEP }
+		const width = viewport().width
+		const move = {
+			ArrowLeft: { right: sideOffset("left", width), bottom: offset.bottom },
+			ArrowRight: { right: sideOffset("right", width), bottom: offset.bottom },
+			ArrowUp: { right: offset.right, bottom: offset.bottom + FAB_KEY_STEP },
+			ArrowDown: { right: offset.right, bottom: offset.bottom - FAB_KEY_STEP }
 		}[event.key]
-		if (!step) return
+		if (!move) return
 		event.preventDefault()
-		const next = settle({
-			right: offset.right + step.right,
-			bottom: offset.bottom + step.bottom
-		})
+		const next = settle(move)
 		setOffset(next)
 		saveOffset(next)
 	}

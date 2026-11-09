@@ -1,4 +1,4 @@
-/** Distance of the floating button from the right and bottom edges of the screen, in px. */
+/** Distance of the floating button from the right and bottom edges of the screen, in px. At rest it sits against the left or right side. */
 export interface FabOffset {
 	right: number
 	bottom: number
@@ -6,6 +6,8 @@ export interface FabOffset {
 
 export const FAB_SIZE = 56
 export const FAB_MARGIN = 8
+/** The gap between the button and the side it rests against. */
+export const FAB_SIDE_INSET = 16
 /** Clear of the bottom tab bar until the user moves it. */
 export const FAB_DEFAULT: FabOffset = { right: 16, bottom: 96 }
 /** How far a pointer must travel before a press counts as a drag, not a tap. */
@@ -53,3 +55,29 @@ export const parseOffset = (raw: string | null): FabOffset | null => {
 	}
 	return null
 }
+
+export type FabSide = "left" | "right"
+
+/** The right offset that puts the button against one side of the screen. */
+export const sideOffset = (side: FabSide, viewportWidth: number): number =>
+	side === "right"
+		? FAB_SIDE_INSET
+		: Math.max(FAB_SIDE_INSET, viewportWidth - FAB_SIZE - FAB_SIDE_INSET)
+
+/** The side whose edge the button's centre is closest to. */
+export const nearestSide = (
+	offset: FabOffset,
+	viewportWidth: number
+): FabSide =>
+	viewportWidth - offset.right - FAB_SIZE / 2 < viewportWidth / 2
+		? "left"
+		: "right"
+
+/** Moves the button horizontally to the closest side, keeping its height. */
+export const snapToSide = (
+	offset: FabOffset,
+	viewportWidth: number
+): FabOffset => ({
+	right: sideOffset(nearestSide(offset, viewportWidth), viewportWidth),
+	bottom: offset.bottom
+})

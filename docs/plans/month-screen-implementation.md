@@ -207,7 +207,7 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
   - the floating add button: phone only, hidden in past months (`canEdit`), above the bottom tab bar, 44px touch target; it does nothing until the + Add menu arrives in T-26 (`onAdd?` prop);
   - no sorting on the phone.
 - **Done when:** nothing scrolls horizontally at 390px except the envelope strip, and the layout matches the Mobile 390 frames.
-- **Status: done (2026-11-09).** Most of the phone layout already came with T-18 to T-20; this task added the floating add button (`AddFab`, shown by `MonthScreen` on the phone when `canEdit`). It can be dragged anywhere (or moved with the arrow keys) and remembers its spot on the device, and settles above the bottom tab bar when dropped over it; it does nothing until the + Add menu (T-26). Manual QA at 390px is done by the owner.
+- **Status: done (2026-11-09).** Most of the phone layout already came with T-18 to T-20; this task added the floating add button (`AddFab`, shown by `MonthScreen` on the phone when `canEdit`). It can be dragged anywhere and settles against the closest side (left or right) when let go, never over the bottom tab bar; the arrow keys switch sides or move it up and down; it remembers its spot on the device; it does nothing until the + Add menu (T-26). Manual QA at 390px is done by the owner.
 
 ### Phase 3 — Panels
 

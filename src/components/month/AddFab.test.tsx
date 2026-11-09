@@ -52,18 +52,37 @@ describe("AddFab", () => {
 	it("follows a drag and remembers the spot", () => {
 		render(<AddFab />)
 		drag(-100, -200)
-		expect(button()).toHaveStyle({ right: "116px", bottom: "296px" })
+		// Still nearer the right edge, so it settles back against it
+		expect(button()).toHaveStyle({ right: "16px", bottom: "296px" })
 		expect(window.localStorage.getItem(FAB_POSITION_KEY)).toBe(
-			'{"right":116,"bottom":296}'
+			'{"right":16,"bottom":296}'
 		)
+	})
+
+	it("settles against the left edge when dropped nearer to it", () => {
+		render(<AddFab />)
+		drag(-250, -100)
+		expect(button()).toHaveStyle({ right: "318px", bottom: "196px" })
+		expect(window.localStorage.getItem(FAB_POSITION_KEY)).toBe(
+			'{"right":318,"bottom":196}'
+		)
+	})
+
+	it("follows the pointer freely while dragging", () => {
+		render(<AddFab />)
+		fireEvent.pointerDown(button(), { button: 0, clientX: 300, clientY: 600 })
+		fireEvent.pointerMove(button(), { clientX: 200, clientY: 600 })
+		expect(button()).toHaveStyle({ right: "116px" })
+		fireEvent.pointerUp(button())
+		expect(button()).toHaveStyle({ right: "16px" })
 	})
 
 	it("keeps the button on screen and above the tab bar once released", () => {
 		render(<AddFab />)
 		drag(900, 900)
-		expect(button()).toHaveStyle({ right: "8px", bottom: "88px" })
+		expect(button()).toHaveStyle({ right: "16px", bottom: "88px" })
 		expect(window.localStorage.getItem(FAB_POSITION_KEY)).toBe(
-			'{"right":8,"bottom":88}'
+			'{"right":16,"bottom":88}'
 		)
 	})
 
@@ -117,10 +136,10 @@ describe("AddFab", () => {
 		expect(window.localStorage.getItem(FAB_POSITION_KEY)).toBeNull()
 	})
 
-	it("restores a stored position, clamped to the screen", () => {
+	it("restores a stored position, on the closest side and on screen", () => {
 		window.localStorage.setItem(FAB_POSITION_KEY, '{"right":20,"bottom":5000}')
 		render(<AddFab />)
-		expect(button()).toHaveStyle({ right: "20px", bottom: "736px" })
+		expect(button()).toHaveStyle({ right: "16px", bottom: "736px" })
 	})
 
 	it("ignores a broken stored position", () => {
@@ -132,11 +151,11 @@ describe("AddFab", () => {
 		})
 	})
 
-	it("moves with the arrow keys", () => {
+	it("switches sides and moves up and down with the arrow keys", () => {
 		render(<AddFab />)
 		fireEvent.keyDown(button(), { key: "ArrowLeft" })
 		fireEvent.keyDown(button(), { key: "ArrowUp" })
-		expect(button()).toHaveStyle({ right: "32px", bottom: "112px" })
+		expect(button()).toHaveStyle({ right: "318px", bottom: "112px" })
 		fireEvent.keyDown(button(), { key: "ArrowRight" })
 		fireEvent.keyDown(button(), { key: "ArrowDown" })
 		expect(button()).toHaveStyle({ right: "16px", bottom: "96px" })
