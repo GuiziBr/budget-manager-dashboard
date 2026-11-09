@@ -2,8 +2,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import {
 	readStoredBoolean,
+	readStoredString,
 	subscribeToStorage,
-	writeStoredBoolean
+	writeStoredBoolean,
+	writeStoredString
 } from "./storage"
 
 afterEach(() => {
@@ -40,5 +42,30 @@ describe("storage", () => {
 		})
 		expect(readStoredBoolean("k", true)).toBe(true)
 		expect(() => writeStoredBoolean("k", false)).not.toThrow()
+	})
+})
+
+describe("string storage", () => {
+	it("round-trips, removes on null and notifies subscribers", () => {
+		const listener = vi.fn()
+		const unsubscribe = subscribeToStorage(listener)
+		expect(readStoredString("s")).toBeNull()
+		writeStoredString("s", "dueAt:asc")
+		expect(readStoredString("s")).toBe("dueAt:asc")
+		writeStoredString("s", null)
+		expect(readStoredString("s")).toBeNull()
+		expect(listener).toHaveBeenCalledTimes(2)
+		unsubscribe()
+	})
+
+	it("survives blocked storage", () => {
+		vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+			throw new Error("blocked")
+		})
+		vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+			throw new Error("blocked")
+		})
+		expect(readStoredString("s")).toBeNull()
+		expect(() => writeStoredString("s", "x")).not.toThrow()
 	})
 })

@@ -197,6 +197,7 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 - **Includes:** Item, Category, Payment, Due, Paid and Amount headers become sort buttons (reuse `SortableHeader`), three-state cycle, `aria-sort`, sort sent to the server via T-06 and T-12, back to page 1 on change, kept in the address and remembered on this device. # is never sortable and stays a plain label.
 - **Done when:** the M-06 acceptance criteria pass.
 - **Backend:** BE-4 (category and payment type sorting) is delivered, so Category and Payment are sortable too. # stays a plain label.
+- **Status: done (2026-11-09).** `useMonthSort` reads the sort from the address, then the device (`month-sort` in `localStorage`), then the default. A click writes both and goes to page 1 in one navigation; the third click clears the remembered sort. Changing month drops `page` and the sort params from the address, and the remembered sort applies again. The phone list has no sort.
 
 #### T-22 Phone layout (M-05, M-04)
 - **Includes:**
