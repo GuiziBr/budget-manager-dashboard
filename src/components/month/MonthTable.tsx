@@ -3,13 +3,16 @@
 import { useEffect, useMemo, useState } from "react"
 import { MonthListRow, MonthTableRow } from "@/components/month/MonthTableRow"
 import { Pagination } from "@/components/Pagination"
+import { SortableHeader } from "@/components/SortableHeader"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { translations } from "@/constants/translations"
 import { EXPENSES_PAGE_SIZE, useMonthExpensesPage } from "@/hooks/use-expenses"
 import { PHONE_QUERY, useMediaQuery } from "@/hooks/use-media-query"
 import { useMonthPage } from "@/hooks/use-month-page"
+import { useMonthSort } from "@/hooks/use-month-sort"
 import { getApiErrorMessage } from "@/lib/api-error-message"
+import type { SortColumn } from "@/lib/expense-sort"
 import { buildRows } from "@/lib/month-rows"
 import { cn } from "@/lib/utils"
 import type { Id } from "@/types/common"
@@ -42,6 +45,10 @@ const columns = [
 	{ key: "actions", width: "w-[52px]" }
 ] as const
 
+// # and the row menu are never sortable
+const isSortable = (key: (typeof columns)[number]["key"]): key is SortColumn =>
+	key !== "number" && key !== "actions"
+
 export function MonthTable({
 	periodId,
 	canEdit,
@@ -49,7 +56,8 @@ export function MonthTable({
 }: MonthTableProps) {
 	const isPhone = useMediaQuery(PHONE_QUERY)
 	const { page, setPage, replacePage } = useMonthPage()
-	const query = useMonthExpensesPage(periodId, page)
+	const { sort, indicatorFor, toggleSort } = useMonthSort()
+	const query = useMonthExpensesPage(periodId, page, sort)
 	const [selectedId, setSelectedId] = useState<Id | null>(null)
 
 	const { data, isPlaceholderData } = query
@@ -162,15 +170,26 @@ export function MonthTable({
 					</colgroup>
 					<thead>
 						<tr className="h-10 border-border border-b bg-background">
-							{columns.map(({ key }) => (
-								<th key={key} scope="col" className={headerCell}>
-									{key === "actions" ? (
-										<span className="sr-only">{t.columns.actions}</span>
-									) : (
-										t.columns[key]
-									)}
-								</th>
-							))}
+							{columns.map(({ key }) =>
+								isSortable(key) ? (
+									<SortableHeader
+										key={key}
+										column={key}
+										label={t.columns[key]}
+										indicator={indicatorFor(key)}
+										onSort={(column) => toggleSort(column as SortColumn)}
+										className={headerCell}
+									/>
+								) : (
+									<th key={key} scope="col" className={headerCell}>
+										{key === "actions" ? (
+											<span className="sr-only">{t.columns.actions}</span>
+										) : (
+											t.columns[key]
+										)}
+									</th>
+								)
+							)}
 						</tr>
 					</thead>
 					<tbody>

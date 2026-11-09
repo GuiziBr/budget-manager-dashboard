@@ -79,6 +79,7 @@ beforeEach(() => {
 afterEach(() => {
 	vi.useRealTimers()
 	vi.restoreAllMocks()
+	window.localStorage.clear()
 })
 
 const bodyRows = () => screen.getAllByRole("row").slice(1)
@@ -145,8 +146,70 @@ describe("MonthTable pages", () => {
 	})
 })
 
+describe("MonthTable sorting", () => {
+	it("makes every column but # and the menu a sort button", async () => {
+		mockPages(all.slice(0, 1))
+		setup()
+		await screen.findByText("Expense 1")
+		const buttons = within(screen.getAllByRole("row")[0]).getAllByRole("button")
+		expect(buttons.map((b) => b.textContent)).toEqual([
+			"Item",
+			"Category",
+			"Payment Type",
+			"Due",
+			"Paid",
+			"Amount"
+		])
+		expect(screen.getByRole("columnheader", { name: "Item" })).toHaveAttribute(
+			"aria-sort",
+			"none"
+		)
+		expect(screen.getByRole("columnheader", { name: "#" })).not.toHaveAttribute(
+			"aria-sort"
+		)
+	})
+
+	it("asks the server for the sort and marks the header", async () => {
+		nav.search = "period=2026-11&sortBy=dueAt&sortOrder=asc"
+		const getPage = mockPages(all)
+		setup()
+		await screen.findByText("Expense 1")
+		expect(getPage).toHaveBeenCalledWith(
+			"expenses",
+			expect.objectContaining({ sortBy: "dueAt", sortOrder: "asc", page: 1 })
+		)
+		expect(screen.getByRole("columnheader", { name: "Due" })).toHaveAttribute(
+			"aria-sort",
+			"ascending"
+		)
+	})
+
+	it("sorts a header click back on page 1, keeping the period", async () => {
+		nav.search = "period=2026-11&page=3"
+		mockPages(all)
+		const user = setup()
+		await screen.findByText("Expense 21")
+		await user.click(screen.getByRole("button", { name: "Amount" }))
+		expect(nav.push).toHaveBeenCalledWith(
+			"?period=2026-11&sortBy=amount&sortOrder=asc",
+			{ scroll: false }
+		)
+	})
+
+	it("restores the default on the third click", async () => {
+		nav.search = "period=2026-11&sortBy=amount&sortOrder=desc"
+		mockPages(all)
+		const user = setup()
+		await screen.findByText("Expense 1")
+		await user.click(screen.getByRole("button", { name: "Amount" }))
+		expect(nav.push).toHaveBeenCalledWith("?period=2026-11", {
+			scroll: false
+		})
+	})
+})
+
 describe("MonthTable rows", () => {
-	it("shows the columns of the design and no sort buttons yet", async () => {
+	it("shows the columns of the design", async () => {
 		mockPages(all.slice(0, 1))
 		setup()
 		await screen.findByText("Expense 1")
@@ -310,6 +373,13 @@ describe("MonthTable on the phone", () => {
 	afterEach(() => {
 		// biome-ignore lint/suspicious/noExplicitAny: removing the test stub
 		delete (window as any).matchMedia
+	})
+
+	it("has no sort buttons", async () => {
+		mockPages(all.slice(0, 1))
+		setup()
+		await screen.findByText("Expense 1")
+		expect(screen.queryByRole("button", { name: "Due" })).toBeNull()
 	})
 
 	it("renders a list with the date line instead of a table", async () => {
