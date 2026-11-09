@@ -285,7 +285,7 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 2. Clicking the Income card (or the Income figure in the phone's Balance card) opens the **income panel**: a side panel from the right on desktop (440px wide, over a dimmed page), a bottom sheet on the phone.
 3. The panel shows:
    - the total income and how much of it is salary ("$6,144.00 of this is salary"), under a "{month year} income" line;
-   - each income: description, Salary badge for salary incomes, received date (if any) or "Not received yet", amount with the dollar sign (`+ $6,144.00`, success colour; in a lighter weight while the income is not received yet) and a row menu (Edit, Delete);
+   - each income: description, Salary badge for salary incomes, received date (if any) or "Not received yet", amount with the dollar sign (`+ $6,144.00`, success colour; in the muted text colour while the income is not received yet) and a row menu (Edit, Delete);
    - an **Add income** button at the bottom (M-20).
 4. The panel closes with the close button, Escape, or a click on the dimmed page.
 

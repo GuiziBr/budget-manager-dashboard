@@ -92,16 +92,18 @@ describe("IncomePanel", () => {
 		expect(await screen.findByText("November 2026 income")).toBeInTheDocument()
 	})
 
-	it("shows received amounts in bold and unreceived ones lighter", async () => {
+	it("shows received amounts in green and unreceived ones muted", async () => {
 		vi.spyOn(api, "get").mockResolvedValue([
 			income({ id: "a", amount: 10, receivedAt: "2026-11-02T00:00:00.000Z" }),
 			income({ id: "b", amount: 20 })
 		] as never)
 		setup()
 		const received = await screen.findByText("+ $10.00")
-		expect(received).toHaveClass("font-semibold")
-		expect(screen.getByText("+ $20.00")).toHaveClass("font-normal")
-		expect(screen.getByText("+ $20.00")).not.toHaveClass("font-semibold")
+		expect(received).toHaveClass("text-success")
+		expect(received).not.toHaveClass("text-muted-foreground")
+		const pending = screen.getByText("+ $20.00")
+		expect(pending).toHaveClass("text-muted-foreground")
+		expect(pending).not.toHaveClass("text-success")
 	})
 
 	it("asks for the month's incomes only", async () => {

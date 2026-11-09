@@ -78,11 +78,11 @@ function IncomeRow({
 					{received ? t.received.replace("{date}", received) : t.notReceived}
 				</span>
 			</div>
-			{/* A lighter weight marks an income that has not arrived yet */}
+			{/* A muted colour marks an income that has not arrived yet */}
 			<span
 				className={cn(
-					"whitespace-nowrap text-[15px] text-success",
-					received ? "font-semibold" : "font-normal"
+					"whitespace-nowrap font-semibold text-[15px]",
+					received ? "text-success" : "text-muted-foreground"
 				)}
 			>
 				+ {money(income.amount)}
