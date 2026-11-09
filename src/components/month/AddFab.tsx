@@ -1,7 +1,7 @@
 "use client"
 
 import { Plus } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { useLayoutEffect, useRef, useState } from "react"
 import { translations } from "@/constants/translations"
 import {
 	clampOffset,
@@ -81,8 +81,8 @@ export function AddFab({ onAdd }: AddFabProps) {
 	} | null>(null)
 	const justDragged = useRef(false)
 
-	// Read after mount so the server and first client render agree
-	useEffect(() => {
+	// Read before the first paint, so a saved position doesn't animate in from the default spot
+	useLayoutEffect(() => {
 		setOffset(readOffset())
 		const onResize = () =>
 			setOffset((current) => clampOffset(current, viewport()))
