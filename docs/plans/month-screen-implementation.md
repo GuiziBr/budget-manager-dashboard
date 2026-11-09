@@ -203,10 +203,11 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
   - below `lg`, the table becomes the list from the phone frame: checkbox, item, type chip, "Due / Paid / Overdue" line, and the amount on the right;
   - the pagination footer under the list inside the card;
   - the Balance card holds Income and Expenses;
-  - the envelope strip scrolls sideways;
-  - the floating add button;
+  - the envelope strip scrolls sideways and keeps the Hide / Show toggle of T-19 (done; spec M-04 updated 2026-11-09);
+  - the floating add button: phone only, hidden in past months (`canEdit`), above the bottom tab bar, 44px touch target; it does nothing until the + Add menu arrives in T-26 (`onAdd?` prop);
   - no sorting on the phone.
 - **Done when:** nothing scrolls horizontally at 390px except the envelope strip, and the layout matches the Mobile 390 frames.
+- **Status: done (2026-11-09).** Most of the phone layout already came with T-18 to T-20; this task added the floating add button (`AddFab`, shown by `MonthScreen` on the phone when `canEdit`). It does nothing until the + Add menu (T-26). Manual QA at 390px is done by the owner.
 
 ### Phase 3 — Panels
 

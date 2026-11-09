@@ -187,7 +187,7 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 - One full-width card showing **every envelope at once**: name, "spent / allocated" and a progress bar. Over-budget envelopes are shown in the danger colour and listed first.
 - The header shows "{n} over budget" (when any). There is no combined total across envelopes.
 - Desktop: a 4-column grid. The card can be **collapsed** with Hide / Show in its header; collapsed, it keeps only the header line (with the over-budget pill). The choice is remembered on this device.
-- Phone: a strip of small envelope cards scrolled sideways (not collapsible).
+- Phone: a strip of small envelope cards scrolled sideways. The strip can be collapsed with the same Hide / Show header and the same remembered choice as on desktop; collapsed, it keeps the header line with the over-budget pill.
 - Clicking an envelope opens its row details (M-08).
 - When an envelope's spend is unavailable (M-11), its spent value shows "—" and it has no bar.
 

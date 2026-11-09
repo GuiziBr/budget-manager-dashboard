@@ -68,6 +68,7 @@ export const translations = {
 			showing: "Showing {from}–{to} of {total} expenses",
 			emptyTitle: "No expenses yet",
 			addExpense: "Add expense",
+			addButton: "Add",
 			columns: {
 				number: "#",
 				item: "Item",
