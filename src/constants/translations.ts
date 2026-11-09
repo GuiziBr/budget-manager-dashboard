@@ -50,7 +50,7 @@ export const translations = {
 		},
 		income: {
 			title: "Income",
-			description: "The income of {month}",
+			description: "{month} income",
 			loading: "Loading income",
 			loadError: "Couldn't load the income",
 			retry: "Retry",
@@ -64,7 +64,8 @@ export const translations = {
 			rowActions: "Actions for {item}",
 			edit: "Edit",
 			delete: "Delete",
-			add: "Add income"
+			add: "Add income",
+			close: "Close"
 		},
 		envelopes: {
 			label: "Categories",

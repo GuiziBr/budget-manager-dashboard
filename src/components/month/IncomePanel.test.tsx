@@ -80,12 +80,28 @@ describe("IncomePanel", () => {
 		])
 		expect(within(rows[0]).getByText("Salary")).toBeInTheDocument()
 		expect(within(rows[2]).queryByText("Salary")).toBeNull()
-		expect(within(rows[0]).getByText("+ 3,000.00")).toBeInTheDocument()
+		expect(within(rows[0]).getByText("+ $3,000.00")).toBeInTheDocument()
 		expect(within(rows[0]).getByText("Received 1 Nov")).toBeInTheDocument()
-		expect(screen.getByText("CAD 6,244.00")).toBeInTheDocument()
-		expect(
-			screen.getByText("CAD 6,144.00 of this is salary")
-		).toBeInTheDocument()
+		expect(screen.getByText("$6,244.00")).toBeInTheDocument()
+		expect(screen.getByText("$6,144.00 of this is salary")).toBeInTheDocument()
+	})
+
+	it("names the month under the title", async () => {
+		vi.spyOn(api, "get").mockResolvedValue([] as never)
+		setup()
+		expect(await screen.findByText("November 2026 income")).toBeInTheDocument()
+	})
+
+	it("shows received amounts in bold and unreceived ones lighter", async () => {
+		vi.spyOn(api, "get").mockResolvedValue([
+			income({ id: "a", amount: 10, receivedAt: "2026-11-02T00:00:00.000Z" }),
+			income({ id: "b", amount: 20 })
+		] as never)
+		setup()
+		const received = await screen.findByText("+ $10.00")
+		expect(received).toHaveClass("font-semibold")
+		expect(screen.getByText("+ $20.00")).toHaveClass("font-normal")
+		expect(screen.getByText("+ $20.00")).not.toHaveClass("font-semibold")
 	})
 
 	it("asks for the month's incomes only", async () => {

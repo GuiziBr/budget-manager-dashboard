@@ -1,6 +1,6 @@
 "use client"
 
-import { EllipsisVertical, Plus } from "lucide-react"
+import { EllipsisVertical, Plus, X } from "lucide-react"
 import { type RefObject, useMemo } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import {
 	Sheet,
+	SheetClose,
 	SheetContent,
 	SheetDescription,
 	SheetHeader,
@@ -46,6 +47,10 @@ interface IncomePanelProps {
 }
 
 const t = translations.month.income
+const { currency } = translations.month.summary
+
+const money = (value: number) =>
+	`${currency}${formatCad(value, { compact: true })}`
 
 function IncomeRow({
 	income,
@@ -73,8 +78,14 @@ function IncomeRow({
 					{received ? t.received.replace("{date}", received) : t.notReceived}
 				</span>
 			</div>
-			<span className="whitespace-nowrap font-semibold text-[15px] text-success">
-				{formatCad(income.amount, { sign: "plus", compact: true })}
+			{/* A lighter weight marks an income that has not arrived yet */}
+			<span
+				className={cn(
+					"whitespace-nowrap text-[15px] text-success",
+					received ? "font-semibold" : "font-normal"
+				)}
+			>
+				+ {money(income.amount)}
 			</span>
 			{canEdit && (
 				<DropdownMenu>
@@ -156,11 +167,11 @@ function PanelBody({
 					{t.total}
 				</span>
 				<span className="font-[family-name:var(--font-roboto)] font-semibold text-[30px] text-success leading-none tracking-[-0.5px]">
-					{formatCad(total)}
+					{money(total)}
 				</span>
 				<span className="pt-1 text-muted-foreground text-sm">
 					{salary > 0
-						? t.ofSalary.replace("{amount}", formatCad(salary))
+						? t.ofSalary.replace("{amount}", money(salary))
 						: t.noSalary}
 				</span>
 			</div>
@@ -224,18 +235,29 @@ export function IncomePanel({
 					event.preventDefault()
 					opener.focus()
 				}}
+				showCloseButton={false}
 				className={cn(
 					"gap-4 pt-5 pb-0 outline-none",
 					isPhone ? "max-h-[85dvh] rounded-t-[20px]" : "w-full sm:max-w-[440px]"
 				)}
 			>
-				<SheetHeader className="p-0 px-5 pr-12">
+				<SheetClose asChild>
+					<Button
+						variant="outline"
+						size="icon"
+						className="absolute top-4 right-5 size-8 rounded-[10px] shadow-none"
+					>
+						<X className="size-4" aria-hidden="true" />
+						<span className="sr-only">{t.close}</span>
+					</Button>
+				</SheetClose>
+				<SheetHeader className="p-0 px-5 pr-14">
 					<SheetTitle className="text-lg">{t.title}</SheetTitle>
 					<SheetDescription>
 						{t.description.replace("{month}", monthLabel(month))}
 					</SheetDescription>
 				</SheetHeader>
-				{open && <PanelBody {...body} />}
+				<PanelBody {...body} />
 			</SheetContent>
 		</Sheet>
 	)
