@@ -173,3 +173,53 @@ describe("MonthScreen states", () => {
 		expect(screen.queryByText(/is closed/)).toBeNull()
 	})
 })
+
+describe("MonthScreen add button", () => {
+	const openMonth = (search: string) => {
+		nav.search = search
+		vi.spyOn(api, "getPage").mockResolvedValue({
+			data: [],
+			total: 0,
+			totalAmount: 0,
+			page: 1,
+			limit: 10
+		} as never)
+		vi.spyOn(api, "get").mockImplementation(((endpoint: string) =>
+			Promise.resolve(
+				endpoint.includes("budget-periods")
+					? [make(2026, 11), make(2026, 10)]
+					: []
+			)) as never)
+	}
+	const stubPhone = (matches: boolean) =>
+		vi.stubGlobal("matchMedia", (query: string) => ({
+			matches,
+			media: query,
+			addEventListener: () => {},
+			removeEventListener: () => {}
+		}))
+	afterEach(() => vi.unstubAllGlobals())
+
+	it("shows on the phone in an editable month", async () => {
+		stubPhone(true)
+		openMonth("")
+		setup()
+		expect(await screen.findByRole("button", { name: "Add" })).toBeVisible()
+	})
+
+	it("is hidden on desktop", async () => {
+		stubPhone(false)
+		openMonth("")
+		setup()
+		await screen.findByRole("region", { name: "Month summary" })
+		expect(screen.queryByRole("button", { name: "Add" })).toBeNull()
+	})
+
+	it("is hidden in a closed month", async () => {
+		stubPhone(true)
+		openMonth("period=2026-10")
+		setup()
+		await screen.findByRole("region", { name: "Month summary" })
+		expect(screen.queryByRole("button", { name: "Add" })).toBeNull()
+	})
+})
