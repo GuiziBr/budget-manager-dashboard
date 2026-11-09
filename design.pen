@@ -16490,7 +16490,7 @@
                       "id": "msYAn",
                       "name": "Subtitle",
                       "fill": "$muted-foreground",
-                      "content": "November 2026",
+                      "content": "November 2026 income",
                       "fontFamily": "$font-body",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -16501,9 +16501,12 @@
                   "type": "frame",
                   "id": "LlCDB",
                   "name": "Close",
-                  "width": 36,
-                  "height": 36,
+                  "width": 32,
+                  "height": 32,
+                  "fill": "$card",
                   "cornerRadius": 10,
+                  "stroke": "$input",
+                  "strokeWidth": 1,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -16511,11 +16514,11 @@
                       "type": "icon",
                       "id": "H7iIK1",
                       "name": "X",
-                      "width": 18,
-                      "height": 18,
+                      "width": 16,
+                      "height": 16,
                       "icon": "x",
                       "library": "lucide",
-                      "fill": "$muted-foreground"
+                      "fill": "$foreground"
                     }
                   ]
                 }
@@ -16544,24 +16547,13 @@
                   "children": [
                     {
                       "type": "text",
-                      "id": "v3bgpS",
-                      "name": "Currency",
-                      "opacity": 0.75,
-                      "fill": "$success",
-                      "content": "CAD",
-                      "fontFamily": "$font-metric",
-                      "fontSize": 13,
-                      "fontWeight": "500"
-                    },
-                    {
-                      "type": "text",
                       "id": "i6P3v",
                       "name": "Amount",
                       "fill": "$success",
-                      "content": "7,375.67",
+                      "content": "$7,375.67",
                       "lineHeight": 1,
                       "fontFamily": "$font-metric",
-                      "fontSize": 28,
+                      "fontSize": 30,
                       "fontWeight": "600",
                       "letterSpacing": -0.5
                     }
@@ -16575,46 +16567,11 @@
                   "alignItems": "center",
                   "children": [
                     {
-                      "type": "frame",
-                      "id": "c8gMT7",
-                      "name": "Salary Badge",
-                      "fill": "$primary-soft",
-                      "cornerRadius": 999,
-                      "gap": 4,
-                      "padding": [
-                        2,
-                        8
-                      ],
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "id": "WcWdn",
-                          "name": "Icon",
-                          "width": 12,
-                          "height": 12,
-                          "icon": "badge-check",
-                          "library": "lucide",
-                          "fill": "$primary-text"
-                        },
-                        {
-                          "type": "text",
-                          "id": "vmKZJ",
-                          "name": "Label",
-                          "fill": "$primary-text",
-                          "content": "Salary",
-                          "fontFamily": "$font-body",
-                          "fontSize": 12,
-                          "fontWeight": "600"
-                        }
-                      ]
-                    },
-                    {
                       "type": "text",
                       "id": "IOPop",
                       "name": "Text",
                       "fill": "$muted-foreground",
-                      "content": "CAD 6,144.00 of this is salary",
+                      "content": "$6,144.00 of this is salary",
                       "fontFamily": "$font-body",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -16734,7 +16691,7 @@
                           "id": "wFZ3S",
                           "name": "Amount",
                           "fill": "$success",
-                          "content": "+ 6,144.00",
+                          "content": "+ $6,144.00",
                           "fontFamily": "$font-metric",
                           "fontSize": 14,
                           "fontWeight": "600"
@@ -16742,265 +16699,6 @@
                         {
                           "type": "icon",
                           "id": "BfPaX",
-                          "name": "Row Menu",
-                          "width": 16,
-                          "height": 16,
-                          "icon": "ellipsis-vertical",
-                          "library": "lucide",
-                          "fill": "$muted-foreground"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "d2Eqs",
-                      "name": "Income Canada Child Benefit",
-                      "width": "fill_container",
-                      "stroke": "$border",
-                      "strokeWidth": {
-                        "bottom": 1
-                      },
-                      "gap": 10,
-                      "padding": [
-                        12,
-                        12,
-                        12,
-                        14
-                      ],
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "Bc31y",
-                          "name": "Main",
-                          "width": "fill_container",
-                          "layout": "vertical",
-                          "gap": 4,
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "ESebr",
-                              "name": "Description",
-                              "fill": "$foreground",
-                              "content": "Canada Child Benefit",
-                              "fontFamily": "$font-body",
-                              "fontSize": 14,
-                              "fontWeight": "500"
-                            },
-                            {
-                              "type": "frame",
-                              "id": "HCrDU",
-                              "name": "Meta",
-                              "gap": 6,
-                              "alignItems": "center",
-                              "children": [
-                                {
-                                  "type": "text",
-                                  "id": "XB4LP",
-                                  "name": "Received",
-                                  "fill": "$muted-foreground",
-                                  "content": "Received 20 Nov",
-                                  "fontFamily": "$font-body",
-                                  "fontSize": 12,
-                                  "fontWeight": "normal"
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "type": "text",
-                          "id": "ZWDRh",
-                          "name": "Amount",
-                          "fill": "$success",
-                          "content": "+ 290.21",
-                          "fontFamily": "$font-metric",
-                          "fontSize": 14,
-                          "fontWeight": "600"
-                        },
-                        {
-                          "type": "icon",
-                          "id": "TzKx5",
-                          "name": "Row Menu",
-                          "width": 16,
-                          "height": 16,
-                          "icon": "ellipsis-vertical",
-                          "library": "lucide",
-                          "fill": "$muted-foreground"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "liDmk",
-                      "name": "Income Rogers credit — phone",
-                      "width": "fill_container",
-                      "stroke": "$border",
-                      "strokeWidth": {
-                        "bottom": 1
-                      },
-                      "gap": 10,
-                      "padding": [
-                        12,
-                        12,
-                        12,
-                        14
-                      ],
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "TEfOM",
-                          "name": "Main",
-                          "width": "fill_container",
-                          "layout": "vertical",
-                          "gap": 4,
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "Rb1Rm",
-                              "name": "Description",
-                              "fill": "$foreground",
-                              "content": "Rogers credit — phone",
-                              "fontFamily": "$font-body",
-                              "fontSize": 14,
-                              "fontWeight": "500"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "text",
-                          "id": "X3rMn",
-                          "name": "Amount",
-                          "fill": "$success",
-                          "content": "+ 10.75",
-                          "fontFamily": "$font-metric",
-                          "fontSize": 14,
-                          "fontWeight": "600"
-                        },
-                        {
-                          "type": "icon",
-                          "id": "H274ve",
-                          "name": "Row Menu",
-                          "width": 16,
-                          "height": 16,
-                          "icon": "ellipsis-vertical",
-                          "library": "lucide",
-                          "fill": "$muted-foreground"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "Wsd1i",
-                      "name": "Income Rogers credit — internet",
-                      "width": "fill_container",
-                      "stroke": "$border",
-                      "strokeWidth": {
-                        "bottom": 1
-                      },
-                      "gap": 10,
-                      "padding": [
-                        12,
-                        12,
-                        12,
-                        14
-                      ],
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "b7Zmm",
-                          "name": "Main",
-                          "width": "fill_container",
-                          "layout": "vertical",
-                          "gap": 4,
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "poEvd",
-                              "name": "Description",
-                              "fill": "$foreground",
-                              "content": "Rogers credit — internet",
-                              "fontFamily": "$font-body",
-                              "fontSize": 14,
-                              "fontWeight": "500"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "text",
-                          "id": "kBvXB",
-                          "name": "Amount",
-                          "fill": "$success",
-                          "content": "+ 11.47",
-                          "fontFamily": "$font-metric",
-                          "fontSize": 14,
-                          "fontWeight": "600"
-                        },
-                        {
-                          "type": "icon",
-                          "id": "dT8Kn",
-                          "name": "Row Menu",
-                          "width": 16,
-                          "height": 16,
-                          "icon": "ellipsis-vertical",
-                          "library": "lucide",
-                          "fill": "$muted-foreground"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "prXDC",
-                      "name": "Income Reimbursement — IA for Devs",
-                      "width": "fill_container",
-                      "stroke": "$border",
-                      "strokeWidth": {
-                        "bottom": 1
-                      },
-                      "gap": 10,
-                      "padding": [
-                        12,
-                        12,
-                        12,
-                        14
-                      ],
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "HE88U",
-                          "name": "Main",
-                          "width": "fill_container",
-                          "layout": "vertical",
-                          "gap": 4,
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "yQMXh",
-                              "name": "Description",
-                              "fill": "$foreground",
-                              "content": "Reimbursement — IA for Devs",
-                              "fontFamily": "$font-body",
-                              "fontSize": 14,
-                              "fontWeight": "500"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "text",
-                          "id": "m3CDi",
-                          "name": "Amount",
-                          "fill": "$success",
-                          "content": "+ 394.20",
-                          "fontFamily": "$font-metric",
-                          "fontSize": 14,
-                          "fontWeight": "600"
-                        },
-                        {
-                          "type": "icon",
-                          "id": "qIEIO",
                           "name": "Row Menu",
                           "width": 16,
                           "height": 16,
@@ -17072,7 +16770,7 @@
                           "id": "ZCzTR",
                           "name": "Amount",
                           "fill": "$success",
-                          "content": "+ 280.00",
+                          "content": "+ $280.00",
                           "fontFamily": "$font-metric",
                           "fontSize": 14,
                           "fontWeight": "600"
@@ -17080,6 +16778,322 @@
                         {
                           "type": "icon",
                           "id": "x1rlCw",
+                          "name": "Row Menu",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "ellipsis-vertical",
+                          "library": "lucide",
+                          "fill": "$muted-foreground"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "d2Eqs",
+                      "name": "Income Canada Child Benefit",
+                      "width": "fill_container",
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "gap": 10,
+                      "padding": [
+                        12,
+                        12,
+                        12,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Bc31y",
+                          "name": "Main",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "ESebr",
+                              "name": "Description",
+                              "fill": "$foreground",
+                              "content": "Canada Child Benefit",
+                              "fontFamily": "$font-body",
+                              "fontSize": 14,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "HCrDU",
+                              "name": "Meta",
+                              "gap": 6,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "XB4LP",
+                                  "name": "Received",
+                                  "fill": "$muted-foreground",
+                                  "content": "Received 20 Nov",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "ZWDRh",
+                          "name": "Amount",
+                          "fill": "$success",
+                          "content": "+ $290.21",
+                          "fontFamily": "$font-metric",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "TzKx5",
+                          "name": "Row Menu",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "ellipsis-vertical",
+                          "library": "lucide",
+                          "fill": "$muted-foreground"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "liDmk",
+                      "name": "Income Rogers credit — phone",
+                      "width": "fill_container",
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "gap": 10,
+                      "padding": [
+                        12,
+                        12,
+                        12,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "TEfOM",
+                          "name": "Main",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Rb1Rm",
+                              "name": "Description",
+                              "fill": "$foreground",
+                              "content": "Rogers credit — phone",
+                              "fontFamily": "$font-body",
+                              "fontSize": 14,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "jkmuX",
+                              "name": "Meta",
+                              "gap": 6,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "glkqS",
+                                  "name": "Received",
+                                  "fill": "$muted-foreground",
+                                  "content": "Not received yet",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "X3rMn",
+                          "name": "Amount",
+                          "fill": "$muted-foreground",
+                          "content": "+ $10.75",
+                          "fontFamily": "$font-metric",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "H274ve",
+                          "name": "Row Menu",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "ellipsis-vertical",
+                          "library": "lucide",
+                          "fill": "$muted-foreground"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Wsd1i",
+                      "name": "Income Rogers credit — internet",
+                      "width": "fill_container",
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "gap": 10,
+                      "padding": [
+                        12,
+                        12,
+                        12,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "b7Zmm",
+                          "name": "Main",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "poEvd",
+                              "name": "Description",
+                              "fill": "$foreground",
+                              "content": "Rogers credit — internet",
+                              "fontFamily": "$font-body",
+                              "fontSize": 14,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "RCRPi",
+                              "name": "Meta",
+                              "gap": 6,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "Y4gU0g",
+                                  "name": "Received",
+                                  "fill": "$muted-foreground",
+                                  "content": "Not received yet",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "kBvXB",
+                          "name": "Amount",
+                          "fill": "$muted-foreground",
+                          "content": "+ $11.47",
+                          "fontFamily": "$font-metric",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "dT8Kn",
+                          "name": "Row Menu",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "ellipsis-vertical",
+                          "library": "lucide",
+                          "fill": "$muted-foreground"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "prXDC",
+                      "name": "Income Reimbursement — IA for Devs",
+                      "width": "fill_container",
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "gap": 10,
+                      "padding": [
+                        12,
+                        12,
+                        12,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "HE88U",
+                          "name": "Main",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "yQMXh",
+                              "name": "Description",
+                              "fill": "$foreground",
+                              "content": "Reimbursement — IA for Devs",
+                              "fontFamily": "$font-body",
+                              "fontSize": 14,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "UjofP",
+                              "name": "Meta",
+                              "gap": 6,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "OKCf9",
+                                  "name": "Received",
+                                  "fill": "$muted-foreground",
+                                  "content": "Not received yet",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "m3CDi",
+                          "name": "Amount",
+                          "fill": "$muted-foreground",
+                          "content": "+ $394.20",
+                          "fontFamily": "$font-metric",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "qIEIO",
                           "name": "Row Menu",
                           "width": 16,
                           "height": 16,
@@ -17121,6 +17135,25 @@
                               "fontFamily": "$font-body",
                               "fontSize": 14,
                               "fontWeight": "500"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "m0oa0c",
+                              "name": "Meta",
+                              "gap": 6,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "iO5LJ",
+                                  "name": "Received",
+                                  "fill": "$muted-foreground",
+                                  "content": "Not received yet",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                }
+                              ]
                             }
                           ]
                         },
@@ -17128,8 +17161,8 @@
                           "type": "text",
                           "id": "tTIQE",
                           "name": "Amount",
-                          "fill": "$success",
-                          "content": "+ 245.04",
+                          "fill": "$muted-foreground",
+                          "content": "+ $245.04",
                           "fontFamily": "$font-metric",
                           "fontSize": 14,
                           "fontWeight": "600"
@@ -24302,7 +24335,7 @@
           "id": "kXP8G",
           "layoutPosition": "absolute",
           "x": 0,
-          "y": 338,
+          "y": 193,
           "name": "Income Sheet",
           "width": 390,
           "fill": "$card",
@@ -24369,7 +24402,7 @@
                       "id": "R5oJ6",
                       "name": "Subtitle",
                       "fill": "$muted-foreground",
-                      "content": "November 2026",
+                      "content": "November 2026 income",
                       "fontFamily": "$font-body",
                       "fontSize": 12,
                       "fontWeight": "normal"
@@ -24378,30 +24411,81 @@
                 },
                 {
                   "type": "frame",
-                  "id": "ljTym",
+                  "id": "auTui",
+                  "name": "Close",
+                  "width": 32,
+                  "height": 32,
+                  "fill": "$card",
+                  "cornerRadius": 10,
+                  "stroke": "$input",
+                  "strokeWidth": 1,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "w3ywMs",
+                      "name": "X",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "x",
+                      "library": "lucide",
+                      "fill": "$foreground"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "cb9dn",
+              "name": "Totals",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 6,
+              "padding": [
+                0,
+                0,
+                2,
+                0
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "y4eX23",
                   "name": "Total",
-                  "layout": "vertical",
-                  "gap": 2,
+                  "gap": 5,
                   "alignItems": "end",
                   "children": [
                     {
                       "type": "text",
-                      "id": "ivKFF",
+                      "id": "b1WVY",
                       "name": "Amount",
                       "fill": "$success",
-                      "content": "+ 7,375.67",
+                      "content": "$7,375.67",
+                      "lineHeight": 1,
                       "fontFamily": "$font-metric",
-                      "fontSize": 20,
-                      "fontWeight": "600"
-                    },
+                      "fontSize": 30,
+                      "fontWeight": "600",
+                      "letterSpacing": -0.5
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ZlX6w",
+                  "name": "Salary Base",
+                  "gap": 6,
+                  "alignItems": "center",
+                  "children": [
                     {
                       "type": "text",
-                      "id": "wBkQz",
-                      "name": "Salary",
+                      "id": "D4A5m",
+                      "name": "Text",
                       "fill": "$muted-foreground",
-                      "content": "Salary CAD 6,144.00",
+                      "content": "$6,144.00 of this is salary",
                       "fontFamily": "$font-body",
-                      "fontSize": 12,
+                      "fontSize": 13,
                       "fontWeight": "normal"
                     }
                   ]
@@ -24501,218 +24585,7 @@
                       "id": "yhZeH",
                       "name": "Amount",
                       "fill": "$success",
-                      "content": "+ 6,144.00",
-                      "fontFamily": "$font-metric",
-                      "fontSize": 14,
-                      "fontWeight": "600"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "L15Q27",
-                  "name": "Income Canada Child Benefit",
-                  "width": "fill_container",
-                  "stroke": "$border",
-                  "strokeWidth": {
-                    "bottom": 1
-                  },
-                  "gap": 10,
-                  "padding": [
-                    11,
-                    14
-                  ],
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "Dm5Jm",
-                      "name": "Main",
-                      "width": "fill_container",
-                      "layout": "vertical",
-                      "gap": 3,
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "AdnM5",
-                          "name": "Description",
-                          "fill": "$foreground",
-                          "content": "Canada Child Benefit",
-                          "fontFamily": "$font-body",
-                          "fontSize": 14,
-                          "fontWeight": "500"
-                        },
-                        {
-                          "type": "frame",
-                          "id": "vTNUB",
-                          "name": "Meta",
-                          "gap": 6,
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "Aoqwn",
-                              "name": "Received",
-                              "fill": "$muted-foreground",
-                              "content": "Received 20 Nov",
-                              "fontFamily": "$font-body",
-                              "fontSize": 12,
-                              "fontWeight": "normal"
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "text",
-                      "id": "fcqg4",
-                      "name": "Amount",
-                      "fill": "$success",
-                      "content": "+ 290.21",
-                      "fontFamily": "$font-metric",
-                      "fontSize": 14,
-                      "fontWeight": "600"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "ZDdWB",
-                  "name": "Income Rogers credit — phone",
-                  "width": "fill_container",
-                  "stroke": "$border",
-                  "strokeWidth": {
-                    "bottom": 1
-                  },
-                  "gap": 10,
-                  "padding": [
-                    11,
-                    14
-                  ],
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "MgH2y",
-                      "name": "Main",
-                      "width": "fill_container",
-                      "layout": "vertical",
-                      "gap": 3,
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "QX7Pr",
-                          "name": "Description",
-                          "fill": "$foreground",
-                          "content": "Rogers credit — phone",
-                          "fontFamily": "$font-body",
-                          "fontSize": 14,
-                          "fontWeight": "500"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "text",
-                      "id": "CvFLj",
-                      "name": "Amount",
-                      "fill": "$success",
-                      "content": "+ 10.75",
-                      "fontFamily": "$font-metric",
-                      "fontSize": 14,
-                      "fontWeight": "600"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "vEMT7",
-                  "name": "Income Rogers credit — internet",
-                  "width": "fill_container",
-                  "stroke": "$border",
-                  "strokeWidth": {
-                    "bottom": 1
-                  },
-                  "gap": 10,
-                  "padding": [
-                    11,
-                    14
-                  ],
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "YBjvf",
-                      "name": "Main",
-                      "width": "fill_container",
-                      "layout": "vertical",
-                      "gap": 3,
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "XwScG",
-                          "name": "Description",
-                          "fill": "$foreground",
-                          "content": "Rogers credit — internet",
-                          "fontFamily": "$font-body",
-                          "fontSize": 14,
-                          "fontWeight": "500"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "text",
-                      "id": "GHkN7",
-                      "name": "Amount",
-                      "fill": "$success",
-                      "content": "+ 11.47",
-                      "fontFamily": "$font-metric",
-                      "fontSize": 14,
-                      "fontWeight": "600"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "tRHMu",
-                  "name": "Income Reimbursement — IA for Devs",
-                  "width": "fill_container",
-                  "stroke": "$border",
-                  "strokeWidth": {
-                    "bottom": 1
-                  },
-                  "gap": 10,
-                  "padding": [
-                    11,
-                    14
-                  ],
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "DP3Yv",
-                      "name": "Main",
-                      "width": "fill_container",
-                      "layout": "vertical",
-                      "gap": 3,
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "w1d7E",
-                          "name": "Description",
-                          "fill": "$foreground",
-                          "content": "Reimbursement — IA for Devs",
-                          "fontFamily": "$font-body",
-                          "fontSize": 14,
-                          "fontWeight": "500"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "text",
-                      "id": "YoR63",
-                      "name": "Amount",
-                      "fill": "$success",
-                      "content": "+ 394.20",
+                      "content": "+ $6,144.00",
                       "fontFamily": "$font-metric",
                       "fontSize": 14,
                       "fontWeight": "600"
@@ -24779,7 +24652,275 @@
                       "id": "JVCZj",
                       "name": "Amount",
                       "fill": "$success",
-                      "content": "+ 280.00",
+                      "content": "+ $280.00",
+                      "fontFamily": "$font-metric",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "L15Q27",
+                  "name": "Income Canada Child Benefit",
+                  "width": "fill_container",
+                  "stroke": "$border",
+                  "strokeWidth": {
+                    "bottom": 1
+                  },
+                  "gap": 10,
+                  "padding": [
+                    11,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Dm5Jm",
+                      "name": "Main",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 3,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "AdnM5",
+                          "name": "Description",
+                          "fill": "$foreground",
+                          "content": "Canada Child Benefit",
+                          "fontFamily": "$font-body",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "vTNUB",
+                          "name": "Meta",
+                          "gap": 6,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Aoqwn",
+                              "name": "Received",
+                              "fill": "$muted-foreground",
+                              "content": "Received 20 Nov",
+                              "fontFamily": "$font-body",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "fcqg4",
+                      "name": "Amount",
+                      "fill": "$success",
+                      "content": "+ $290.21",
+                      "fontFamily": "$font-metric",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ZDdWB",
+                  "name": "Income Rogers credit — phone",
+                  "width": "fill_container",
+                  "stroke": "$border",
+                  "strokeWidth": {
+                    "bottom": 1
+                  },
+                  "gap": 10,
+                  "padding": [
+                    11,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "MgH2y",
+                      "name": "Main",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 3,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "QX7Pr",
+                          "name": "Description",
+                          "fill": "$foreground",
+                          "content": "Rogers credit — phone",
+                          "fontFamily": "$font-body",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "PVtP4",
+                          "name": "Meta",
+                          "gap": 6,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "r2ws9n",
+                              "name": "Received",
+                              "fill": "$muted-foreground",
+                              "content": "Not received yet",
+                              "fontFamily": "$font-body",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "CvFLj",
+                      "name": "Amount",
+                      "fill": "$muted-foreground",
+                      "content": "+ $10.75",
+                      "fontFamily": "$font-metric",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "vEMT7",
+                  "name": "Income Rogers credit — internet",
+                  "width": "fill_container",
+                  "stroke": "$border",
+                  "strokeWidth": {
+                    "bottom": 1
+                  },
+                  "gap": 10,
+                  "padding": [
+                    11,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "YBjvf",
+                      "name": "Main",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 3,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "XwScG",
+                          "name": "Description",
+                          "fill": "$foreground",
+                          "content": "Rogers credit — internet",
+                          "fontFamily": "$font-body",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "I60nU",
+                          "name": "Meta",
+                          "gap": 6,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "j5LPMk",
+                              "name": "Received",
+                              "fill": "$muted-foreground",
+                              "content": "Not received yet",
+                              "fontFamily": "$font-body",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "GHkN7",
+                      "name": "Amount",
+                      "fill": "$muted-foreground",
+                      "content": "+ $11.47",
+                      "fontFamily": "$font-metric",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "tRHMu",
+                  "name": "Income Reimbursement — IA for Devs",
+                  "width": "fill_container",
+                  "stroke": "$border",
+                  "strokeWidth": {
+                    "bottom": 1
+                  },
+                  "gap": 10,
+                  "padding": [
+                    11,
+                    14
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "DP3Yv",
+                      "name": "Main",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 3,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "w1d7E",
+                          "name": "Description",
+                          "fill": "$foreground",
+                          "content": "Reimbursement — IA for Devs",
+                          "fontFamily": "$font-body",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "YOBWP",
+                          "name": "Meta",
+                          "gap": 6,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "bV1Oi",
+                              "name": "Received",
+                              "fill": "$muted-foreground",
+                              "content": "Not received yet",
+                              "fontFamily": "$font-body",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "YoR63",
+                      "name": "Amount",
+                      "fill": "$muted-foreground",
+                      "content": "+ $394.20",
                       "fontFamily": "$font-metric",
                       "fontSize": 14,
                       "fontWeight": "600"
@@ -24816,6 +24957,25 @@
                           "fontFamily": "$font-body",
                           "fontSize": 14,
                           "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "aklhj",
+                          "name": "Meta",
+                          "gap": 6,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "kOQn2",
+                              "name": "Received",
+                              "fill": "$muted-foreground",
+                              "content": "Not received yet",
+                              "fontFamily": "$font-body",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
                         }
                       ]
                     },
@@ -24823,8 +24983,8 @@
                       "type": "text",
                       "id": "GbNpm",
                       "name": "Amount",
-                      "fill": "$success",
-                      "content": "+ 245.04",
+                      "fill": "$muted-foreground",
+                      "content": "+ $245.04",
                       "fontFamily": "$font-metric",
                       "fontSize": 14,
                       "fontWeight": "600"
