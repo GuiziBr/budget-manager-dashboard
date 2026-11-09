@@ -160,3 +160,97 @@
 		box-shadow: inset 0 0 20px 20px var(--card);
 	}
 }
+
+/* Sheets slide in and out. tw-animate-css isn't loaded, so the sheet's animate-in classes do nothing; these keyframes drive the open and close instead. */
+@keyframes sheet-fade-in {
+	from {
+		opacity: 0;
+	}
+}
+@keyframes sheet-fade-out {
+	to {
+		opacity: 0;
+	}
+}
+@keyframes sheet-in-right {
+	from {
+		transform: translateX(100%);
+	}
+}
+@keyframes sheet-out-right {
+	to {
+		transform: translateX(100%);
+	}
+}
+@keyframes sheet-in-left {
+	from {
+		transform: translateX(-100%);
+	}
+}
+@keyframes sheet-out-left {
+	to {
+		transform: translateX(-100%);
+	}
+}
+@keyframes sheet-in-bottom {
+	from {
+		transform: translateY(100%);
+	}
+}
+@keyframes sheet-out-bottom {
+	to {
+		transform: translateY(100%);
+	}
+}
+@keyframes sheet-in-top {
+	from {
+		transform: translateY(-100%);
+	}
+}
+@keyframes sheet-out-top {
+	to {
+		transform: translateY(-100%);
+	}
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	[data-slot="sheet-overlay"][data-state="open"] {
+		animation: sheet-fade-in 300ms ease-out;
+	}
+	[data-slot="sheet-overlay"][data-state="closed"] {
+		animation: sheet-fade-out 220ms ease-in forwards;
+	}
+	[data-slot="sheet-content"][data-state="open"] {
+		animation-duration: 320ms;
+		animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+	}
+	[data-slot="sheet-content"][data-state="closed"] {
+		animation-duration: 220ms;
+		animation-timing-function: cubic-bezier(0.4, 0, 1, 1);
+		animation-fill-mode: forwards;
+	}
+	[data-slot="sheet-content"][data-side="right"][data-state="open"] {
+		animation-name: sheet-in-right;
+	}
+	[data-slot="sheet-content"][data-side="right"][data-state="closed"] {
+		animation-name: sheet-out-right;
+	}
+	[data-slot="sheet-content"][data-side="left"][data-state="open"] {
+		animation-name: sheet-in-left;
+	}
+	[data-slot="sheet-content"][data-side="left"][data-state="closed"] {
+		animation-name: sheet-out-left;
+	}
+	[data-slot="sheet-content"][data-side="bottom"][data-state="open"] {
+		animation-name: sheet-in-bottom;
+	}
+	[data-slot="sheet-content"][data-side="bottom"][data-state="closed"] {
+		animation-name: sheet-out-bottom;
+	}
+	[data-slot="sheet-content"][data-side="top"][data-state="open"] {
+		animation-name: sheet-in-top;
+	}
+	[data-slot="sheet-content"][data-side="top"][data-state="closed"] {
+		animation-name: sheet-out-top;
+	}
+}

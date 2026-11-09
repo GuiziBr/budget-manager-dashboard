@@ -48,6 +48,25 @@ export const translations = {
 			currency: "$",
 			viewAll: "View all"
 		},
+		income: {
+			title: "Income",
+			description: "{month} income",
+			loading: "Loading income",
+			loadError: "Couldn't load the income",
+			retry: "Retry",
+			total: "Total income",
+			ofSalary: "{amount} of this is salary",
+			noSalary: "No salary this month",
+			empty: "No income this month",
+			salary: "Salary",
+			received: "Received {date}",
+			notReceived: "Not received yet",
+			rowActions: "Actions for {item}",
+			edit: "Edit",
+			delete: "Delete",
+			add: "Add income",
+			close: "Close"
+		},
 		envelopes: {
 			label: "Categories",
 			title: "Categories",

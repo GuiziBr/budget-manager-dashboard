@@ -223,3 +223,99 @@ describe("MonthScreen add button", () => {
 		expect(screen.queryByRole("button", { name: "Add" })).toBeNull()
 	})
 })
+
+describe("MonthScreen income panel", () => {
+	const open = (search = "") => {
+		nav.search = search
+		vi.spyOn(api, "getPage").mockResolvedValue({
+			data: [],
+			total: 0,
+			totalAmount: 0,
+			page: 1,
+			limit: 10
+		} as never)
+		vi.spyOn(api, "get").mockImplementation(((endpoint: string) =>
+			Promise.resolve(
+				endpoint.includes("budget-periods")
+					? [make(2026, 11), make(2026, 10)]
+					: endpoint.startsWith("incomes")
+						? [
+								{
+									id: "i1",
+									budgetPeriodId: "x",
+									description: "Pay day",
+									amount: 10,
+									isSalary: true,
+									receivedAt: null,
+									createdAt: "",
+									updatedAt: "",
+									deletedAt: null
+								}
+							]
+						: []
+			)) as never)
+	}
+
+	it("lists no income on the page until View all is clicked", async () => {
+		open()
+		const user = setup()
+		await screen.findByRole("region", { name: "Month summary" })
+		expect(screen.queryByText("Pay day")).toBeNull()
+		await user.click(screen.getByRole("button", { name: /View all/ }))
+		expect(await screen.findByText("Pay day")).toBeInTheDocument()
+		expect(screen.getByRole("dialog")).toBeInTheDocument()
+	})
+
+	it("returns the focus to the control that opened the panel", async () => {
+		open()
+		const user = setup()
+		const viewAll = await screen.findByRole("button", { name: /View all/ })
+		await user.click(viewAll)
+		await screen.findByText("Pay day")
+		await user.keyboard("{Escape}")
+		await vi.waitFor(() => expect(viewAll).toHaveFocus())
+	})
+
+	it("doesn't reopen the panel when coming back to a month", async () => {
+		open()
+		const { wrapper } = createQueryWrapper()
+		const { rerender } = render(<MonthScreen />, { wrapper })
+		const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+		await user.click(await screen.findByRole("button", { name: /View all/ }))
+		await screen.findByText("Pay day")
+
+		// Back and forward leave the panel open's month, then return to it
+		nav.search = "period=2026-10"
+		rerender(<MonthScreen />)
+		await vi.waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+		nav.search = ""
+		rerender(<MonthScreen />)
+		await screen.findByRole("region", { name: "Month summary" })
+		expect(screen.queryByRole("dialog")).toBeNull()
+	})
+
+	it("doesn't reopen the panel after a month that isn't opened", async () => {
+		open()
+		const { wrapper } = createQueryWrapper()
+		const { rerender } = render(<MonthScreen />, { wrapper })
+		const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+		await user.click(await screen.findByRole("button", { name: /View all/ }))
+		await screen.findByText("Pay day")
+
+		nav.search = "period=2027-03"
+		rerender(<MonthScreen />)
+		await screen.findByText(/hasn't been opened/)
+		nav.search = ""
+		rerender(<MonthScreen />)
+		await screen.findByRole("region", { name: "Month summary" })
+		expect(screen.queryByRole("dialog")).toBeNull()
+	})
+
+	it("has no edit controls in a closed month", async () => {
+		open("period=2026-10")
+		const user = setup()
+		await user.click(await screen.findByRole("button", { name: /View all/ }))
+		await screen.findByText("Pay day")
+		expect(screen.queryByRole("button", { name: "Add income" })).toBeNull()
+	})
+})

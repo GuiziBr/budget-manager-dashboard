@@ -71,7 +71,7 @@ These terms and calculations are used throughout the document.
 | **% of salary** | Row amount ÷ salary base. **Not shown for now** (out of scope, see [todo.md](todo.md)) |
 | **Unpaid** | An expense with no paid date. Envelopes have no paid date and are never unpaid |
 | **Overdue** | An unpaid expense whose due date is before today. Applies in every month, past ones included |
-| **Money** | CAD with 2 decimals: `CAD 1,450.00`. Expense amounts are shown **without a sign**, in the regular text colour; incomes carry a plus sign in the success colour (`+ CAD 6,144.00`). Only a negative balance shows a minus sign. Compact lists (phone rows and the income panel) use the **compact form** without the currency (`1,450.00`, `+ 6,144.00`), since the app is CAD only and the totals next to them show it |
+| **Money** | CAD with 2 decimals: `CAD 1,450.00`. Expense amounts are shown **without a sign**, in the regular text colour; incomes carry a plus sign in the success colour (`+ CAD 6,144.00`). Only a negative balance shows a minus sign. Compact lists (the phone rows) use the **compact form** without the currency (`1,450.00`), since the app is CAD only and the totals next to them show it. The income panel shows its amounts with the dollar sign (`$6,144.00`, `+ $1,500.00`) |
 
 ---
 
@@ -284,8 +284,8 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 1. Incomes are **not listed on the page**. The Income summary card shows the total and a **View all** link.
 2. Clicking the Income card (or the Income figure in the phone's Balance card) opens the **income panel**: a side panel from the right on desktop (440px wide, over a dimmed page), a bottom sheet on the phone.
 3. The panel shows:
-   - the total income and how much of it is salary ("CAD 6,144.00 of this is salary");
-   - each income: description, Salary badge for salary incomes, received date (if any), amount in the compact form (`+ 6,144.00`, success colour, section 2) and a row menu (Edit, Delete);
+   - the total income and how much of it is salary ("$6,144.00 of this is salary"), under a "{month year} income" line;
+   - each income: description, Salary badge for salary incomes, received date (if any) or "Not received yet", amount with the dollar sign (`+ $6,144.00`, success colour; in the muted text colour while the income is not received yet) and a row menu (Edit, Delete);
    - an **Add income** button at the bottom (M-20).
 4. The panel closes with the close button, Escape, or a click on the dimmed page.
 
@@ -294,7 +294,7 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 **Acceptance criteria**
 - *Given* the month screen, *then* no income rows are shown on the page.
 - *Given* I click the Income card, *then* the income panel opens listing every income of the month with its total.
-- *Given* two incomes flagged as salary of 3,000.00 and 3,144.00, *then* both show the Salary badge and the panel reads "CAD 6,144.00 of this is salary".
+- *Given* two incomes flagged as salary of 3,000.00 and 3,144.00, *then* both show the Salary badge and the panel reads "$6,144.00 of this is salary".
 - *Given* no salary income, *then* the panel says "No salary this month".
 
 #### M-08 Row details
