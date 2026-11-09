@@ -168,4 +168,17 @@ describe("AddFab", () => {
 		fireEvent.pointerMove(button(), { clientX: 100, clientY: 100 })
 		expect(button()).toHaveStyle({ right: "16px", bottom: "96px" })
 	})
+
+	it("settles to the closest side when the screen is resized", () => {
+		render(<AddFab />)
+		drag(-250, 0)
+		expect(button()).toHaveStyle({ right: "318px" })
+		Object.defineProperty(window, "innerWidth", {
+			value: 500,
+			configurable: true
+		})
+		fireEvent(window, new Event("resize"))
+		// Still the left side, now of a wider screen
+		expect(button()).toHaveStyle({ right: "428px" })
+	})
 })

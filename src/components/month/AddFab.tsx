@@ -84,8 +84,7 @@ export function AddFab({ onAdd }: AddFabProps) {
 	// Read before the first paint, so a saved position doesn't animate in from the default spot
 	useLayoutEffect(() => {
 		setOffset(readOffset())
-		const onResize = () =>
-			setOffset((current) => clampOffset(current, viewport()))
+		const onResize = () => setOffset(settle)
 		window.addEventListener("resize", onResize)
 		return () => window.removeEventListener("resize", onResize)
 	}, [])
