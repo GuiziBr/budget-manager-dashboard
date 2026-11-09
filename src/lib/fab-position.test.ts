@@ -22,6 +22,16 @@ describe("clampOffset", () => {
 		})
 	})
 
+	it("keeps the button above a minimum bottom offset", () => {
+		expect(clampOffset({ right: 16, bottom: 10 }, viewport, 88)).toEqual({
+			right: 16,
+			bottom: 88
+		})
+		expect(clampOffset({ right: 16, bottom: 300 }, viewport, 88).bottom).toBe(
+			300
+		)
+	})
+
 	it("doesn't go below the margin in a tiny viewport", () => {
 		expect(
 			clampOffset({ right: 30, bottom: 30 }, { width: 40, height: 40 })

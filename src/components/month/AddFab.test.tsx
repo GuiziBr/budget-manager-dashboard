@@ -58,10 +58,41 @@ describe("AddFab", () => {
 		)
 	})
 
-	it("keeps the button on screen", () => {
+	it("keeps the button on screen and above the tab bar once released", () => {
 		render(<AddFab />)
 		drag(900, 900)
-		expect(button()).toHaveStyle({ right: "8px", bottom: "8px" })
+		expect(button()).toHaveStyle({ right: "8px", bottom: "88px" })
+		expect(window.localStorage.getItem(FAB_POSITION_KEY)).toBe(
+			'{"right":8,"bottom":88}'
+		)
+	})
+
+	it("lets the button go over the tab bar while dragging, then lifts it on release", () => {
+		render(<AddFab />)
+		fireEvent.pointerDown(button(), { button: 0, clientX: 300, clientY: 600 })
+		fireEvent.pointerMove(button(), { clientX: 300, clientY: 760 })
+		expect(button()).toHaveStyle({ bottom: "8px" })
+		fireEvent.pointerUp(button())
+		expect(button()).toHaveStyle({ bottom: "88px" })
+	})
+
+	it("rests above the measured tab bar", () => {
+		const bar = document.createElement("nav")
+		bar.setAttribute("aria-label", "Primary")
+		bar.getBoundingClientRect = () => ({ top: 700 }) as DOMRect
+		document.body.append(bar)
+		render(<AddFab />)
+		drag(0, 900)
+		// 800 - 700 + 8
+		expect(button()).toHaveStyle({ bottom: "108px" })
+		bar.remove()
+	})
+
+	it("doesn't move below the tab bar with the arrow keys", () => {
+		render(<AddFab />)
+		for (let i = 0; i < 10; i++)
+			fireEvent.keyDown(button(), { key: "ArrowDown" })
+		expect(button()).toHaveStyle({ bottom: "88px" })
 	})
 
 	it("doesn't open the menu after a drag, but does after the next tap", async () => {

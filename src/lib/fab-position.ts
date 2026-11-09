@@ -13,19 +13,26 @@ export const FAB_DRAG_THRESHOLD = 6
 export const FAB_KEY_STEP = 16
 export const FAB_POSITION_KEY = "month.add-fab.position"
 
-const clampAxis = (value: number, viewport: number) =>
+/** Used when the tab bar can't be measured (tests, or the bar isn't on the page). */
+export const FAB_TAB_BAR_FALLBACK = 88
+
+const clampAxis = (value: number, viewport: number, min = FAB_MARGIN) =>
 	Math.min(
-		Math.max(value, FAB_MARGIN),
+		Math.max(value, min),
 		Math.max(FAB_MARGIN, viewport - FAB_SIZE - FAB_MARGIN)
 	)
 
-/** Keeps the whole button on screen. */
+/**
+ * Keeps the whole button on screen. `minBottom` keeps it above the bottom tab bar;
+ * leave it out to allow the whole screen (while dragging).
+ */
 export const clampOffset = (
 	offset: FabOffset,
-	viewport: { width: number; height: number }
+	viewport: { width: number; height: number },
+	minBottom = FAB_MARGIN
 ): FabOffset => ({
 	right: clampAxis(offset.right, viewport.width),
-	bottom: clampAxis(offset.bottom, viewport.height)
+	bottom: clampAxis(offset.bottom, viewport.height, minBottom)
 })
 
 /** Reads a stored position, ignoring anything that isn't two finite numbers. */

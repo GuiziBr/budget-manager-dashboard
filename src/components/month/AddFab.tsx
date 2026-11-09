@@ -8,7 +8,9 @@ import {
 	FAB_DEFAULT,
 	FAB_DRAG_THRESHOLD,
 	FAB_KEY_STEP,
+	FAB_MARGIN,
 	FAB_POSITION_KEY,
+	FAB_TAB_BAR_FALLBACK,
 	type FabOffset,
 	parseOffset
 } from "@/lib/fab-position"
@@ -23,12 +25,27 @@ const viewport = () => ({
 	height: window.innerHeight
 })
 
+/** The lowest the button may rest: just above the bottom tab bar. */
+const restingMinBottom = () => {
+	const bar = document.querySelector(
+		`nav[aria-label="${translations.navigation.tabBarLabel}"]`
+	)
+	const top = bar?.getBoundingClientRect().top
+	if (top === undefined || top <= 0) return FAB_TAB_BAR_FALLBACK
+	return window.innerHeight - top + FAB_MARGIN
+}
+
+/** A position the button can rest at: on screen and clear of the tab bar. */
+const settle = (offset: FabOffset) =>
+	clampOffset(offset, viewport(), restingMinBottom())
+
 const readOffset = (): FabOffset => {
 	try {
-		const stored = parseOffset(window.localStorage.getItem(FAB_POSITION_KEY))
-		return clampOffset(stored ?? FAB_DEFAULT, viewport())
+		return settle(
+			parseOffset(window.localStorage.getItem(FAB_POSITION_KEY)) ?? FAB_DEFAULT
+		)
 	} catch {
-		return clampOffset(FAB_DEFAULT, viewport())
+		return settle(FAB_DEFAULT)
 	}
 }
 
@@ -103,10 +120,10 @@ export function AddFab({ onAdd }: AddFabProps) {
 		setTimeout(() => {
 			justDragged.current = false
 		}, 0)
-		setOffset((latest) => {
-			saveOffset(latest)
-			return latest
-		})
+		// Dropped over the tab bar: slide up to just above it
+		const resting = settle(offset)
+		setOffset(resting)
+		saveOffset(resting)
 	}
 
 	const onKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
@@ -118,10 +135,10 @@ export function AddFab({ onAdd }: AddFabProps) {
 		}[event.key]
 		if (!step) return
 		event.preventDefault()
-		const next = clampOffset(
-			{ right: offset.right + step.right, bottom: offset.bottom + step.bottom },
-			viewport()
-		)
+		const next = settle({
+			right: offset.right + step.right,
+			bottom: offset.bottom + step.bottom
+		})
 		setOffset(next)
 		saveOffset(next)
 	}
@@ -140,7 +157,7 @@ export function AddFab({ onAdd }: AddFabProps) {
 			aria-label={translations.month.table.addButton}
 			aria-description={translations.month.table.addButtonHint}
 			style={{ right: offset.right, bottom: offset.bottom }}
-			className={`fixed z-30 flex size-14 touch-none select-none items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${dragging ? "cursor-grabbing scale-105" : "cursor-grab"}`}
+			className={`fixed z-30 flex size-14 touch-none select-none items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${dragging ? "cursor-grabbing scale-105" : "cursor-grab transition-[bottom,right,transform] duration-200"}`}
 		>
 			<Plus className="size-6" aria-hidden="true" />
 		</button>
