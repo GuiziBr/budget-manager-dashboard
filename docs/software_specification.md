@@ -169,7 +169,6 @@ All models include a `deleted_at` timestamp. No records are physically deleted. 
 
 - Multiple incomes with `isSalary = true` per period are allowed (e.g., split payroll deposits)
 - **% of salary** is derived at query time — `expense.amount / SUM(income.amount WHERE isSalary = true)` for the same period — and is never stored
-- An income **cannot be updated or soft-deleted** if its budget period's `(year, month)` is before the current calendar month — returns **422 Unprocessable Entity**
 
 ### Lookup Tables (Category, PaymentType, Bank, Store)
 

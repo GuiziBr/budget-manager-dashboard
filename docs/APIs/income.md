@@ -16,10 +16,6 @@ Base route: `/incomes`. An income is money received within one budget period.
 | `updatedAt` | date | |
 | `deletedAt` | date \| null | always `null` |
 
-## Past-period rule
-
-Incomes whose budget period is earlier than the current UTC year/month cannot be updated or deleted (`422`). Creation is allowed in any existing period.
-
 ## GET /incomes
 
 | Query param | Type | Required | Notes |
@@ -76,7 +72,6 @@ At least one field is required. `budgetPeriodId` cannot be changed.
 - **200** updated `Income`
 - **400** `id` not a UUID, invalid body, or empty body
 - **404** income not found
-- **422** the income's period is in the past: `Cannot update an income from a past budget period`
 - **500**
 
 ## DELETE /incomes/:id
@@ -84,5 +79,4 @@ At least one field is required. `budgetPeriodId` cannot be changed.
 - **204** no body
 - **400** `id` is not a UUID
 - **404** income not found
-- **422** the income's period is in the past: `Cannot delete an income from a past budget period`
 - **500**
