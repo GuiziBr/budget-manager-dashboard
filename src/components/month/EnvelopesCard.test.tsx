@@ -62,13 +62,36 @@ describe("EnvelopesCard", () => {
 		expect(screen.queryByText(/over budget/)).not.toBeInTheDocument()
 	})
 
-	it("leaves out an envelope whose category isn't in the lookup", async () => {
+	it("shows (deleted) for an envelope whose category isn't in the lookup", async () => {
 		mockApi([env("e1", "gone", 500, 900), env("e2", "c1", 500, 100)])
 		setup()
 		const items = await screen.findAllByRole("listitem")
-		expect(items).toHaveLength(1)
-		expect(items[0]).toHaveTextContent("Groceries")
-		expect(screen.queryByText(/over budget/)).not.toBeInTheDocument()
+		expect(items).toHaveLength(2)
+		// Over budget, so it comes first and still counts
+		expect(items[0]).toHaveTextContent("(deleted)")
+		expect(items[1]).toHaveTextContent("Groceries")
+		expect(screen.getByText("1 over budget")).toBeInTheDocument()
+	})
+
+	it("opens the envelope on click and highlights the selected one", async () => {
+		mockApi([env("e1", "c1", 500, 100), env("e2", "c2", 200, 50)])
+		const onSelect = vi.fn()
+		const { wrapper } = createQueryWrapper()
+		render(
+			<EnvelopesCard
+				periodId="p1"
+				onSelectEnvelope={onSelect}
+				selectedEnvelopeId="e2"
+			/>,
+			{ wrapper }
+		)
+		const dining = await screen.findByRole("button", { name: /Dining/ })
+		expect(dining).toHaveAttribute("aria-current", "true")
+		expect(
+			screen.getByRole("button", { name: /Groceries/ })
+		).not.toHaveAttribute("aria-current")
+		await userEvent.click(screen.getByRole("button", { name: /Groceries/ }))
+		expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ id: "e1" }))
 	})
 
 	it("collapses, keeps the pill, and remembers the choice", async () => {

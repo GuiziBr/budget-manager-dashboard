@@ -108,6 +108,21 @@ export function installmentEndDate(plan: InstallmentPlanDates): string {
 	return toUtcDay(end.toISOString())
 }
 
+// The end date of the plan a row belongs to, from what the row already carries
+export function rowInstallmentEndDate(installment: RowInstallment): string {
+	return installmentEndDate({
+		firstPurchasedAt: installment.firstPurchasedAt,
+		totalInstallments: installment.total,
+		paymentIntervalDays: installment.paymentIntervalDays
+	})
+}
+
+// Allocated minus spent, in cents so it stays exact. Negative when over budget; null without a spend figure
+export function envelopeRemaining(status: EnvelopeStatus): number | null {
+	if (status.spent === null) return null
+	return fromCents(toCents(status.allocated) - toCents(status.spent))
+}
+
 export function envelopeStatus(
 	envelope: BudgetEnvelope,
 	categoryNames: ReadonlyMap<Id, string>

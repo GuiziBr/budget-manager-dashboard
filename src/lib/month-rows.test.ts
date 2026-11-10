@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest"
 import type { BudgetEnvelope, Expense, Income } from "@/types"
 import {
 	buildRows,
+	envelopeRemaining,
 	envelopeStatus,
 	installmentEndDate,
 	isOverdue,
 	isUnpaid,
+	rowInstallmentEndDate,
 	rowType,
 	sortEnvelopes,
 	totals
@@ -282,6 +284,39 @@ describe("envelopeStatus", () => {
 		expect(
 			envelopeStatus(envelope({ categoryId: "gone" }), names).categoryName
 		).toBeNull()
+	})
+})
+
+describe("rowInstallmentEndDate", () => {
+	it("reads the plan from the row (Car finance, 104 payments every 14 days)", () => {
+		expect(
+			rowInstallmentEndDate({
+				number: 78,
+				total: 104,
+				paymentIntervalDays: 14,
+				firstPurchasedAt: "2023-11-10T00:00:00.000Z"
+			})
+		).toBe("2027-10-22")
+	})
+})
+
+describe("envelopeRemaining", () => {
+	const names = new Map([["c1", "Groceries"]])
+	const remaining = (spentAmount: number | null, allocatedAmount = 100) =>
+		envelopeRemaining(
+			envelopeStatus(envelope({ spentAmount, allocatedAmount }), names)
+		)
+
+	it("is allocated minus spent", () => {
+		expect(remaining(40)).toBe(60)
+	})
+
+	it("is negative when over budget, without float noise", () => {
+		expect(remaining(120.1)).toBe(-20.1)
+	})
+
+	it("is null without a spend figure", () => {
+		expect(remaining(null)).toBeNull()
 	})
 })
 

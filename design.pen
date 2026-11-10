@@ -21707,59 +21707,104 @@
               "alignItems": "center",
               "children": [
                 {
-                  "type": "frame",
-                  "id": "F1XDN",
-                  "name": "Type Chip",
-                  "fill": "$card",
-                  "cornerRadius": 999,
-                  "gap": 6,
-                  "padding": [
-                    3,
-                    10
-                  ],
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "icon",
-                      "id": "HUJyN",
-                      "name": "Icon",
-                      "width": 12,
-                      "height": 12,
-                      "icon": "repeat",
-                      "library": "lucide",
-                      "fill": "$muted-foreground"
-                    },
-                    {
-                      "type": "text",
-                      "id": "zspjJ",
-                      "name": "Label",
-                      "fill": "$muted-foreground",
-                      "content": "Recurring · Month —",
-                      "fontFamily": "$font-body",
-                      "fontSize": 12,
-                      "fontWeight": "500"
-                    }
-                  ]
+                  "type": "text",
+                  "id": "BCBm8",
+                  "name": "Title",
+                  "fill": "$foreground",
+                  "content": "Hydro bill",
+                  "fontFamily": "$font-body",
+                  "fontSize": 18,
+                  "fontWeight": "600"
                 },
                 {
                   "type": "frame",
-                  "id": "yEJx1",
-                  "name": "Close",
-                  "width": 36,
-                  "height": 36,
-                  "cornerRadius": 10,
-                  "justifyContent": "center",
+                  "id": "z5uZI",
+                  "name": "Header Actions",
+                  "gap": 8,
                   "alignItems": "center",
                   "children": [
                     {
-                      "type": "icon",
-                      "id": "I0tl5",
-                      "name": "X",
-                      "width": 18,
-                      "height": 18,
-                      "icon": "x",
-                      "library": "lucide",
-                      "fill": "$muted-foreground"
+                      "type": "text",
+                      "id": "YxCW4",
+                      "name": "Counter",
+                      "fill": "$muted-foreground",
+                      "content": "(3/36)",
+                      "lineHeight": 1,
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "YNiLd",
+                      "name": "Previous",
+                      "width": 32,
+                      "height": 32,
+                      "cornerRadius": 10,
+                      "stroke": "$border",
+                      "strokeWidth": 1,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "H9rpQ",
+                          "name": "Chevron Up",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "chevron-up",
+                          "library": "lucide",
+                          "fill": "$foreground"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "k84YIM",
+                      "name": "Next",
+                      "width": 32,
+                      "height": 32,
+                      "cornerRadius": 10,
+                      "stroke": "$border",
+                      "strokeWidth": 1,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "ampC1",
+                          "name": "Chevron Down",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "chevron-down",
+                          "library": "lucide",
+                          "fill": "$foreground"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "yEJx1",
+                      "name": "Close",
+                      "width": 32,
+                      "height": 32,
+                      "cornerRadius": 10,
+                      "stroke": "$border",
+                      "strokeWidth": 1,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "I0tl5",
+                          "name": "X",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "x",
+                          "library": "lucide",
+                          "fill": "$muted-foreground"
+                        }
+                      ]
                     }
                   ]
                 }
@@ -21770,82 +21815,27 @@
               "id": "PAz9y",
               "name": "Summary",
               "width": "fill_container",
-              "layout": "vertical",
               "gap": 12,
               "padding": [
                 16,
-                24,
-                20,
                 24
               ],
+              "justifyContent": "space_between",
+              "alignItems": "center",
               "children": [
-                {
-                  "type": "frame",
-                  "id": "tmvjM",
-                  "name": "Title Block",
-                  "layout": "vertical",
-                  "gap": 6,
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "BCBm8",
-                      "name": "Title",
-                      "fill": "$foreground",
-                      "content": "Hydro bill",
-                      "fontFamily": "$font-body",
-                      "fontSize": 22,
-                      "fontWeight": "700",
-                      "letterSpacing": -0.3
-                    },
-                    {
-                      "type": "frame",
-                      "id": "fJO7p",
-                      "name": "Category Chip",
-                      "fill": "$card",
-                      "cornerRadius": 999,
-                      "padding": [
-                        2,
-                        8
-                      ],
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "TUuvX",
-                          "name": "Category",
-                          "fill": "$muted-foreground",
-                          "content": "Utilities",
-                          "fontFamily": "$font-body",
-                          "fontSize": 11,
-                          "fontWeight": "500"
-                        }
-                      ]
-                    }
-                  ]
-                },
                 {
                   "type": "frame",
                   "id": "c63gG",
                   "name": "Amount",
                   "gap": 5,
-                  "alignItems": "end",
+                  "alignItems": "center",
                   "children": [
-                    {
-                      "type": "text",
-                      "id": "d8rkz",
-                      "name": "Currency",
-                      "opacity": 0.75,
-                      "fill": "$danger",
-                      "content": "CAD",
-                      "fontFamily": "$font-metric",
-                      "fontSize": 13,
-                      "fontWeight": "500"
-                    },
                     {
                       "type": "text",
                       "id": "cME1v",
                       "name": "Value",
-                      "fill": "$danger",
-                      "content": "105.00",
+                      "fill": "$foreground",
+                      "content": "$105.00",
                       "lineHeight": 1,
                       "fontFamily": "$font-metric",
                       "fontSize": 30,
@@ -21856,70 +21846,24 @@
                 },
                 {
                   "type": "frame",
-                  "id": "WOlWC",
-                  "name": "Status Pill",
-                  "fill": "$danger-soft",
+                  "id": "fJO7p",
+                  "name": "Category Chip",
+                  "fill": "$card",
                   "cornerRadius": 999,
-                  "gap": 6,
                   "padding": [
-                    3,
-                    10
+                    2,
+                    8
                   ],
-                  "alignItems": "center",
                   "children": [
                     {
-                      "type": "icon",
-                      "id": "ll5Sr",
-                      "name": "Icon",
-                      "width": 13,
-                      "height": 13,
-                      "icon": "circle-alert",
-                      "library": "lucide",
-                      "fill": "$danger"
-                    },
-                    {
                       "type": "text",
-                      "id": "QNZAY",
-                      "name": "Label",
-                      "fill": "$danger",
-                      "content": "Overdue · was due 12 Nov",
+                      "id": "TUuvX",
+                      "name": "Category",
+                      "fill": "$muted-foreground",
+                      "content": "Utilities",
                       "fontFamily": "$font-body",
-                      "fontSize": 12,
-                      "fontWeight": "600"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "E7jPe",
-                  "name": "Mark Paid Button",
-                  "width": "fill_container",
-                  "height": 40,
-                  "fill": "$primary",
-                  "cornerRadius": 10,
-                  "gap": 8,
-                  "justifyContent": "center",
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "icon",
-                      "id": "B2VcHl",
-                      "name": "Icon",
-                      "width": 16,
-                      "height": 16,
-                      "icon": "check",
-                      "library": "lucide",
-                      "fill": "$primary-foreground"
-                    },
-                    {
-                      "type": "text",
-                      "id": "J1IZP",
-                      "name": "Label",
-                      "fill": "$primary-foreground",
-                      "content": "Mark as paid today",
-                      "fontFamily": "$font-body",
-                      "fontSize": 14,
-                      "fontWeight": "600"
+                      "fontSize": 11,
+                      "fontWeight": "500"
                     }
                   ]
                 }
@@ -21932,7 +21876,7 @@
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
-              "gap": 20,
+              "gap": 16,
               "padding": [
                 0,
                 24
@@ -21940,23 +21884,100 @@
               "children": [
                 {
                   "type": "frame",
+                  "id": "oGQPR",
+                  "name": "Tabs",
+                  "width": "fill_container",
+                  "fill": "$muted",
+                  "cornerRadius": 12,
+                  "gap": 4,
+                  "padding": 4,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "JfdkF",
+                      "name": "Tab Payment",
+                      "width": "fill_container",
+                      "height": 32,
+                      "fill": "$card",
+                      "cornerRadius": 8,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "#00000033",
+                        "offset": {
+                          "x": 0,
+                          "y": 1
+                        },
+                        "blur": 2
+                      },
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "VOTjB",
+                          "name": "Label",
+                          "fill": "$foreground",
+                          "content": "Payment",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ZN8pb",
+                      "name": "Tab Dates",
+                      "width": "fill_container",
+                      "height": 32,
+                      "cornerRadius": 8,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "OMovz",
+                          "name": "Label",
+                          "fill": "$muted-foreground",
+                          "content": "Dates",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "DOpCQ",
+                      "name": "Tab Recurring bill",
+                      "width": "fill_container",
+                      "height": 32,
+                      "cornerRadius": 8,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "y0cAp",
+                          "name": "Label",
+                          "fill": "$muted-foreground",
+                          "content": "Recurring bill",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
                   "id": "dAlIB",
                   "name": "Payment",
                   "width": "fill_container",
                   "layout": "vertical",
-                  "gap": 8,
                   "children": [
-                    {
-                      "type": "text",
-                      "id": "Vd4ku",
-                      "name": "Section Label",
-                      "fill": "$muted-foreground",
-                      "content": "PAYMENT",
-                      "fontFamily": "$font-body",
-                      "fontSize": 11,
-                      "fontWeight": "600",
-                      "letterSpacing": 1
-                    },
                     {
                       "type": "frame",
                       "id": "C1nR1",
@@ -21969,6 +21990,69 @@
                       "strokeWidth": 1,
                       "layout": "vertical",
                       "children": [
+                        {
+                          "type": "frame",
+                          "id": "IJNJP",
+                          "name": "Status",
+                          "width": "fill_container",
+                          "stroke": "$border",
+                          "strokeWidth": {
+                            "bottom": 1
+                          },
+                          "padding": [
+                            10,
+                            14
+                          ],
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "uBY2l",
+                              "name": "Label",
+                              "fill": "$muted-foreground",
+                              "content": "Status",
+                              "fontFamily": "$font-body",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "WOlWC",
+                              "name": "Status Pill",
+                              "fill": "$danger-soft",
+                              "cornerRadius": 999,
+                              "gap": 6,
+                              "padding": [
+                                2,
+                                10
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "ll5Sr",
+                                  "name": "Icon",
+                                  "width": 13,
+                                  "height": 13,
+                                  "icon": "circle-alert",
+                                  "library": "lucide",
+                                  "fill": "$danger"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "QNZAY",
+                                  "name": "Label",
+                                  "fill": "$danger",
+                                  "content": "Overdue",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        },
                         {
                           "type": "frame",
                           "id": "hT9ND",
@@ -22083,298 +22167,6 @@
                       ]
                     }
                   ]
-                },
-                {
-                  "type": "frame",
-                  "id": "JHO3U",
-                  "name": "Dates",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": 8,
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "QJp5X",
-                      "name": "Section Label",
-                      "fill": "$muted-foreground",
-                      "content": "DATES",
-                      "fontFamily": "$font-body",
-                      "fontSize": 11,
-                      "fontWeight": "600",
-                      "letterSpacing": 1
-                    },
-                    {
-                      "type": "frame",
-                      "id": "barLD",
-                      "name": "Fields",
-                      "clip": true,
-                      "width": "fill_container",
-                      "fill": "$card",
-                      "cornerRadius": 14,
-                      "stroke": "$border",
-                      "strokeWidth": 1,
-                      "layout": "vertical",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "Ftyx0",
-                          "name": "Purchased",
-                          "width": "fill_container",
-                          "stroke": "$border",
-                          "strokeWidth": {
-                            "bottom": 1
-                          },
-                          "padding": [
-                            12,
-                            14
-                          ],
-                          "justifyContent": "space_between",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "ENM2u",
-                              "name": "Label",
-                              "fill": "$muted-foreground",
-                              "content": "Purchased",
-                              "fontFamily": "$font-body",
-                              "fontSize": 13,
-                              "fontWeight": "normal"
-                            },
-                            {
-                              "type": "text",
-                              "id": "C6iu0r",
-                              "name": "Value",
-                              "fill": "$muted-foreground",
-                              "content": "—",
-                              "fontFamily": "$font-body",
-                              "fontSize": 13,
-                              "fontWeight": "500"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "frame",
-                          "id": "N6jzFQ",
-                          "name": "Due",
-                          "width": "fill_container",
-                          "stroke": "$border",
-                          "strokeWidth": {
-                            "bottom": 1
-                          },
-                          "padding": [
-                            12,
-                            14
-                          ],
-                          "justifyContent": "space_between",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "P7fps",
-                              "name": "Label",
-                              "fill": "$muted-foreground",
-                              "content": "Due",
-                              "fontFamily": "$font-body",
-                              "fontSize": 13,
-                              "fontWeight": "normal"
-                            },
-                            {
-                              "type": "text",
-                              "id": "mZe9F",
-                              "name": "Value",
-                              "fill": "$foreground",
-                              "content": "12 Nov 2026",
-                              "fontFamily": "$font-body",
-                              "fontSize": 13,
-                              "fontWeight": "500"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "frame",
-                          "id": "w4gZP",
-                          "name": "Paid",
-                          "width": "fill_container",
-                          "stroke": "$border",
-                          "padding": [
-                            12,
-                            14
-                          ],
-                          "justifyContent": "space_between",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "CE4YR",
-                              "name": "Label",
-                              "fill": "$muted-foreground",
-                              "content": "Paid",
-                              "fontFamily": "$font-body",
-                              "fontSize": 13,
-                              "fontWeight": "normal"
-                            },
-                            {
-                              "type": "text",
-                              "id": "PGQ4q",
-                              "name": "Value",
-                              "fill": "$foreground",
-                              "content": "Not paid",
-                              "fontFamily": "$font-body",
-                              "fontSize": 13,
-                              "fontWeight": "500"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "A6kiNt",
-                  "name": "Recurring bill",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": 8,
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "jWvmo",
-                      "name": "Section Label",
-                      "fill": "$muted-foreground",
-                      "content": "RECURRING BILL",
-                      "fontFamily": "$font-body",
-                      "fontSize": 11,
-                      "fontWeight": "600",
-                      "letterSpacing": 1
-                    },
-                    {
-                      "type": "frame",
-                      "id": "o5Hcd1",
-                      "name": "Fields",
-                      "clip": true,
-                      "width": "fill_container",
-                      "fill": "$card",
-                      "cornerRadius": 14,
-                      "stroke": "$border",
-                      "strokeWidth": 1,
-                      "layout": "vertical",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "KOHCF",
-                          "name": "Repeats",
-                          "width": "fill_container",
-                          "stroke": "$border",
-                          "strokeWidth": {
-                            "bottom": 1
-                          },
-                          "padding": [
-                            12,
-                            14
-                          ],
-                          "justifyContent": "space_between",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "oDheH",
-                              "name": "Label",
-                              "fill": "$muted-foreground",
-                              "content": "Repeats",
-                              "fontFamily": "$font-body",
-                              "fontSize": 13,
-                              "fontWeight": "normal"
-                            },
-                            {
-                              "type": "text",
-                              "id": "x39jUp",
-                              "name": "Value",
-                              "fill": "$foreground",
-                              "content": "Every month since Mar 2026",
-                              "fontFamily": "$font-body",
-                              "fontSize": 13,
-                              "fontWeight": "500"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "frame",
-                          "id": "cAiZ9",
-                          "name": "Months running",
-                          "width": "fill_container",
-                          "stroke": "$border",
-                          "strokeWidth": {
-                            "bottom": 1
-                          },
-                          "padding": [
-                            12,
-                            14
-                          ],
-                          "justifyContent": "space_between",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "Mmm82",
-                              "name": "Label",
-                              "fill": "$muted-foreground",
-                              "content": "Months running",
-                              "fontFamily": "$font-body",
-                              "fontSize": 13,
-                              "fontWeight": "normal"
-                            },
-                            {
-                              "type": "text",
-                              "id": "r4T9c",
-                              "name": "Value",
-                              "fill": "$muted-foreground",
-                              "content": "—",
-                              "fontFamily": "$font-body",
-                              "fontSize": 13,
-                              "fontWeight": "500"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "frame",
-                          "id": "xJfmV",
-                          "name": "Manage bill",
-                          "width": "fill_container",
-                          "stroke": "$border",
-                          "padding": [
-                            12,
-                            14
-                          ],
-                          "justifyContent": "space_between",
-                          "alignItems": "center",
-                          "children": [
-                            {
-                              "type": "text",
-                              "id": "kIk7j",
-                              "name": "Label",
-                              "fill": "$muted-foreground",
-                              "content": "Manage bill",
-                              "fontFamily": "$font-body",
-                              "fontSize": 13,
-                              "fontWeight": "normal"
-                            },
-                            {
-                              "type": "text",
-                              "id": "rxmIl",
-                              "name": "Value",
-                              "fill": "$primary-text",
-                              "content": "Open in Recurring →",
-                              "fontFamily": "$font-body",
-                              "fontSize": 13,
-                              "fontWeight": "500"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
                 }
               ]
             },
@@ -22387,39 +22179,38 @@
               "strokeWidth": {
                 "top": 1
               },
-              "gap": 12,
+              "layout": "vertical",
+              "gap": 8,
               "padding": 24,
               "children": [
                 {
                   "type": "frame",
-                  "id": "WJaV4",
-                  "name": "Edit Button",
+                  "id": "E7jPe",
+                  "name": "Mark Paid Button",
                   "width": "fill_container",
                   "height": 40,
-                  "fill": "$card",
+                  "fill": "$primary",
                   "cornerRadius": 10,
-                  "stroke": "$input",
-                  "strokeWidth": 1,
                   "gap": 8,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
                     {
                       "type": "icon",
-                      "id": "CqtWl",
+                      "id": "B2VcHl",
                       "name": "Icon",
-                      "width": 15,
-                      "height": 15,
-                      "icon": "pencil",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "check",
                       "library": "lucide",
-                      "fill": "$foreground"
+                      "fill": "$primary-foreground"
                     },
                     {
                       "type": "text",
-                      "id": "I4tTh",
+                      "id": "J1IZP",
                       "name": "Label",
-                      "fill": "$foreground",
-                      "content": "Edit",
+                      "fill": "$primary-foreground",
+                      "content": "Mark as paid today",
                       "fontFamily": "$font-body",
                       "fontSize": 14,
                       "fontWeight": "600"
@@ -22428,35 +22219,80 @@
                 },
                 {
                   "type": "frame",
-                  "id": "Y6Y16o",
-                  "name": "Delete Button",
+                  "id": "FwF1D",
+                  "name": "Secondary Actions",
                   "width": "fill_container",
-                  "height": 40,
-                  "fill": "$destructive",
-                  "cornerRadius": 10,
-                  "gap": 8,
-                  "justifyContent": "center",
-                  "alignItems": "center",
+                  "gap": 12,
                   "children": [
                     {
-                      "type": "icon",
-                      "id": "fwdMy",
-                      "name": "Icon",
-                      "width": 15,
-                      "height": 15,
-                      "icon": "trash-2",
-                      "library": "lucide",
-                      "fill": "$primary-foreground"
+                      "type": "frame",
+                      "id": "WJaV4",
+                      "name": "Edit Button",
+                      "width": "fill_container",
+                      "height": 40,
+                      "fill": "$card",
+                      "cornerRadius": 10,
+                      "stroke": "$input",
+                      "strokeWidth": 1,
+                      "gap": 8,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "CqtWl",
+                          "name": "Icon",
+                          "width": 15,
+                          "height": 15,
+                          "icon": "pencil",
+                          "library": "lucide",
+                          "fill": "$foreground"
+                        },
+                        {
+                          "type": "text",
+                          "id": "I4tTh",
+                          "name": "Label",
+                          "fill": "$foreground",
+                          "content": "Edit",
+                          "fontFamily": "$font-body",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        }
+                      ]
                     },
                     {
-                      "type": "text",
-                      "id": "eZdVD",
-                      "name": "Label",
-                      "fill": "$primary-foreground",
-                      "content": "Delete",
-                      "fontFamily": "$font-body",
-                      "fontSize": 14,
-                      "fontWeight": "600"
+                      "type": "frame",
+                      "id": "Y6Y16o",
+                      "name": "Delete Button",
+                      "width": "fill_container",
+                      "height": 40,
+                      "fill": "$destructive",
+                      "cornerRadius": 10,
+                      "gap": 8,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "fwdMy",
+                          "name": "Icon",
+                          "width": 15,
+                          "height": 15,
+                          "icon": "trash-2",
+                          "library": "lucide",
+                          "fill": "$primary-foreground"
+                        },
+                        {
+                          "type": "text",
+                          "id": "eZdVD",
+                          "name": "Label",
+                          "fill": "$primary-foreground",
+                          "content": "Delete",
+                          "fontFamily": "$font-body",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        }
+                      ]
                     }
                   ]
                 }

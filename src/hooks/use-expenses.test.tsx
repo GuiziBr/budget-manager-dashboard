@@ -1,14 +1,16 @@
 // @vitest-environment jsdom
 import { act, renderHook, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { api } from "@/lib/api"
+import { ApiError, api } from "@/lib/api"
 import { createQueryWrapper } from "@/test/query-wrapper"
 import type { Expense, ExpensePage } from "@/types"
 import {
 	EXPENSES_QUERY_KEY,
+	expenseQueryKey,
 	monthExpensesQueryKey,
 	useCreateExpense,
 	useDeleteExpense,
+	useExpense,
 	useMonthExpensesPage,
 	useUpdateExpense
 } from "./use-expenses"
@@ -234,6 +236,34 @@ describe("useUpdateExpense", () => {
 		await act(async () => resolve(makeExpense("e1")))
 	})
 
+	it("leaves a cached expense by id alone when optimistic", async () => {
+		vi.spyOn(api, "patch").mockReturnValue(new Promise(() => {}))
+		const { wrapper, queryClient } = createQueryWrapper()
+		queryClient.setQueryData(
+			monthExpensesQueryKey("p1", 1, null),
+			makePage([makeExpense("e1")])
+		)
+		const detail = makeExpense("e1")
+		queryClient.setQueryData(expenseQueryKey("e1"), detail)
+
+		const { result } = renderHook(
+			() => useUpdateExpense({ optimistic: true }),
+			{ wrapper }
+		)
+		act(() => {
+			result.current.mutate({ id: "e1", input: { paidAt: "2026-11-04" } })
+		})
+
+		await waitFor(() =>
+			expect(
+				queryClient.getQueryData<ExpensePage>(
+					monthExpensesQueryKey("p1", 1, null)
+				)?.data[0].paidAt
+			).toBe("2026-11-04")
+		)
+		expect(queryClient.getQueryData(expenseQueryKey("e1"))).toBe(detail)
+	})
+
 	it("restores the pages when the request fails", async () => {
 		vi.spyOn(api, "patch").mockRejectedValue(new Error("boom"))
 		const { wrapper, queryClient } = createQueryWrapper()
@@ -302,5 +332,65 @@ describe("useDeleteExpense", () => {
 
 		expect(del).toHaveBeenCalledWith("expenses/e1")
 		expect(invalidate).toHaveBeenCalledWith({ queryKey: EXPENSES_QUERY_KEY })
+	})
+})
+
+describe("useExpense", () => {
+	const validId = "11111111-1111-4111-8111-111111111111"
+
+	it("loads one expense by id", async () => {
+		const get = vi.spyOn(api, "get").mockResolvedValue(makeExpense(validId))
+		const { wrapper } = createQueryWrapper()
+
+		const { result } = renderHook(() => useExpense(validId), { wrapper })
+
+		await waitFor(() => expect(result.current.isSuccess).toBe(true))
+		expect(result.current.data?.id).toBe(validId)
+		expect(get).toHaveBeenCalledWith(`expenses/${validId}`)
+	})
+
+	it("doesn't ask again for an expense the screen already cached", () => {
+		const get = vi.spyOn(api, "get")
+		const { wrapper, queryClient } = createQueryWrapper()
+		queryClient.setQueryData(expenseQueryKey("e1"), makeExpense("e1"))
+
+		const { result } = renderHook(() => useExpense("e1"), { wrapper })
+
+		expect(result.current.data?.id).toBe("e1")
+		expect(get).not.toHaveBeenCalled()
+	})
+
+	it("doesn't request anything without an id", () => {
+		const get = vi.spyOn(api, "get")
+		const { wrapper } = createQueryWrapper()
+
+		renderHook(() => useExpense(undefined), { wrapper })
+
+		expect(get).not.toHaveBeenCalled()
+	})
+
+	it("reports a missing expense without retrying", async () => {
+		const get = vi
+			.spyOn(api, "get")
+			.mockRejectedValue(new ApiError("not found", 404))
+		const { wrapper } = createQueryWrapper()
+
+		const { result } = renderHook(() => useExpense(validId), { wrapper })
+
+		await waitFor(() => expect(result.current.isError).toBe(true))
+		expect(get).toHaveBeenCalledTimes(1)
+	})
+
+	it("rejects an id that isn't a UUID without requesting it", async () => {
+		const get = vi.spyOn(api, "get")
+		const { wrapper } = createQueryWrapper()
+
+		const { result } = renderHook(() => useExpense("..%2Fcategories"), {
+			wrapper
+		})
+
+		await waitFor(() => expect(result.current.isError).toBe(true))
+		expect((result.current.error as ApiError).status).toBe(400)
+		expect(get).not.toHaveBeenCalled()
 	})
 })

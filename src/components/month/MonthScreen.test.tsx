@@ -6,15 +6,51 @@ import { ApiError, api } from "@/lib/api"
 import { createQueryWrapper } from "@/test/query-wrapper"
 import { MonthScreen } from "./MonthScreen"
 
+// The address is a small store, so push, replace and back change what the screen reads
 const nav = vi.hoisted(() => ({
 	search: "",
-	push: vi.fn(),
-	replace: vi.fn()
+	history: [] as string[],
+	listeners: new Set<() => void>(),
+	cache: { key: "", params: new URLSearchParams() }
 }))
-vi.mock("next/navigation", () => ({
-	useSearchParams: () => new URLSearchParams(nav.search),
-	useRouter: () => ({ push: nav.push, replace: nav.replace })
-}))
+const notify = () => {
+	for (const listener of nav.listeners) listener()
+}
+const toSearch = (href: string) => href.replace(/^\?/, "")
+const toast = vi.hoisted(() => ({ error: vi.fn() }))
+vi.mock("sonner", () => ({ toast }))
+vi.mock("next/navigation", async () => {
+	const { useSyncExternalStore } = await import("react")
+	const snapshot = () => {
+		if (nav.cache.key !== nav.search) {
+			nav.cache = { key: nav.search, params: new URLSearchParams(nav.search) }
+		}
+		return nav.cache.params
+	}
+	const subscribe = (listener: () => void) => {
+		nav.listeners.add(listener)
+		return () => nav.listeners.delete(listener)
+	}
+	const router = {
+		push: (href: string) => {
+			nav.history.push(nav.search)
+			nav.search = toSearch(href)
+			notify()
+		},
+		replace: (href: string) => {
+			nav.search = toSearch(href)
+			notify()
+		},
+		back: () => {
+			nav.search = nav.history.pop() ?? ""
+			notify()
+		}
+	}
+	return {
+		useSearchParams: () => useSyncExternalStore(subscribe, snapshot, snapshot),
+		useRouter: () => router
+	}
+})
 
 const make = (year: number, month: number) => ({
 	id: `${year}-${month}`,
@@ -29,6 +65,8 @@ beforeEach(() => {
 	vi.useFakeTimers({ toFake: ["Date"] })
 	vi.setSystemTime(new Date("2026-11-02T12:00:00Z"))
 	nav.search = ""
+	nav.history = []
+	toast.error.mockClear()
 })
 
 afterEach(() => {
@@ -317,5 +355,294 @@ describe("MonthScreen income panel", () => {
 		await user.click(await screen.findByRole("button", { name: /View all/ }))
 		await screen.findByText("Pay day")
 		expect(screen.queryByRole("button", { name: "Add income" })).toBeNull()
+	})
+})
+
+describe("MonthScreen details panel", () => {
+	// Shared-link ids for an expense/envelope outside the page/list on screen: real UUIDs, unlike "x1"/"e1" below
+	const HYDRO_ID = "11111111-1111-4111-8111-111111111111"
+	const FAR_EXPENSE_ID = "77777777-7777-4777-8777-777777777777"
+	const OLD_ENVELOPE_ID = "66666666-6666-4666-8666-666666666666"
+
+	const expenseIn = (id: string, periodId: string, description: string) => ({
+		id,
+		budgetPeriodId: periodId,
+		recurringExpenseId: null,
+		description,
+		installmentNumber: null,
+		purchasedAt: null,
+		dueAt: "2026-11-28",
+		paidAt: null,
+		amount: 120,
+		category: { id: "c1", name: "Utilities" },
+		paymentType: { id: "t1", name: "Debit" },
+		bank: null,
+		store: null,
+		installment: null,
+		monthsRunning: null,
+		createdAt: "",
+		updatedAt: "",
+		deletedAt: null
+	})
+	const hydro = expenseIn(HYDRO_ID, "2026-11", "Hydro bill")
+	const envelope = (id: string, periodId: string) => ({
+		id,
+		budgetPeriodId: periodId,
+		categoryId: "c9",
+		allocatedAmount: 400,
+		spentAmount: 90,
+		spendUpdatedAt: null
+	})
+
+	const open = (
+		search = "",
+		listed = hydro,
+		others: unknown[] = [],
+		secondPage: unknown[] = []
+	) => {
+		nav.search = search
+		vi.spyOn(api, "getPage").mockImplementation((async (
+			_endpoint: string,
+			params?: { page?: number }
+		) => {
+			const page = Number(params?.page ?? 1)
+			return {
+				data: page === 2 ? secondPage : [listed, ...others],
+				// A second page needs more than one page of expenses
+				total: secondPage.length ? 11 : 1 + others.length,
+				totalAmount: 120,
+				page,
+				limit: 10
+			}
+		}) as never)
+		return vi.spyOn(api, "get").mockImplementation(((endpoint: string) => {
+			if (endpoint === `expenses/${HYDRO_ID}`) return Promise.resolve(listed)
+			if (endpoint === `expenses/${FAR_EXPENSE_ID}`)
+				return Promise.resolve(expenseIn(FAR_EXPENSE_ID, "2026-10", "Far away"))
+			if (endpoint === `budget-envelopes/${OLD_ENVELOPE_ID}`)
+				return Promise.resolve(envelope(OLD_ENVELOPE_ID, "2026-10"))
+			if (
+				endpoint.startsWith("expenses/") ||
+				endpoint.startsWith("budget-envelopes/")
+			)
+				return Promise.reject(new ApiError("not found", 404))
+			return Promise.resolve(
+				endpoint.includes("budget-periods")
+					? [make(2026, 11), make(2026, 10)]
+					: endpoint.startsWith("categories")
+						? [{ id: "c9", name: "Groceries" }]
+						: endpoint.startsWith("budget-envelopes")
+							? [envelope("e1", "2026-11")]
+							: []
+			)
+		}) as never)
+	}
+
+	it("puts the expense in the address and opens its details", async () => {
+		const get = open()
+		const user = setup()
+		await user.click(await screen.findByRole("button", { name: "Hydro bill" }))
+		const dialog = await screen.findByRole("dialog")
+		expect(nav.search).toBe(`expense=${HYDRO_ID}`)
+		expect(dialog).toHaveTextContent("Hydro bill")
+		expect(dialog).toHaveTextContent("Debit")
+		// The page behind a modal panel is hidden from the accessibility tree
+		expect(
+			screen
+				.getByRole("button", { name: "Hydro bill", hidden: true })
+				.closest("tr")
+		).toHaveAttribute("aria-current", "true")
+		// The row was cached when clicked, so the API isn't asked for it
+		expect(get).not.toHaveBeenCalledWith(`expenses/${HYDRO_ID}`)
+	})
+
+	it("closes with Escape, goes back in history and returns the focus", async () => {
+		open()
+		const user = setup()
+		const item = await screen.findByRole("button", { name: "Hydro bill" })
+		await user.click(item)
+		await screen.findByRole("dialog")
+		await user.keyboard("{Escape}")
+		await vi.waitFor(() => expect(item).toHaveFocus())
+		expect(nav.search).toBe("")
+		expect(screen.queryByRole("dialog")).toBeNull()
+		expect(item.closest("tr")).not.toHaveAttribute("aria-current")
+	})
+
+	it("steps to the next and previous expense, updating the address without adding history", async () => {
+		const get = open("", hydro, [expenseIn("x2", "2026-11", "Water bill")])
+		const user = setup()
+		await user.click(await screen.findByRole("button", { name: "Hydro bill" }))
+		const dialog = await screen.findByRole("dialog")
+		const historyAfterOpen = nav.history.length
+
+		await user.click(screen.getByRole("button", { name: "Next expense" }))
+		await vi.waitFor(() => expect(nav.search).toBe("expense=x2"))
+		expect(screen.getByRole("dialog")).toHaveTextContent("Water bill")
+		expect(nav.history).toHaveLength(historyAfterOpen)
+		expect(get).not.toHaveBeenCalledWith("expenses/x2")
+
+		await user.click(screen.getByRole("button", { name: "Previous expense" }))
+		await vi.waitFor(() => expect(nav.search).toBe(`expense=${HYDRO_ID}`))
+		expect(dialog).toHaveTextContent("Hydro bill")
+
+		// One step back from wherever it ended closes it
+		await user.keyboard("{Escape}")
+		await vi.waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+		expect(nav.search).toBe("")
+	})
+
+	it("continues onto the next and the previous page, and the table follows", async () => {
+		open(
+			"",
+			hydro,
+			[expenseIn("x2", "2026-11", "Water bill")],
+			[expenseIn("x3", "2026-11", "Gas bill")]
+		)
+		const user = setup()
+		await user.click(await screen.findByRole("button", { name: "Hydro bill" }))
+		await screen.findByRole("dialog")
+		const params = () => new URLSearchParams(nav.search)
+
+		await user.click(screen.getByRole("button", { name: "Next expense" }))
+		await vi.waitFor(() => expect(params().get("expense")).toBe("x2"))
+
+		// Water bill is the last row of page 1: Next waits for page 2, then moves there
+		const next = screen.getByRole("button", { name: "Next expense" })
+		await vi.waitFor(() => expect(next).toBeEnabled())
+		await user.click(next)
+		await vi.waitFor(() => expect(params().get("expense")).toBe("x3"))
+		expect(params().get("page")).toBe("2")
+		expect(screen.getByRole("dialog")).toHaveTextContent("Gas bill")
+		expect(
+			screen
+				.getByRole("button", { name: "Gas bill", hidden: true })
+				.closest("tr")
+		).toHaveAttribute("aria-current", "true")
+
+		// Gas bill is the first row of page 2: Previous goes back to the end of page 1
+		const previous = screen.getByRole("button", { name: "Previous expense" })
+		await vi.waitFor(() => expect(previous).toBeEnabled())
+		await user.click(previous)
+		await vi.waitFor(() => expect(params().get("expense")).toBe("x2"))
+		expect(params().get("page")).toBeNull()
+		expect(screen.getByRole("dialog")).toHaveTextContent("Water bill")
+	})
+
+	it("opens the expense named in a pasted link and removes the param on close", async () => {
+		open(`period=2026-11&expense=${HYDRO_ID}`)
+		const user = setup()
+		const dialog = await screen.findByRole("dialog")
+		expect(dialog).toHaveTextContent("Hydro bill")
+		await user.keyboard("{Escape}")
+		await vi.waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+		expect(nav.search).toBe("period=2026-11")
+	})
+
+	it("switches to the month of a linked expense that is somewhere else", async () => {
+		open(`period=2026-11&expense=${FAR_EXPENSE_ID}`)
+		setup()
+		const dialog = await screen.findByRole("dialog")
+		expect(dialog).toHaveTextContent("Far away")
+		await vi.waitFor(() =>
+			expect(new URLSearchParams(nav.search).get("period")).toBe("2026-10")
+		)
+		expect(new URLSearchParams(nav.search).get("expense")).toBe(FAR_EXPENSE_ID)
+		expect(
+			await screen.findByRole("button", { name: /October 2026/, hidden: true })
+		).toBeInTheDocument()
+	})
+
+	it("uses the linked month even when the address has no period", async () => {
+		open(`expense=${FAR_EXPENSE_ID}`)
+		setup()
+		await screen.findByRole("dialog")
+		await vi.waitFor(() =>
+			expect(new URLSearchParams(nav.search).get("period")).toBe("2026-10")
+		)
+	})
+
+	it("says so and drops the param when the linked expense doesn't exist", async () => {
+		open("period=2026-11&expense=gone")
+		setup()
+		await vi.waitFor(() =>
+			expect(toast.error).toHaveBeenCalledWith(
+				"This expense no longer exists.",
+				{ id: "linked-selection" }
+			)
+		)
+		expect(nav.search).toBe("period=2026-11")
+		expect(screen.queryByRole("dialog")).toBeNull()
+	})
+
+	it("drops a tampered link without requesting it, instead of following it to another endpoint", async () => {
+		const get = open("period=2026-11&expense=..%2Fcategories")
+		setup()
+		await vi.waitFor(() =>
+			expect(toast.error).toHaveBeenCalledWith(
+				"This expense no longer exists.",
+				{ id: "linked-selection" }
+			)
+		)
+		expect(
+			get.mock.calls.some(([endpoint]) => String(endpoint).includes(".."))
+		).toBe(false)
+		expect(screen.queryByRole("dialog")).toBeNull()
+	})
+
+	it("puts the envelope in the address and opens its details", async () => {
+		const get = open()
+		const user = setup()
+		await user.click(await screen.findByRole("button", { name: /Groceries/ }))
+		const dialog = await screen.findByRole("dialog")
+		expect(nav.search).toBe("envelope=e1")
+		expect(dialog).toHaveTextContent("Groceries")
+		expect(dialog).toHaveTextContent("$310.00")
+		expect(get).not.toHaveBeenCalledWith("budget-envelopes/e1")
+	})
+
+	it("opens the envelope named in a pasted link, in its own month", async () => {
+		open(`period=2026-11&envelope=${OLD_ENVELOPE_ID}`)
+		setup()
+		expect(await screen.findByRole("dialog")).toHaveTextContent("Groceries")
+		await vi.waitFor(() =>
+			expect(new URLSearchParams(nav.search).get("period")).toBe("2026-10")
+		)
+	})
+
+	it("says so and drops the param when the linked envelope doesn't exist", async () => {
+		open("period=2026-11&envelope=nope")
+		setup()
+		await vi.waitFor(() =>
+			expect(toast.error).toHaveBeenCalledWith(
+				"This envelope no longer exists.",
+				{ id: "linked-selection" }
+			)
+		)
+		expect(nav.search).toBe("period=2026-11")
+	})
+
+	it("closes the details when the month changes", async () => {
+		open()
+		const { wrapper } = createQueryWrapper()
+		const { rerender } = render(<MonthScreen />, { wrapper })
+		const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+		await user.click(await screen.findByRole("button", { name: "Hydro bill" }))
+		await screen.findByRole("dialog")
+
+		// A month link carries no selection
+		nav.search = "period=2026-10"
+		rerender(<MonthScreen />)
+		await vi.waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+	})
+
+	it("shows no actions in a closed month", async () => {
+		open("period=2026-10", expenseIn("x1", "2026-10", "Hydro bill"))
+		const user = setup()
+		await user.click(await screen.findByRole("button", { name: "Hydro bill" }))
+		const dialog = await screen.findByRole("dialog")
+		expect(dialog).toHaveTextContent("Hydro bill")
+		expect(screen.queryByRole("button", { name: /Mark as/ })).toBeNull()
+		expect(screen.queryByRole("button", { name: "Delete" })).toBeNull()
 	})
 })

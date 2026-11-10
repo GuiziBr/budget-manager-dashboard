@@ -7,8 +7,9 @@ import {
 	useQuery,
 	useQueryClient
 } from "@tanstack/react-query"
-import { api } from "@/lib/api"
+import { ApiError, api } from "@/lib/api"
 import { type SortState, toSortParams } from "@/lib/expense-sort"
+import { isUuid } from "@/lib/id"
 import type {
 	CreateExpenseInput,
 	Expense,
@@ -22,6 +23,35 @@ import type {
 export const EXPENSES_QUERY_KEY = ["expenses"] as const
 
 export const EXPENSES_PAGE_SIZE = 10
+
+/** Only the month pages hold lists; the details of one expense are kept under their own key. */
+const MONTH_PAGES_KEY = [...EXPENSES_QUERY_KEY, "month"] as const
+
+/** How long a loaded expense counts as fresh: the details panel opens from the page without a request. */
+const EXPENSE_STALE_TIME_MS = 30 * 1000
+
+export function expenseQueryKey(id: Id | undefined) {
+	return [...EXPENSES_QUERY_KEY, "detail", id] as const
+}
+
+/**
+ * One expense by id, for a link to it (the expense may be on any page of any
+ * month). Opening a row seeds this entry, so no request is made in that case.
+ * Pass `undefined` to skip the request.
+ */
+export function useExpense(id: Id | undefined) {
+	return useQuery({
+		queryKey: expenseQueryKey(id),
+		queryFn: () =>
+			id !== undefined && isUuid(id)
+				? api.get<Expense>(`expenses/${encodeURIComponent(id)}`)
+				: // Not a real id (e.g. a tampered address): same as the API's own 404/400
+					Promise.reject(new ApiError("Invalid id", 400)),
+		enabled: id !== undefined,
+		staleTime: EXPENSE_STALE_TIME_MS,
+		retry: false
+	})
+}
 
 export function monthExpensesQueryKey(
 	periodId: Id | undefined,
@@ -115,10 +145,10 @@ export function useUpdateExpense({ optimistic = false } = {}) {
 
 			await queryClient.cancelQueries({ queryKey: EXPENSES_QUERY_KEY })
 			const snapshots = queryClient.getQueriesData<ExpensePage>({
-				queryKey: EXPENSES_QUERY_KEY
+				queryKey: MONTH_PAGES_KEY
 			})
 			queryClient.setQueriesData<ExpensePage>(
-				{ queryKey: EXPENSES_QUERY_KEY },
+				{ queryKey: MONTH_PAGES_KEY },
 				(page) =>
 					page && {
 						...page,
