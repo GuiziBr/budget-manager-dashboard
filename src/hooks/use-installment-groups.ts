@@ -17,9 +17,8 @@ export function installmentGroupQueryKey(id: Id | undefined) {
 }
 
 /**
- * One installment plan. Read only when View plan opens: it is the only place
- * that needs the amount per payment, which `expense.installment` doesn't carry.
- * Pass `undefined` while the panel is closed to skip the request.
+ * One installment plan, for the amount per payment, which `expense.installment`
+ * doesn't carry. Pass `undefined` until the plan is needed to skip the request.
  */
 export function useInstallmentGroup(id: Id | undefined) {
 	return useQuery({

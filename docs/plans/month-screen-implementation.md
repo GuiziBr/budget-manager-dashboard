@@ -155,8 +155,8 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 - **Status: done (2026-11-04).** Exports `BUDGET_ENVELOPES_QUERY_KEY`; a month's list is keyed `["budget-envelopes", "month", periodId]` and waits until the period id is known. `spentAmount` is passed through untouched, `null` included. Create and delete invalidate every envelope query.
 
 #### T-15 Installment group hooks
-- `use-installment-groups.ts`: `useInstallmentGroup(id)` (read only when **View plan** opens, for the amount per payment, which `expense.installment` doesn't carry) and `useUpdateInstallmentGroup` (invalidates the expenses of every month it touches). `n of N`, interval and first purchase date come with each expense, so there are no per-plan reads.
-- **Status: done (2026-11-04).** `useInstallmentGroup(id)` stays idle while `id` is `undefined`, so View plan can pass the id only when it opens. `useUpdateInstallmentGroup` takes `{ id, amountPerInstallment }` and invalidates the plan and the root `["expenses"]` key, which covers every month and page. The key is a local copy until the expense hooks are merged; switch it to `EXPENSES_QUERY_KEY` then.
+- `use-installment-groups.ts`: `useInstallmentGroup(id)` (for the amount per payment, which `expense.installment` doesn't carry; unused since View plan was dropped from T-24, kept for T-31) and `useUpdateInstallmentGroup` (invalidates the expenses of every month it touches). `n of N`, interval and first purchase date come with each expense, so there are no per-plan reads.
+- **Status: done (2026-11-04).** `useInstallmentGroup(id)` stays idle while `id` is `undefined`, so a caller can pass the id only when it needs the plan. `useUpdateInstallmentGroup` takes `{ id, amountPerInstallment }` and invalidates the plan and the root `["expenses"]` key, which covers every month and page. The key is a local copy until the expense hooks are merged; switch it to `EXPENSES_QUERY_KEY` then.
 
 ### Phase 2 — Read-only Month screen
 
@@ -221,13 +221,14 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 - **Includes:** the panel for expenses and envelopes:
   - type chip, title, category, amount and status pill;
   - Payment, Dates and Recurring bill sections;
-  - for installments, the plan section (`n of N`, interval, first purchase, end date, View plan); the plan's amount per payment is not on the expense, so it is shown in View plan (T-31), not here;
+  - for installments, the plan section (`n of N`, interval, first purchase, end date); no View plan button (dropped 2026-11-09, the section has all the details needed); the plan's amount per payment is not on the expense and is not shown;
   - the selected row highlighted;
   - actions hidden in past months.
-  Action buttons are wired in T-25, T-29, T-30 and T-31.
+  Action buttons are wired in T-25, T-29 and T-30.
 - **Done when:** the M-08 acceptance criteria pass and the panel matches the "Expense details open" frame.
 - **Backend:** G-12 (envelopes carry no category name): an envelope whose category was deleted shows "(deleted)".
-- Months running, plan interval and end date come from the expense; only View plan reads the group (T-15).
+- Months running, plan interval and end date come from the expense; the panel never reads the installment group.
+- **Status: done (2026-11-09).** The open expense or envelope is in the address (`?expense=<id>` or `?envelope=<id>`, `useLinkedSelection`, pure helpers in `lib/selection-link.ts`), so a link opens it and only one panel is open at a time. Opening adds a history entry and closing goes back to it (a pasted link just loses the param); changing month drops it. A link to a row on another month or page is read by id (`useExpense`, `useBudgetEnvelope`) and `useLinkedSelectionSync` switches the screen to that row's month; a missing or malformed id shows a toast and drops the param. Two arrows beside Close step to the previous and next expense of the page on screen (`link.show` replaces the address, so back still closes in one step). At the edge of a page they continue onto the neighbouring page (the panel reads that page only when standing on the edge, and sets `?page=` and `?expense=` together); a count (`(11/36)`) beside them shows the place in the month; they stop at the first and last expense of the month and don't apply to envelopes. Rows opened on screen are cached under their id, so no by-id request is made. `ExpenseDetailsPanel` and `EnvelopeDetailsPanel` (shared frame in `DetailsSheet`) read the page and envelopes already loaded; a recurring row also reads its bill (`useRecurringExpense`) for the month it started. The panel closes by itself if the expense leaves the page on screen. Action buttons (paid, Edit, Delete) take optional handlers and do nothing until T-25, T-29, T-30 and T-33; they are hidden in closed months. G-12: an envelope whose category is gone now shows "(deleted)" instead of being left out of the card.
 
 ### Phase 4 — Actions
 
@@ -266,7 +267,8 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 - **Done when:** the M-18 acceptance criteria pass.
 
 #### T-31 Change an installment plan's amount (M-19)
-- **Includes:** View plan; a Change amount field; the confirmation naming the current month; `PATCH /installment-groups/:id`; refresh of the months it affects.
+- **Blocked by a decision:** View plan was dropped from the row details (T-24), so M-19 has no entry point yet. Decide where Change amount lives (for example an action in the details' installment section) before starting.
+- **Includes:** a Change amount field, opened from that entry point; the confirmation naming the current month; `PATCH /installment-groups/:id`; refresh of the months it affects.
 - **Done when:** the M-19 acceptance criteria pass.
 
 #### T-32 Add, edit, delete income (M-20, M-21)
@@ -336,3 +338,4 @@ Delivered on 2026-11-03 and no longer waited on: envelope spend (G-5), plan size
 | Question | Blocks |
 |---|---|
 | U-2: Do adding and deleting envelopes (M-23, M-24) stay, given budgets are read-only? | T-33 |
+| U-3: Where does Change amount (M-19) live now that View plan is gone from the row details? | T-31 |

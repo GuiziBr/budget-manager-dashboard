@@ -5,6 +5,8 @@ import { api } from "@/lib/api"
 import { createQueryWrapper } from "@/test/query-wrapper"
 import {
 	BUDGET_ENVELOPES_QUERY_KEY,
+	envelopeQueryKey,
+	useBudgetEnvelope,
 	useCreateEnvelope,
 	useDeleteEnvelope,
 	useMonthEnvelopes
@@ -154,5 +156,38 @@ describe("useDeleteEnvelope", () => {
 		})
 
 		expect(invalidate).not.toHaveBeenCalled()
+	})
+})
+
+describe("useBudgetEnvelope", () => {
+	it("loads one envelope by id, spend included", async () => {
+		const get = vi.spyOn(api, "get").mockResolvedValue(envelope)
+		const { wrapper } = createQueryWrapper()
+
+		const { result } = renderHook(() => useBudgetEnvelope("e1"), { wrapper })
+
+		await waitFor(() => expect(result.current.isSuccess).toBe(true))
+		expect(result.current.data?.spentAmount).toBe(245.18)
+		expect(get).toHaveBeenCalledWith("budget-envelopes/e1")
+	})
+
+	it("doesn't ask again for an envelope the screen already cached", () => {
+		const get = vi.spyOn(api, "get")
+		const { wrapper, queryClient } = createQueryWrapper()
+		queryClient.setQueryData(envelopeQueryKey("e1"), envelope)
+
+		const { result } = renderHook(() => useBudgetEnvelope("e1"), { wrapper })
+
+		expect(result.current.data?.id).toBe("e1")
+		expect(get).not.toHaveBeenCalled()
+	})
+
+	it("doesn't request anything without an id", () => {
+		const get = vi.spyOn(api, "get")
+		const { wrapper } = createQueryWrapper()
+
+		renderHook(() => useBudgetEnvelope(undefined), { wrapper })
+
+		expect(get).not.toHaveBeenCalled()
 	})
 })

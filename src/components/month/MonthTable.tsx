@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo } from "react"
 import { MonthListRow, MonthTableRow } from "@/components/month/MonthTableRow"
 import { Pagination } from "@/components/Pagination"
 import { SortableHeader } from "@/components/SortableHeader"
@@ -13,7 +13,7 @@ import { useMonthPage } from "@/hooks/use-month-page"
 import { useMonthSort } from "@/hooks/use-month-sort"
 import { getApiErrorMessage } from "@/lib/api-error-message"
 import type { SortColumn } from "@/lib/expense-sort"
-import { buildRows } from "@/lib/month-rows"
+import { buildRows, type MonthRow } from "@/lib/month-rows"
 import { cn } from "@/lib/utils"
 import type { Id } from "@/types/common"
 
@@ -23,6 +23,10 @@ interface MonthTableProps {
 	canEdit: boolean
 	/** Opens the expense form (wired in T-26). Without it the empty state shows no button. */
 	onAddExpense?: () => void
+	/** The expense whose details are open; its row is highlighted. */
+	selectedId?: Id | null
+	/** Opens the expense's details. */
+	onSelectRow?: (row: MonthRow) => void
 }
 
 const t = translations.month.table
@@ -52,13 +56,14 @@ const isSortable = (key: (typeof columns)[number]["key"]): key is SortColumn =>
 export function MonthTable({
 	periodId,
 	canEdit,
-	onAddExpense
+	onAddExpense,
+	selectedId = null,
+	onSelectRow
 }: MonthTableProps) {
 	const isPhone = useMediaQuery(PHONE_QUERY)
 	const { page, setPage, replacePage } = useMonthPage()
 	const { sort, indicatorFor, toggleSort } = useMonthSort()
 	const query = useMonthExpensesPage(periodId, page, sort)
-	const [selectedId, setSelectedId] = useState<Id | null>(null)
 
 	const { data, isPlaceholderData } = query
 	const totalPages = Math.max(
@@ -150,7 +155,7 @@ export function MonthTable({
 							key={row.expense.id}
 							row={row}
 							selected={selectedId === row.expense.id}
-							onSelect={() => setSelectedId(row.expense.id)}
+							onSelect={() => onSelectRow?.(row)}
 						/>
 					))}
 				</ul>
@@ -198,7 +203,7 @@ export function MonthTable({
 								key={row.expense.id}
 								row={row}
 								selected={selectedId === row.expense.id}
-								onSelect={() => setSelectedId(row.expense.id)}
+								onSelect={() => onSelectRow?.(row)}
 							/>
 						))}
 					</tbody>

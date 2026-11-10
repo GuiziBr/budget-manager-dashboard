@@ -303,10 +303,12 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 
 **How it works**
 1. Clicking or tapping a row opens the details: a side panel from the right on desktop, a bottom sheet on the phone. The selected row is highlighted behind it.
-2. Details show the type, item, category, amount and status (paid, unpaid, overdue), a **Mark as paid today** button when unpaid, and every field not shown in the table: payment type, **bank, store**, **purchased**, due and paid dates.
-3. For installments they add the plan: `n of N`, interval, first purchase date, **end date**, and **View plan** (M-19). The plan's amount per payment is shown in View plan, which reads the plan; the row's own amount can differ after a single-row edit (M-17).
+2. Below the amount and status, the details are in **tabs**, one per group: **Payment** (the default), **Dates**, **Installment plan** and **Recurring bill**. Payment and Dates are always there; the other two appear only for an installment or a recurring expense. The chosen tab is kept while stepping to another expense, and falls back to Payment if that expense doesn't have it. Details show the item (no type chip under the title: the number of an installment or the month of a recurring bill is in its tab), category (to the right of the amount) and amount; the status (paid, unpaid, overdue) is the first row of the Payment tab, a **Mark as paid today** button when unpaid, and every field not shown in the table: payment type, **bank, store**, **purchased**, due and paid dates.
+3. For installments they add the plan: `n of N`, interval, first purchase date and **end date**. There is no View plan button: these fields are all the row details need, and they come with the expense. The plan's amount per payment is not shown here, because the row's own amount can differ after a single-row edit (M-17).
 4. For recurring rows they add the bill's start month, "Month 11" (M-10) and a link to the bill on the Recurring screen.
 5. Actions: Mark paid / unpaid, Edit, Delete (hidden in past months).
+6. **Shareable link.** The open expense or envelope is in the address: `?expense=<id>` or `?envelope=<id>`, next to `?period=` and `?page=`. Opening a row adds a history entry, so the back button closes the panel; closing it goes back to that entry, or just removes the param when the panel came from a pasted link. A link opens the details wherever the row is (any page, any sort, any month): if the address names another month than the one shown, the screen switches to the row's month (replacing the address, so back doesn't land on the wrong month). A link to something that doesn't exist, or whose month isn't opened, shows "This expense no longer exists." (or "This envelope…") and drops the param. Changing month drops the selection.
+7. **Previous / next.** Two arrows at the top right, beside Close, show the previous and next expense in the order of the table (the server's sort). At the last row of a page, Next continues to the first row of the next page, and Previous at the first row goes to the last row of the previous page; the table moves to that page too. The address (`?page=` and `?expense=`) updates in one step without adding history, so the back button still closes the panel in one step. A count such as `(11/36)` to the left of the arrows shows the place of the open expense in the whole month (not just its page); it is left out for an expense that isn't on the page on screen. The neighbouring page is read only when the open expense is on the edge of its page. The Up and Down arrow keys do the same while the panel is open (not when typing in a field or with a modifier key held). The arrows are disabled at the very first and very last expense of the month, and for an expense that isn't on the page on screen (a pasted link). The envelope panel has its own arrows (M-11).
 
 **Rules**
 - End date of a plan = first purchase date + (N − 1) × interval days.
@@ -314,6 +316,11 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 **Acceptance criteria**
 - *Given* Car finance payment 78 of a 14-day plan with 104 payments starting 2023-11-10, *then* the details show 78 of 104 and the end date.
 - *Given* a past month, *then* the details show no Edit, Delete or paid actions.
+- *Given* a link with `?expense=<id>` for an expense on page 3 of October and no `period`, *when* I open it, *then* October is shown and the details of that expense are open.
+- *Given* the details of the third expense on a page are open, *when* I choose Next, *then* the fourth expense's details show and `?expense=` holds its id, and *when* I then press back, *then* the panel is closed.
+- *Given* the last expense of page 1 is open, *when* I choose Next, *then* the first expense of page 2 shows, the table is on page 2 with that row highlighted, and `?page=2&expense=<id>` is in the address.
+- *Given* the first expense of page 2 of 36 is open, *then* the count reads `(11/36)`.
+- *Given* a link with an id that doesn't exist, *then* a message says so, the param is removed and the month stays as it was.
 
 #### M-09 Installment progress
 
@@ -345,6 +352,7 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 **How it works**
 - Spend is shown only in the Envelopes card (desktop grid and phone strip), not in the table. Each envelope shows the amount spent against its budget, with a progress bar. Over budget: amount and bar in the danger colour.
 - Spend is `spentAmount` on each envelope. The backend takes it from an external spend API and applies the billing-cycle rule: a purchase made after a card's due date counts in the next month, so future months can already have spend. The user never enters it.
+- The envelope panel has previous / next arrows (and the Up / Down keys) with a count such as `(2/6)`, in the order of the Categories card (over budget first). The address updates without adding history.
 - Envelope **spend** counts in the Expenses total and the balance; envelope budgets don't (section 2).
 
 **When something goes wrong**
@@ -507,7 +515,7 @@ The expense is created in the month being viewed (except installments, see M-15)
 *As the budget owner, I want to change the amount of all remaining payments of a plan at once.*
 
 **How it works**
-1. **View plan** (row details) opens the plan: description, `n of N` for this row, amount per payment, interval, first purchase date, end date and total.
+1. *Entry point to be decided.* The row details have no View plan button (dropped 2026-11-09), so this flow needs another way in, such as an action in the installment section of the details.
 2. **Change amount** lets me enter a new amount per payment.
 3. The confirmation says: "Payments in {current month} and later will change to CAD {amount}. Earlier payments keep their amount."
 
@@ -632,10 +640,10 @@ The expense is created in the month being viewed (except installments, see M-15)
 | What | Source |
 |---|---|
 | Months | `GET /budget-periods` (sorted by the frontend), `POST`, `DELETE /budget-periods` |
-| Expenses | `GET /expenses?budgetPeriodId=&page=&limit=20&sortBy=&sortOrder=`, one page at a time; its `totalAmount` feeds the Expenses card. `POST`, `PATCH`, `DELETE /expenses` |
-| Installment plans | `n of N`, interval, first purchase date and end date come with each expense (`installment`). `GET`, `PATCH /installment-groups/:id` only for **View plan** and changing the amount |
+| Expenses | `GET /expenses?budgetPeriodId=&page=&limit=20&sortBy=&sortOrder=`, one page at a time; its `totalAmount` feeds the Expenses card. `POST`, `PATCH`, `DELETE /expenses`. `GET /expenses/:id` only for a link to an expense that isn't on the page on screen (rows opened on screen are cached, so no request) |
+| Installment plans | `n of N`, interval, first purchase date and end date come with each expense (`installment`). `GET`, `PATCH /installment-groups/:id` only for changing the amount (M-19) |
 | Incomes | `GET /incomes?budgetPeriodId=`, `POST`, `PATCH`, `DELETE /incomes` |
-| Envelopes | `GET /budget-envelopes?budgetPeriodId=` (with `spentAmount`), `POST`, `DELETE /budget-envelopes` (no `PATCH`: budgets are read-only) |
+| Envelopes | `GET /budget-envelopes?budgetPeriodId=` (with `spentAmount`), `GET /budget-envelopes/:id` only for a link to an envelope that isn't in the month on screen, `POST`, `DELETE /budget-envelopes` (no `PATCH`: budgets are read-only) |
 | Lookups | `GET /categories`, `/payment-types`, `/banks`, `/stores` |
 
 ---

@@ -3,6 +3,7 @@ import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { ApiError, api } from "@/lib/api"
+import type { MonthRow } from "@/lib/month-rows"
 import { createQueryWrapper } from "@/test/query-wrapper"
 import type { Expense, ExpensePage } from "@/types"
 import { MonthTable } from "./MonthTable"
@@ -57,7 +58,14 @@ function mockPages(list: Expense[]) {
 		})
 }
 
-function setup(props: { canEdit?: boolean; onAddExpense?: () => void } = {}) {
+function setup(
+	props: {
+		canEdit?: boolean
+		onAddExpense?: () => void
+		selectedId?: string | null
+		onSelectRow?: (row: MonthRow) => void
+	} = {}
+) {
 	const { wrapper } = createQueryWrapper()
 	render(
 		<MonthTable periodId="p1" canEdit={props.canEdit ?? true} {...props} />,
@@ -309,7 +317,8 @@ describe("MonthTable rows", () => {
 
 	it("selects a row on click and keeps the checkbox and menu from selecting", async () => {
 		mockPages(all.slice(0, 2))
-		const user = setup()
+		const onSelectRow = vi.fn()
+		const user = setup({ onSelectRow })
 		const row = (await screen.findByText("Expense 1")).closest(
 			"tr"
 		) as HTMLElement
@@ -317,9 +326,21 @@ describe("MonthTable rows", () => {
 		await user.click(
 			within(row).getByRole("button", { name: "Actions for Expense 1" })
 		)
-		expect(row).not.toHaveAttribute("aria-current")
+		expect(onSelectRow).not.toHaveBeenCalled()
 		await user.click(screen.getByRole("button", { name: "Expense 1" }))
-		expect(row).toHaveAttribute("aria-current", "true")
+		expect(onSelectRow).toHaveBeenCalledOnce()
+		expect(onSelectRow.mock.calls[0][0].expense.id).toBe("1")
+		await user.click(row)
+		expect(onSelectRow).toHaveBeenCalledTimes(2)
+	})
+
+	it("highlights the row whose details are open", async () => {
+		mockPages(all.slice(0, 2))
+		setup({ selectedId: "2" })
+		const selected = (await screen.findByText("Expense 2")).closest("tr")
+		const other = screen.getByText("Expense 1").closest("tr")
+		expect(selected).toHaveAttribute("aria-current", "true")
+		expect(other).not.toHaveAttribute("aria-current")
 	})
 })
 

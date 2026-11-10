@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { formatDayMonth } from "./format-date"
+import { formatDayMonth, formatFullDate, formatMonthYear } from "./format-date"
 
 describe("formatDayMonth", () => {
 	it("formats a date and a timestamp", () => {
@@ -16,5 +16,31 @@ describe("formatDayMonth", () => {
 		expect(formatDayMonth(undefined)).toBeNull()
 		expect(formatDayMonth("")).toBeNull()
 		expect(formatDayMonth("not a date")).toBeNull()
+	})
+})
+
+describe("formatFullDate", () => {
+	it("adds the year, in UTC", () => {
+		expect(formatFullDate("2023-11-10")).toBe("10 Nov 2023")
+		expect(formatFullDate("2026-12-31T23:30:00Z")).toBe("31 Dec 2026")
+	})
+
+	it("returns null for missing or invalid values", () => {
+		expect(formatFullDate(null)).toBeNull()
+		expect(formatFullDate(undefined)).toBeNull()
+		expect(formatFullDate("nope")).toBeNull()
+	})
+})
+
+describe("formatMonthYear", () => {
+	it("formats month and year, in UTC", () => {
+		expect(formatMonthYear("2025-11-01")).toBe("Nov 2025")
+		expect(formatMonthYear("2025-12-31T23:30:00Z")).toBe("Dec 2025")
+	})
+
+	it("returns null for missing or invalid values", () => {
+		expect(formatMonthYear(null)).toBeNull()
+		expect(formatMonthYear("")).toBeNull()
+		expect(formatMonthYear("nope")).toBeNull()
 	})
 })

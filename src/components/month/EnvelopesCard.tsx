@@ -27,35 +27,42 @@ export const ENVELOPES_COLLAPSED_KEY = "month.envelopes.collapsed"
 
 interface EnvelopesCardProps {
 	periodId: Id
-	/** Opens the envelope's details (wired in T-24). */
+	/** Opens the envelope's details. */
 	onSelectEnvelope?: (envelope: BudgetEnvelope) => void
+	/** The envelope whose details are open; its tile is highlighted. */
+	selectedEnvelopeId?: Id | null
 }
 
 const money = (value: number) =>
 	`${translations.month.summary.currency}${formatCad(value, { compact: true })}`
 
-type NamedEnvelopeStatus = EnvelopeStatus & { categoryName: string }
-
-const hasCategory = (status: EnvelopeStatus): status is NamedEnvelopeStatus =>
-	status.categoryName !== null
+// A category deleted after the envelope's month has no name left (G-12)
+const nameOf = (status: EnvelopeStatus) =>
+	status.categoryName ?? translations.month.details.deleted
 
 function EnvelopeTile({
 	status,
+	selected,
 	onSelect
 }: {
-	status: NamedEnvelopeStatus
+	status: EnvelopeStatus
+	selected: boolean
 	onSelect?: (envelope: BudgetEnvelope) => void
 }) {
 	const t = translations.month.envelopes
-	const { categoryName, allocated, spent, ratio, overBudget, envelope } = status
-	const name = categoryName
+	const { allocated, spent, ratio, overBudget, envelope } = status
+	const name = nameOf(status)
 
 	return (
 		<li>
 			<button
 				type="button"
 				onClick={() => onSelect?.(envelope)}
-				className="flex w-full flex-col gap-2 rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+				aria-current={selected ? "true" : undefined}
+				className={cn(
+					"flex w-full cursor-pointer flex-col gap-2 rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+					selected && "bg-accent"
+				)}
 			>
 				<span className="flex w-full items-center justify-between gap-2">
 					<span className="truncate text-[13px] font-medium text-foreground">
@@ -88,26 +95,31 @@ function EnvelopeTile({
 
 function PhoneEnvelopeTile({
 	status,
+	selected,
 	onSelect
 }: {
-	status: NamedEnvelopeStatus
+	status: EnvelopeStatus
+	selected: boolean
 	onSelect?: (envelope: BudgetEnvelope) => void
 }) {
 	const t = translations.month.envelopes
-	const { categoryName, allocated, spent, ratio, overBudget, envelope } = status
+	const { allocated, spent, ratio, overBudget, envelope } = status
+	const name = nameOf(status)
 
 	return (
 		<li className="shrink-0">
 			<button
 				type="button"
 				onClick={() => onSelect?.(envelope)}
+				aria-current={selected ? "true" : undefined}
 				className={cn(
-					"flex w-[160px] flex-col gap-2 rounded-[14px] border bg-card p-3.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+					"flex w-[160px] flex-col gap-2 rounded-[14px] border p-3.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+					selected ? "bg-accent" : "bg-card",
 					overBudget ? "border-danger" : "border-border"
 				)}
 			>
 				<span className="truncate text-[13px] font-medium text-foreground">
-					{categoryName}
+					{name}
 				</span>
 				<span className="flex items-end gap-[3px] whitespace-nowrap">
 					<span
@@ -126,7 +138,7 @@ function PhoneEnvelopeTile({
 					<Progress
 						value={ratio * 100}
 						variant={overBudget ? "danger" : "default"}
-						aria-label={categoryName}
+						aria-label={name}
 						className="h-[5px]"
 					/>
 				)}
@@ -196,7 +208,8 @@ function CollapseHeader({
 
 export function EnvelopesCard({
 	periodId,
-	onSelectEnvelope
+	onSelectEnvelope,
+	selectedEnvelopeId = null
 }: EnvelopesCardProps) {
 	const t = translations.month.envelopes
 	const envelopes = useMonthEnvelopes(periodId)
@@ -210,10 +223,7 @@ export function EnvelopesCard({
 	const statuses = useMemo(() => {
 		if (!envelopes.data || !categories.data) return null
 		const names = new Map(categories.data.map((c) => [c.id, c.name]))
-		// An envelope whose category isn't in the lookup has no name to show, so it is left out
-		return sortEnvelopes(
-			envelopes.data.map((e) => envelopeStatus(e, names))
-		).filter(hasCategory)
+		return sortEnvelopes(envelopes.data.map((e) => envelopeStatus(e, names)))
 	}, [envelopes.data, categories.data])
 
 	const failed = [envelopes, categories].find((q) => q.isError)
@@ -280,6 +290,7 @@ export function EnvelopesCard({
 							<PhoneEnvelopeTile
 								key={status.envelope.id}
 								status={status}
+								selected={status.envelope.id === selectedEnvelopeId}
 								onSelect={onSelectEnvelope}
 							/>
 						))}
@@ -320,6 +331,7 @@ export function EnvelopesCard({
 							<EnvelopeTile
 								key={status.envelope.id}
 								status={status}
+								selected={status.envelope.id === selectedEnvelopeId}
 								onSelect={onSelectEnvelope}
 							/>
 						))}
