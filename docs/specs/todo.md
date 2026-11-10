@@ -68,7 +68,7 @@ One tab per lookup, plus appearance. Lists are short and not paginated.
 | Item | Decided in | Notes |
 |---|---|---|
 | History screen: totals over time, envelope spend over time, an item over time, same month last year | UX brief §12 | First candidate for a later phase. Needs per-month totals from the backend (G-10) |
-| Migrating past months from the spreadsheet; adding rows to past months | Month spec §7 (Q-2) | Past months that were never opened can't be opened (opened past months are editable, except envelopes, M-25) |
+| Migrating past months from the spreadsheet: opening a past month that was never opened | Month spec §7 (Q-2) | Only past months that were never opened can't be opened. Opened past months accept new expenses and incomes and are editable, except envelopes (M-25) |
 | Starting point of the recurring months-running count | UX brief §13 | Placeholder field R-04 |
 | Multiple users, sharing, authentication | UX brief §12 | |
 | Push or email notifications | UX brief §12 | Warnings are in-app only |

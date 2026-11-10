@@ -672,7 +672,7 @@ G-2, G-3, G-5 and G-6 were delivered by the backend on 2026-11-03 (plan size, lo
 | Question | Decision |
 |---|---|
 | Q-1 Show the category in the table? | Yes, as a small chip under the item (M-05) |
-| Q-2 Add rows to past months (migrating from the spreadsheet)? | Out of scope for now. Past months stay read-only, and past months that were never opened can't be opened (M-02, M-25) |
+| Q-2 Add rows to past months (migrating from the spreadsheet)? | Opened past months accept new expenses and incomes (M-25). Out of scope for now: opening a past month that was never opened, so those can't be opened or filled (M-02, M-25) |
 | Q-3 Envelope due date? | Envelopes have no due date. They can't be ticked off or become overdue (M-12, M-13) |
 | Q-4 Remember the store in the expense form? | No, payment type, bank and category only, for now (M-26) |
 | How does the open-month review save incomes? | One `POST /incomes` per income, after the month is created (M-02). Backend change under review (BE-1) |
