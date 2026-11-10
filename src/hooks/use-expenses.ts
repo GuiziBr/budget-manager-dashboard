@@ -7,8 +7,9 @@ import {
 	useQuery,
 	useQueryClient
 } from "@tanstack/react-query"
-import { api } from "@/lib/api"
+import { ApiError, api } from "@/lib/api"
 import { type SortState, toSortParams } from "@/lib/expense-sort"
+import { isUuid } from "@/lib/id"
 import type {
 	CreateExpenseInput,
 	Expense,
@@ -41,7 +42,11 @@ export function expenseQueryKey(id: Id | undefined) {
 export function useExpense(id: Id | undefined) {
 	return useQuery({
 		queryKey: expenseQueryKey(id),
-		queryFn: () => api.get<Expense>(`expenses/${id}`),
+		queryFn: () =>
+			id !== undefined && isUuid(id)
+				? api.get<Expense>(`expenses/${encodeURIComponent(id)}`)
+				: // Not a real id (e.g. a tampered address): same as the API's own 404/400
+					Promise.reject(new ApiError("Invalid id", 400)),
 		enabled: id !== undefined,
 		staleTime: EXPENSE_STALE_TIME_MS,
 		retry: false

@@ -19,6 +19,9 @@ vi.mock("@/hooks/use-media-query", () => ({
 	useMediaQuery: () => phone.value
 }))
 
+// A shared-link expense: not on the page on screen, so it's read by id (a real UUID, unlike the rows below)
+const FAR_ID = "99999999-9999-4999-8999-999999999999"
+
 const expense = (id: number, patch: Partial<Expense> = {}): Expense => ({
 	id: String(id),
 	budgetPeriodId: "p1",
@@ -307,20 +310,22 @@ describe("ExpenseDetailsPanel", () => {
 		vi.spyOn(api, "getPage").mockResolvedValue(page([expense(1)]))
 		const get = vi
 			.spyOn(api, "get")
-			.mockResolvedValue(expense(77, { description: "Far away" }) as never)
+			.mockResolvedValue(
+				expense(77, { id: FAR_ID, description: "Far away" }) as never
+			)
 		const { wrapper } = createQueryWrapper()
 		render(
 			<ExpenseDetailsPanel
 				onClose={vi.fn()}
 				periodId="p1"
-				expenseId="77"
+				expenseId={FAR_ID}
 				canEdit
 			/>,
 			{ wrapper }
 		)
 		const panel = await dialog()
 		expect(panel.getByRole("heading", { name: "Far away" })).toBeInTheDocument()
-		expect(get).toHaveBeenCalledWith("expenses/77")
+		expect(get).toHaveBeenCalledWith(`expenses/${FAR_ID}`)
 	})
 
 	it("stays closed when the expense can't be found", async () => {
@@ -333,13 +338,32 @@ describe("ExpenseDetailsPanel", () => {
 			<ExpenseDetailsPanel
 				onClose={vi.fn()}
 				periodId="p1"
-				expenseId="gone"
+				expenseId={FAR_ID}
 				canEdit
 			/>,
 			{ wrapper }
 		)
-		await vi.waitFor(() => expect(get).toHaveBeenCalledWith("expenses/gone"))
+		await vi.waitFor(() =>
+			expect(get).toHaveBeenCalledWith(`expenses/${FAR_ID}`)
+		)
 		expect(screen.queryByRole("dialog")).toBeNull()
+	})
+
+	it("stays closed, without requesting it, when the linked id isn't a UUID", async () => {
+		vi.spyOn(api, "getPage").mockResolvedValue(page([expense(1)]))
+		const get = vi.spyOn(api, "get")
+		const { wrapper } = createQueryWrapper()
+		render(
+			<ExpenseDetailsPanel
+				onClose={vi.fn()}
+				periodId="p1"
+				expenseId="..%2Fcategories"
+				canEdit
+			/>,
+			{ wrapper }
+		)
+		await vi.waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+		expect(get).not.toHaveBeenCalled()
 	})
 
 	describe("previous and next", () => {
@@ -528,14 +552,16 @@ describe("ExpenseDetailsPanel", () => {
 
 		it("disables both for an expense that isn't on the page", async () => {
 			vi.spyOn(api, "getPage").mockResolvedValue(page(list))
-			vi.spyOn(api, "get").mockResolvedValue(expense(77) as never)
+			vi.spyOn(api, "get").mockResolvedValue(
+				expense(77, { id: FAR_ID }) as never
+			)
 			const { wrapper } = createQueryWrapper()
 			render(
 				<ExpenseDetailsPanel
 					onClose={vi.fn()}
 					onNavigate={vi.fn()}
 					periodId="p1"
-					expenseId="77"
+					expenseId={FAR_ID}
 					canEdit
 				/>,
 				{ wrapper }

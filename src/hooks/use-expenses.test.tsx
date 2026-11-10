@@ -336,15 +336,17 @@ describe("useDeleteExpense", () => {
 })
 
 describe("useExpense", () => {
+	const validId = "11111111-1111-4111-8111-111111111111"
+
 	it("loads one expense by id", async () => {
-		const get = vi.spyOn(api, "get").mockResolvedValue(makeExpense("e9"))
+		const get = vi.spyOn(api, "get").mockResolvedValue(makeExpense(validId))
 		const { wrapper } = createQueryWrapper()
 
-		const { result } = renderHook(() => useExpense("e9"), { wrapper })
+		const { result } = renderHook(() => useExpense(validId), { wrapper })
 
 		await waitFor(() => expect(result.current.isSuccess).toBe(true))
-		expect(result.current.data?.id).toBe("e9")
-		expect(get).toHaveBeenCalledWith("expenses/e9")
+		expect(result.current.data?.id).toBe(validId)
+		expect(get).toHaveBeenCalledWith(`expenses/${validId}`)
 	})
 
 	it("doesn't ask again for an expense the screen already cached", () => {
@@ -373,9 +375,22 @@ describe("useExpense", () => {
 			.mockRejectedValue(new ApiError("not found", 404))
 		const { wrapper } = createQueryWrapper()
 
-		const { result } = renderHook(() => useExpense("gone"), { wrapper })
+		const { result } = renderHook(() => useExpense(validId), { wrapper })
 
 		await waitFor(() => expect(result.current.isError).toBe(true))
 		expect(get).toHaveBeenCalledTimes(1)
+	})
+
+	it("rejects an id that isn't a UUID without requesting it", async () => {
+		const get = vi.spyOn(api, "get")
+		const { wrapper } = createQueryWrapper()
+
+		const { result } = renderHook(() => useExpense("..%2Fcategories"), {
+			wrapper
+		})
+
+		await waitFor(() => expect(result.current.isError).toBe(true))
+		expect((result.current.error as ApiError).status).toBe(400)
+		expect(get).not.toHaveBeenCalled()
 	})
 })

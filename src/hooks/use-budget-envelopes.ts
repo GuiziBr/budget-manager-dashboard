@@ -1,7 +1,8 @@
 "use client"
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { api } from "@/lib/api"
+import { ApiError, api } from "@/lib/api"
+import { isUuid } from "@/lib/id"
 import type { BudgetEnvelope, CreateEnvelopeInput, Id } from "@/types"
 
 /** Every envelope query starts with this key, so invalidating it refreshes all of them. */
@@ -19,7 +20,11 @@ export function envelopeQueryKey(id: Id | undefined) {
 export function useBudgetEnvelope(id: Id | undefined) {
 	return useQuery({
 		queryKey: envelopeQueryKey(id),
-		queryFn: () => api.get<BudgetEnvelope>(`budget-envelopes/${id}`),
+		queryFn: () =>
+			id !== undefined && isUuid(id)
+				? api.get<BudgetEnvelope>(`budget-envelopes/${encodeURIComponent(id)}`)
+				: // Not a real id (e.g. a tampered address): same as the API's own 404/400
+					Promise.reject(new ApiError("Invalid id", 400)),
 		enabled: id !== undefined,
 		staleTime: 30 * 1000,
 		retry: false

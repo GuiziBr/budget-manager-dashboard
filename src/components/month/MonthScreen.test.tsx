@@ -359,6 +359,11 @@ describe("MonthScreen income panel", () => {
 })
 
 describe("MonthScreen details panel", () => {
+	// Shared-link ids for an expense/envelope outside the page/list on screen: real UUIDs, unlike "x1"/"e1" below
+	const HYDRO_ID = "11111111-1111-4111-8111-111111111111"
+	const FAR_EXPENSE_ID = "77777777-7777-4777-8777-777777777777"
+	const OLD_ENVELOPE_ID = "66666666-6666-4666-8666-666666666666"
+
 	const expenseIn = (id: string, periodId: string, description: string) => ({
 		id,
 		budgetPeriodId: periodId,
@@ -379,7 +384,7 @@ describe("MonthScreen details panel", () => {
 		updatedAt: "",
 		deletedAt: null
 	})
-	const hydro = expenseIn("x1", "2026-11", "Hydro bill")
+	const hydro = expenseIn(HYDRO_ID, "2026-11", "Hydro bill")
 	const envelope = (id: string, periodId: string) => ({
 		id,
 		budgetPeriodId: periodId,
@@ -411,11 +416,11 @@ describe("MonthScreen details panel", () => {
 			}
 		}) as never)
 		return vi.spyOn(api, "get").mockImplementation(((endpoint: string) => {
-			if (endpoint === "expenses/x1") return Promise.resolve(listed)
-			if (endpoint === "expenses/far")
-				return Promise.resolve(expenseIn("far", "2026-10", "Far away"))
-			if (endpoint === "budget-envelopes/old")
-				return Promise.resolve(envelope("old", "2026-10"))
+			if (endpoint === `expenses/${HYDRO_ID}`) return Promise.resolve(listed)
+			if (endpoint === `expenses/${FAR_EXPENSE_ID}`)
+				return Promise.resolve(expenseIn(FAR_EXPENSE_ID, "2026-10", "Far away"))
+			if (endpoint === `budget-envelopes/${OLD_ENVELOPE_ID}`)
+				return Promise.resolve(envelope(OLD_ENVELOPE_ID, "2026-10"))
 			if (
 				endpoint.startsWith("expenses/") ||
 				endpoint.startsWith("budget-envelopes/")
@@ -438,7 +443,7 @@ describe("MonthScreen details panel", () => {
 		const user = setup()
 		await user.click(await screen.findByRole("button", { name: "Hydro bill" }))
 		const dialog = await screen.findByRole("dialog")
-		expect(nav.search).toBe("expense=x1")
+		expect(nav.search).toBe(`expense=${HYDRO_ID}`)
 		expect(dialog).toHaveTextContent("Hydro bill")
 		expect(dialog).toHaveTextContent("Debit")
 		// The page behind a modal panel is hidden from the accessibility tree
@@ -448,7 +453,7 @@ describe("MonthScreen details panel", () => {
 				.closest("tr")
 		).toHaveAttribute("aria-current", "true")
 		// The row was cached when clicked, so the API isn't asked for it
-		expect(get).not.toHaveBeenCalledWith("expenses/x1")
+		expect(get).not.toHaveBeenCalledWith(`expenses/${HYDRO_ID}`)
 	})
 
 	it("closes with Escape, goes back in history and returns the focus", async () => {
@@ -478,7 +483,7 @@ describe("MonthScreen details panel", () => {
 		expect(get).not.toHaveBeenCalledWith("expenses/x2")
 
 		await user.click(screen.getByRole("button", { name: "Previous expense" }))
-		await vi.waitFor(() => expect(nav.search).toBe("expense=x1"))
+		await vi.waitFor(() => expect(nav.search).toBe(`expense=${HYDRO_ID}`))
 		expect(dialog).toHaveTextContent("Hydro bill")
 
 		// One step back from wherever it ended closes it
@@ -525,7 +530,7 @@ describe("MonthScreen details panel", () => {
 	})
 
 	it("opens the expense named in a pasted link and removes the param on close", async () => {
-		open("period=2026-11&expense=x1")
+		open(`period=2026-11&expense=${HYDRO_ID}`)
 		const user = setup()
 		const dialog = await screen.findByRole("dialog")
 		expect(dialog).toHaveTextContent("Hydro bill")
@@ -535,21 +540,21 @@ describe("MonthScreen details panel", () => {
 	})
 
 	it("switches to the month of a linked expense that is somewhere else", async () => {
-		open("period=2026-11&expense=far")
+		open(`period=2026-11&expense=${FAR_EXPENSE_ID}`)
 		setup()
 		const dialog = await screen.findByRole("dialog")
 		expect(dialog).toHaveTextContent("Far away")
 		await vi.waitFor(() =>
 			expect(new URLSearchParams(nav.search).get("period")).toBe("2026-10")
 		)
-		expect(new URLSearchParams(nav.search).get("expense")).toBe("far")
+		expect(new URLSearchParams(nav.search).get("expense")).toBe(FAR_EXPENSE_ID)
 		expect(
 			await screen.findByRole("button", { name: /October 2026/, hidden: true })
 		).toBeInTheDocument()
 	})
 
 	it("uses the linked month even when the address has no period", async () => {
-		open("expense=far")
+		open(`expense=${FAR_EXPENSE_ID}`)
 		setup()
 		await screen.findByRole("dialog")
 		await vi.waitFor(() =>
@@ -570,6 +575,21 @@ describe("MonthScreen details panel", () => {
 		expect(screen.queryByRole("dialog")).toBeNull()
 	})
 
+	it("drops a tampered link without requesting it, instead of following it to another endpoint", async () => {
+		const get = open("period=2026-11&expense=..%2Fcategories")
+		setup()
+		await vi.waitFor(() =>
+			expect(toast.error).toHaveBeenCalledWith(
+				"This expense no longer exists.",
+				{ id: "linked-selection" }
+			)
+		)
+		expect(
+			get.mock.calls.some(([endpoint]) => String(endpoint).includes(".."))
+		).toBe(false)
+		expect(screen.queryByRole("dialog")).toBeNull()
+	})
+
 	it("puts the envelope in the address and opens its details", async () => {
 		const get = open()
 		const user = setup()
@@ -582,7 +602,7 @@ describe("MonthScreen details panel", () => {
 	})
 
 	it("opens the envelope named in a pasted link, in its own month", async () => {
-		open("period=2026-11&envelope=old")
+		open(`period=2026-11&envelope=${OLD_ENVELOPE_ID}`)
 		setup()
 		expect(await screen.findByRole("dialog")).toHaveTextContent("Groceries")
 		await vi.waitFor(() =>

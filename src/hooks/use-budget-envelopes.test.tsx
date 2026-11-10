@@ -160,15 +160,33 @@ describe("useDeleteEnvelope", () => {
 })
 
 describe("useBudgetEnvelope", () => {
+	const validId = "22222222-2222-4222-8222-222222222222"
+
 	it("loads one envelope by id, spend included", async () => {
-		const get = vi.spyOn(api, "get").mockResolvedValue(envelope)
+		const get = vi
+			.spyOn(api, "get")
+			.mockResolvedValue({ ...envelope, id: validId })
 		const { wrapper } = createQueryWrapper()
 
-		const { result } = renderHook(() => useBudgetEnvelope("e1"), { wrapper })
+		const { result } = renderHook(() => useBudgetEnvelope(validId), {
+			wrapper
+		})
 
 		await waitFor(() => expect(result.current.isSuccess).toBe(true))
 		expect(result.current.data?.spentAmount).toBe(245.18)
-		expect(get).toHaveBeenCalledWith("budget-envelopes/e1")
+		expect(get).toHaveBeenCalledWith(`budget-envelopes/${validId}`)
+	})
+
+	it("rejects an id that isn't a UUID without requesting it", async () => {
+		const get = vi.spyOn(api, "get")
+		const { wrapper } = createQueryWrapper()
+
+		const { result } = renderHook(() => useBudgetEnvelope("..%2Fcategories"), {
+			wrapper
+		})
+
+		await waitFor(() => expect(result.current.isError).toBe(true))
+		expect(get).not.toHaveBeenCalled()
 	})
 
 	it("doesn't ask again for an envelope the screen already cached", () => {

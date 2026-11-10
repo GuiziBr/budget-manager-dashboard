@@ -50,6 +50,9 @@ function setup(
 
 const dialog = async () => within(await screen.findByRole("dialog"))
 
+// A shared-link envelope: not in the month's list, so it's read by id (a real UUID, unlike "e1" above)
+const FAR_ID = "88888888-8888-4888-8888-888888888888"
+
 describe("EnvelopeDetailsPanel", () => {
 	it("shows spent, budget and what is left", async () => {
 		setup(env())
@@ -115,16 +118,16 @@ describe("EnvelopeDetailsPanel", () => {
 	})
 
 	it("reads an envelope that isn't in the month's list by id (a shared link)", async () => {
-		const { get } = setup(env(), { envelopeId: "far" })
+		const { get } = setup(env(), { envelopeId: FAR_ID })
 		const panel = await dialog()
 		expect(
 			panel.getByRole("heading", { name: "Groceries" })
 		).toBeInTheDocument()
-		expect(get).toHaveBeenCalledWith("budget-envelopes/far")
+		expect(get).toHaveBeenCalledWith(`budget-envelopes/${FAR_ID}`)
 	})
 
 	it("stays closed when the envelope can't be found", async () => {
-		const { get } = setup(env(), { envelopeId: "gone" })
+		const { get } = setup(env(), { envelopeId: FAR_ID })
 		get.mockImplementation(((endpoint: string) =>
 			endpoint.startsWith("budget-envelopes/")
 				? Promise.reject(new ApiError("not found", 404))
@@ -134,9 +137,17 @@ describe("EnvelopeDetailsPanel", () => {
 							: [env()]
 					)) as never)
 		await vi.waitFor(() =>
-			expect(get).toHaveBeenCalledWith("budget-envelopes/gone")
+			expect(get).toHaveBeenCalledWith(`budget-envelopes/${FAR_ID}`)
 		)
 		expect(screen.queryByRole("dialog")).toBeNull()
+	})
+
+	it("stays closed, without requesting it, when the linked id isn't a UUID", async () => {
+		const { get } = setup(env(), { envelopeId: "..%2Fcategories" })
+		await vi.waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+		expect(get).not.toHaveBeenCalledWith(
+			expect.stringContaining("budget-envelopes/..")
+		)
 	})
 })
 
