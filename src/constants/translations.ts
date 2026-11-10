@@ -108,6 +108,7 @@ export const translations = {
 			overdueOn: "Overdue · {date}",
 			paidState: "Paid: {item}",
 			unpaidState: "Not paid: {item}",
+			paidFailed: "Couldn't update the paid status. Try again.",
 			rowActions: "Actions for {item}"
 		},
 		details: {
@@ -173,8 +174,9 @@ export const translations = {
 			notOpenedTitle: "{month} hasn't been opened yet",
 			openMonth: "Open {month}",
 			notTracked: "{month} wasn't tracked in the app",
-			closedBadge: "Closed",
-			closedBanner: "{month} is closed. You can view it but not change it."
+			pastBadge: "Past month",
+			pastNote:
+				"You can edit this month. Envelopes of past months can't be changed."
 		}
 	},
 	errors: {
@@ -185,7 +187,7 @@ export const translations = {
 		noPeriodForInstallments:
 			"Open the month of the first payment before adding this plan.",
 		lookupGone: "{field} no longer exists. Choose another.",
-		monthClosed: "This month is now closed and can't be changed.",
+		monthClosed: "Envelopes of past months can't be changed.",
 		generic: "Something went wrong. Try again.",
 		fields: {
 			category: "Category",

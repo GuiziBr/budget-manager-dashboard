@@ -140,27 +140,32 @@ describe("MonthScreen states", () => {
 		expect(screen.queryByRole("button", { name: /^Open / })).toBeNull()
 	})
 
-	it("shows the closed banner for an opened past month", async () => {
+	it("shows a Past month pill that explains the envelope exception", async () => {
 		nav.search = "period=2026-10"
 		vi.spyOn(api, "get").mockResolvedValue([make(2026, 10)])
-		setup()
+		const user = setup()
+		// One pill for the phone and one for desktop; CSS shows only one of them
+		const [pill] = await screen.findAllByRole("button", { name: "Past month" })
+		await user.click(pill)
 		expect(
 			await screen.findByText(
-				"October 2026 is closed. You can view it but not change it."
+				"You can edit this month. Envelopes of past months can't be changed."
 			)
 		).toBeInTheDocument()
 	})
 
-	it("offers a Closed pill that explains the closed month", async () => {
-		nav.search = "period=2026-10"
-		vi.spyOn(api, "get").mockResolvedValue([make(2026, 10)])
-		const user = setup()
-		await user.click(await screen.findByRole("button", { name: "Closed" }))
-		expect(
-			await screen.findAllByText(
-				"October 2026 is closed. You can view it but not change it."
-			)
-		).toHaveLength(2)
+	it("shows no Past month pill in the current month", async () => {
+		vi.spyOn(api, "getPage").mockResolvedValue({
+			data: [],
+			total: 0,
+			totalAmount: 0,
+			page: 1,
+			limit: 10
+		} as never)
+		vi.spyOn(api, "get").mockResolvedValue([make(2026, 11)])
+		setup()
+		await screen.findByRole("region", { name: "Month summary" })
+		expect(screen.queryByRole("button", { name: "Past month" })).toBeNull()
 	})
 
 	it("shows the summary cards for an opened month, also a closed one", async () => {
@@ -253,12 +258,11 @@ describe("MonthScreen add button", () => {
 		expect(screen.queryByRole("button", { name: "Add" })).toBeNull()
 	})
 
-	it("is hidden in a closed month", async () => {
+	it("shows in a past month, which is edited like the current one", async () => {
 		stubPhone(true)
 		openMonth("period=2026-10")
 		setup()
-		await screen.findByRole("region", { name: "Month summary" })
-		expect(screen.queryByRole("button", { name: "Add" })).toBeNull()
+		expect(await screen.findByRole("button", { name: "Add" })).toBeVisible()
 	})
 })
 
@@ -349,12 +353,12 @@ describe("MonthScreen income panel", () => {
 		expect(screen.queryByRole("dialog")).toBeNull()
 	})
 
-	it("has no edit controls in a closed month", async () => {
+	it("has edit controls in a past month", async () => {
 		open("period=2026-10")
 		const user = setup()
 		await user.click(await screen.findByRole("button", { name: /View all/ }))
 		await screen.findByText("Pay day")
-		expect(screen.queryByRole("button", { name: "Add income" })).toBeNull()
+		expect(screen.getByRole("button", { name: "Add income" })).toBeVisible()
 	})
 })
 
@@ -636,13 +640,170 @@ describe("MonthScreen details panel", () => {
 		await vi.waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
 	})
 
-	it("shows no actions in a closed month", async () => {
+	it("shows the expense actions in a past month", async () => {
 		open("period=2026-10", expenseIn("x1", "2026-10", "Hydro bill"))
 		const user = setup()
 		await user.click(await screen.findByRole("button", { name: "Hydro bill" }))
 		const dialog = await screen.findByRole("dialog")
 		expect(dialog).toHaveTextContent("Hydro bill")
-		expect(screen.queryByRole("button", { name: /Mark as/ })).toBeNull()
+		expect(screen.getByRole("button", { name: /Mark as/ })).toBeInTheDocument()
+		expect(screen.getByRole("button", { name: "Delete" })).toBeInTheDocument()
+	})
+
+	it("still hides Delete on an envelope in a past month", async () => {
+		open(`period=2026-10&envelope=${OLD_ENVELOPE_ID}`)
+		setup()
+		expect(await screen.findByRole("dialog")).toHaveTextContent("Groceries")
 		expect(screen.queryByRole("button", { name: "Delete" })).toBeNull()
+	})
+})
+
+describe("MonthScreen mark paid", () => {
+	const ID = "11111111-1111-4111-8111-111111111111"
+	const bill = (patch: Record<string, unknown> = {}) => ({
+		id: ID,
+		budgetPeriodId: "2026-11",
+		recurringExpenseId: null,
+		description: "Hydro bill",
+		installmentNumber: null,
+		purchasedAt: null,
+		dueAt: "2026-11-28",
+		paidAt: null,
+		amount: 120,
+		category: { id: "c1", name: "Utilities" },
+		paymentType: { id: "t1", name: "Debit" },
+		bank: null,
+		store: null,
+		installment: null,
+		monthsRunning: null,
+		createdAt: "",
+		updatedAt: "",
+		deletedAt: null,
+		...patch
+	})
+
+	// The server keeps the row, so a refetch after the PATCH returns what was saved
+	const open = (
+		search: string,
+		patch: Record<string, unknown>,
+		failure?: ApiError
+	) => {
+		nav.search = search
+		let saved = bill(patch)
+		vi.spyOn(api, "getPage").mockImplementation((async () => ({
+			data: [saved],
+			total: 1,
+			totalAmount: 120,
+			page: 1,
+			limit: 10
+		})) as never)
+		vi.spyOn(api, "get").mockImplementation(((endpoint: string) =>
+			Promise.resolve(
+				endpoint.includes("budget-periods")
+					? [make(2026, 11), make(2026, 10)]
+					: []
+			)) as never)
+		return vi.spyOn(api, "patch").mockImplementation((async (
+			_endpoint: string,
+			body: Record<string, unknown>
+		) => {
+			if (failure) throw failure
+			saved = { ...saved, ...body }
+			return saved
+		}) as never)
+	}
+
+	it("ticks an unpaid row with today's date", async () => {
+		const patch = open("", {})
+		const user = setup()
+		await user.click(
+			await screen.findByRole("checkbox", { name: "Not paid: Hydro bill" })
+		)
+		expect(patch).toHaveBeenCalledWith(`expenses/${ID}`, {
+			paidAt: "2026-11-02"
+		})
+		expect(
+			await screen.findByRole("checkbox", { name: "Paid: Hydro bill" })
+		).toBeChecked()
+		expect(await screen.findAllByText("2 Nov")).not.toHaveLength(0)
+	})
+
+	it("unticks a paid row by clearing the date", async () => {
+		const patch = open("", { paidAt: "2026-11-01" })
+		const user = setup()
+		await user.click(
+			await screen.findByRole("checkbox", { name: "Paid: Hydro bill" })
+		)
+		expect(patch).toHaveBeenCalledWith(`expenses/${ID}`, { paidAt: null })
+		expect(
+			await screen.findByRole("checkbox", { name: "Not paid: Hydro bill" })
+		).not.toBeChecked()
+	})
+
+	it("doesn't open the details when the checkbox is clicked", async () => {
+		open("", {})
+		const user = setup()
+		await user.click(
+			await screen.findByRole("checkbox", { name: "Not paid: Hydro bill" })
+		)
+		expect(screen.queryByRole("dialog")).toBeNull()
+	})
+
+	it("puts the checkbox back and shows an error toast when the update fails", async () => {
+		open("", {}, new ApiError("boom", 500))
+		const user = setup()
+		await user.click(
+			await screen.findByRole("checkbox", { name: "Not paid: Hydro bill" })
+		)
+		await vi.waitFor(() =>
+			expect(toast.error).toHaveBeenCalledWith(
+				"Couldn't update the paid status. Try again.",
+				{ id: "paid-update-failed" }
+			)
+		)
+		expect(
+			await screen.findByRole("checkbox", { name: "Not paid: Hydro bill" })
+		).not.toBeChecked()
+	})
+
+	it("shows the generic failure on a 422, which expenses no longer return", async () => {
+		open("", {}, new ApiError("closed", 422))
+		const user = setup()
+		await user.click(
+			await screen.findByRole("checkbox", { name: "Not paid: Hydro bill" })
+		)
+		await vi.waitFor(() =>
+			expect(toast.error).toHaveBeenCalledWith(
+				"Couldn't update the paid status. Try again.",
+				{ id: "paid-update-failed" }
+			)
+		)
+	})
+
+	it("marks paid and unpaid from the details panel", async () => {
+		const patch = open("", {})
+		const user = setup()
+		await user.click(await screen.findByRole("button", { name: "Hydro bill" }))
+		await user.click(
+			await screen.findByRole("button", { name: "Mark as paid today" })
+		)
+		expect(patch).toHaveBeenLastCalledWith(`expenses/${ID}`, {
+			paidAt: "2026-11-02"
+		})
+		await user.click(
+			await screen.findByRole("button", { name: "Mark as unpaid" })
+		)
+		expect(patch).toHaveBeenLastCalledWith(`expenses/${ID}`, { paidAt: null })
+	})
+
+	it("marks paid in a past month too", async () => {
+		const patch = open("period=2026-10", { budgetPeriodId: "2026-10" })
+		const user = setup()
+		await user.click(
+			await screen.findByRole("checkbox", { name: "Not paid: Hydro bill" })
+		)
+		expect(patch).toHaveBeenCalledWith(`expenses/${ID}`, {
+			paidAt: "2026-11-02"
+		})
 	})
 })

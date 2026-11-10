@@ -1,7 +1,7 @@
 "use client"
 
 import { ChevronDown, ChevronLeft, ChevronRight, Ellipsis } from "lucide-react"
-import { ClosedBanner, ClosedPill } from "@/components/month/ClosedBanner"
+import { PastMonthPill } from "@/components/month/PastMonthPill"
 import { Button } from "@/components/ui/button"
 import {
 	DropdownMenu,
@@ -35,7 +35,7 @@ export function MonthHeader() {
 					<DropdownMenuTrigger asChild>
 						<Button
 							variant="ghost"
-							className={`order-1 min-w-0 gap-1 px-0 lg:order-2 lg:mr-0 lg:flex-1 lg:gap-1.5 lg:px-1.5 ${state === "closed" ? "" : "mr-auto"}`}
+							className={`order-1 min-w-0 gap-1 px-0 lg:order-2 lg:mr-0 lg:flex-1 lg:gap-1.5 lg:px-1.5 ${state === "past" ? "" : "mr-auto"}`}
 							aria-label={t.switcherLabel.replace("{month}", monthLabel(month))}
 						>
 							<span className="font-serif text-[22px] font-bold tracking-[-0.4px] lg:text-2xl">
@@ -74,7 +74,10 @@ export function MonthHeader() {
 						)}
 					</DropdownMenuContent>
 				</DropdownMenu>
-				{state === "closed" && <ClosedPill label={monthLabel(month)} />}
+				{/* Phone: beside the month name */}
+				{state === "past" && (
+					<PastMonthPill className="order-1 mr-auto lg:hidden" />
+				)}
 				<Button
 					variant="outline"
 					size="icon"
@@ -90,11 +93,8 @@ export function MonthHeader() {
 					<ChevronRight className="size-[18px] lg:size-4" />
 				</Button>
 			</div>
-			{state === "closed" && (
-				<div className="hidden min-w-0 lg:block lg:flex-1">
-					<ClosedBanner label={monthLabel(month)} />
-				</div>
-			)}
+			{/* Desktop: to the right of the whole switcher */}
+			{state === "past" && <PastMonthPill className="hidden lg:flex" />}
 			{/* Placeholder: Delete month arrives with T-38 */}
 			<Button
 				variant="outline"

@@ -14,6 +14,8 @@ interface MonthRowProps {
 	row: MonthRow
 	selected: boolean
 	onSelect: () => void
+	/** Ticks or unticks the paid control. Without it the control is a read-only display. */
+	onTogglePaid?: () => void
 }
 
 const t = translations.month.table
@@ -24,25 +26,33 @@ function paidLabel(row: MonthRow) {
 	return template.replace("{item}", row.expense.description)
 }
 
-/** The paid control. Read-only until marking paid arrives (T-25); it stays at full strength in dimmed rows. */
+/** The paid control; it stays at full strength in dimmed rows. Read-only when there is no handler (past months). */
 function PaidCheckbox({
 	row,
+	onToggle,
 	className
 }: {
 	row: MonthRow
+	onToggle?: () => void
 	className?: string
 }) {
 	return (
 		<Checkbox
 			checked={!row.unpaid}
-			aria-readonly="true"
+			onCheckedChange={onToggle ? () => onToggle() : undefined}
+			aria-readonly={onToggle ? undefined : "true"}
 			aria-label={paidLabel(row)}
 			className={className}
 		/>
 	)
 }
 
-export function MonthTableRow({ row, selected, onSelect }: MonthRowProps) {
+export function MonthTableRow({
+	row,
+	selected,
+	onSelect,
+	onTogglePaid
+}: MonthRowProps) {
 	const { expense } = row
 	const due = formatDayMonth(expense.dueAt)
 	const paidDate = formatDayMonth(expense.paidAt)
@@ -99,7 +109,7 @@ export function MonthTableRow({ row, selected, onSelect }: MonthRowProps) {
 					onClick={(event) => event.stopPropagation()}
 					onKeyDown={(event) => event.stopPropagation()}
 				>
-					<PaidCheckbox row={row} />
+					<PaidCheckbox row={row} onToggle={onTogglePaid} />
 					{paidDate && (
 						<span className="text-muted-foreground text-xs">{paidDate}</span>
 					)}
@@ -124,7 +134,12 @@ export function MonthTableRow({ row, selected, onSelect }: MonthRowProps) {
 }
 
 /** One row of the phone list: checkbox, item with its chip and date line, amount. */
-export function MonthListRow({ row, selected, onSelect }: MonthRowProps) {
+export function MonthListRow({
+	row,
+	selected,
+	onSelect,
+	onTogglePaid
+}: MonthRowProps) {
 	const { expense } = row
 	const due = formatDayMonth(expense.dueAt)
 	const paidDate = formatDayMonth(expense.paidAt)
@@ -143,7 +158,11 @@ export function MonthListRow({ row, selected, onSelect }: MonthRowProps) {
 				selected && "bg-accent"
 			)}
 		>
-			<PaidCheckbox row={row} className="size-6 rounded-[7px]" />
+			<PaidCheckbox
+				row={row}
+				onToggle={onTogglePaid}
+				className="size-6 rounded-[7px]"
+			/>
 			<button
 				type="button"
 				onClick={onSelect}

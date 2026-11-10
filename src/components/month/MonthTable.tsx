@@ -16,6 +16,7 @@ import type { SortColumn } from "@/lib/expense-sort"
 import { buildRows, type MonthRow } from "@/lib/month-rows"
 import { cn } from "@/lib/utils"
 import type { Id } from "@/types/common"
+import type { Expense } from "@/types/expense"
 
 interface MonthTableProps {
 	periodId: Id
@@ -27,6 +28,8 @@ interface MonthTableProps {
 	selectedId?: Id | null
 	/** Opens the expense's details. */
 	onSelectRow?: (row: MonthRow) => void
+	/** Ticks or unticks an expense's paid control. Ignored when `canEdit` is false. */
+	onTogglePaid?: (expense: Expense) => void
 }
 
 const t = translations.month.table
@@ -58,7 +61,8 @@ export function MonthTable({
 	canEdit,
 	onAddExpense,
 	selectedId = null,
-	onSelectRow
+	onSelectRow,
+	onTogglePaid
 }: MonthTableProps) {
 	const isPhone = useMediaQuery(PHONE_QUERY)
 	const { page, setPage, replacePage } = useMonthPage()
@@ -129,6 +133,9 @@ export function MonthTable({
 		)
 	}
 
+	const toggleFor = (row: MonthRow) =>
+		canEdit && onTogglePaid ? () => onTogglePaid(row.expense) : undefined
+
 	const pages = Array.from({ length: totalPages }, (_, index) => index + 1)
 	// The current page stays on screen, a little faded, while the next one loads
 	const fade = isPlaceholderData && "opacity-60 transition-opacity"
@@ -156,6 +163,7 @@ export function MonthTable({
 							row={row}
 							selected={selectedId === row.expense.id}
 							onSelect={() => onSelectRow?.(row)}
+							onTogglePaid={toggleFor(row)}
 						/>
 					))}
 				</ul>
@@ -204,6 +212,7 @@ export function MonthTable({
 								row={row}
 								selected={selectedId === row.expense.id}
 								onSelect={() => onSelectRow?.(row)}
+								onTogglePaid={toggleFor(row)}
 							/>
 						))}
 					</tbody>

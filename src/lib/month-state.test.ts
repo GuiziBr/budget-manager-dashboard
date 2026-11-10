@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { canEditMonth, getMonthState } from "./month-state"
+import { canEditEnvelopes, canEditMonth, getMonthState } from "./month-state"
 
 const period = {
 	id: "p1",
@@ -34,10 +34,8 @@ describe("getMonthState", () => {
 		expect(getMonthState({ ...base, comparison: "past" })).toBe("not-tracked")
 	})
 
-	it("is closed for an opened past month", () => {
-		expect(getMonthState({ ...base, period, comparison: "past" })).toBe(
-			"closed"
-		)
+	it("is past for an opened past month", () => {
+		expect(getMonthState({ ...base, period, comparison: "past" })).toBe("past")
 	})
 
 	it("is open for an opened current or future month", () => {
@@ -51,15 +49,29 @@ describe("getMonthState", () => {
 })
 
 describe("canEditMonth", () => {
-	it("allows actions only in the open state", () => {
+	it("allows actions in an opened month, past ones included", () => {
 		expect(canEditMonth("open")).toBe(true)
+		expect(canEditMonth("past")).toBe(true)
+		for (const state of [
+			"loading",
+			"error",
+			"not-opened",
+			"not-tracked"
+		] as const)
+			expect(canEditMonth(state)).toBe(false)
+	})
+})
+
+describe("canEditEnvelopes", () => {
+	it("allows envelope changes only in a current or future month", () => {
+		expect(canEditEnvelopes("open")).toBe(true)
 		for (const state of [
 			"loading",
 			"error",
 			"not-opened",
 			"not-tracked",
-			"closed"
+			"past"
 		] as const)
-			expect(canEditMonth(state)).toBe(false)
+			expect(canEditEnvelopes(state)).toBe(false)
 	})
 })
