@@ -68,7 +68,7 @@ One tab per lookup, plus appearance. Lists are short and not paginated.
 | Item | Decided in | Notes |
 |---|---|---|
 | History screen: totals over time, envelope spend over time, an item over time, same month last year | UX brief §12 | First candidate for a later phase. Needs per-month totals from the backend (G-10) |
-| Migrating past months from the spreadsheet; adding rows to past months | Month spec §7 (Q-2) | Past months stay read-only; past months never opened can't be opened |
+| Migrating past months from the spreadsheet; adding rows to past months | Month spec §7 (Q-2) | Past months that were never opened can't be opened (opened past months are editable, except envelopes, M-25) |
 | Starting point of the recurring months-running count | UX brief §13 | Placeholder field R-04 |
 | Multiple users, sharing, authentication | UX brief §12 | |
 | Push or email notifications | UX brief §12 | Warnings are in-app only |
@@ -87,13 +87,12 @@ One tab per lookup, plus appearance. Lists are short and not paginated.
 |---|---|---|---|
 | U-2 | Do adding and deleting envelopes (M-23, M-24) stay? Adding one means entering its budget, while budgets are otherwise read-only (M-22) | Kept in the spec, with the budget entered once on creation | Plan task T-33 |
 
-U-1 (marking a bill paid after its month ends) moved to BE-3. U-3 (envelope rows in the table) was resolved on 2026-11-02: with server-side pagination, envelopes live only in the Envelopes card.
+U-1 (marking a bill paid after its month ends) and BE-3 were resolved on 2026-11-10: the backend now lets expenses and incomes of past months be changed, so past months are edited like the current one (envelopes excepted, M-25). G-1 (undocumented 422 for past-month expenses) is resolved with it. U-3 (envelope rows in the table) was resolved on 2026-11-02: with server-side pagination, envelopes live only in the Envelopes card.
 
 ### 2.3 Backend gaps
 
 | ID | Gap | Affects | Suggested fix |
 |---|---|---|---|
-| G-1 | `docs/APIs/expense.md` doesn't document the 422 for changing or deleting a past-month expense, which the software specification requires | M-25 | Confirm the 422 exists and document it |
 | G-4 | The software specification says a new recurring expense is also added to months after it that are already opened; the API doc says only months opened afterwards get a copy | M-16 | Confirm which is true and align the docs |
 | G-7 | Lookup names: the software specification says unique ignoring case, the API docs say exact (case-sensitive) match | S-02, S-06, S-09, S-11, S-14 | Confirm which rule applies |
 | G-9 | No endpoint lists installment plans, so plans can only be reached from their expense rows | M-19 | `GET /installment-groups`, if a list of plans is ever wanted |
@@ -109,6 +108,5 @@ Backend API changes to review with the backend before or during the Month screen
 |---|---|---|---|---|
 | BE-1 | Create the salary together with the month | `POST /budget-periods` creates the month and generates rows and envelopes, but not incomes. The frontend then sends one `POST /incomes` per salary, outside the backend's transaction | Accept the month's salary incomes in the `POST /budget-periods` body (for example `incomes: [{ description, amount, isSalary }]`) and create them in the same transaction. One request opens the month, and it never ends up opened without its salary | M-02 |
 | BE-2 | Reactivate a cancelled recurring bill | The software specification says `cancelledAt` can be cleared to reactivate a bill; `PATCH /recurring-expenses/:id` doesn't allow setting it back to `null` | Allow `cancelledAt: null` on the PATCH (or add a reactivate action), and align the specification and the API docs | R-07 |
-| BE-3 | Mark a bill paid after its month has ended | Past-month expenses can't be updated (`422`), so a bill paid after its month ends (due 28 Nov, paid 2 Dec) can't get a paid date and stays overdue for good | Allow `paidAt` alone to be set or cleared on past-month expenses; every other field stays locked. The frontend would then show the paid control in past months | M-12, M-13, M-25 |
 | BE-4 | Sort expenses by category and payment type | `GET /expenses` now sorts across pages by `description`, `amount`, `purchasedAt`, `dueAt`, `paidAt`, `installmentNumber`, `createdAt`, `updatedAt`. It has no key for the category and payment type **names** (expenses only carry their ids) | Add `sortBy` values for the category and payment type names. **Delivered 2026-11-03** as `categoryName` and `paymentTypeName`, documented in [expense.md](../APIs/expense.md); the same change made the `description` sort case-insensitive. Details: [t-06-backend-requirements.md](t-06-backend-requirements.md) | M-06 (Category and Payment headers) |
 | BE-5 | Totals across months | `GET /expenses` returns `totalAmount` for the month, which covers the Month screen's Expenses card. Comparing months (History) would still need one request per month | A summary endpoint for a range of months, when History is picked up | History |
