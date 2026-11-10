@@ -640,7 +640,7 @@ The expense is created in the month being viewed (except installments, see M-15)
 | What | Source |
 |---|---|
 | Months | `GET /budget-periods` (sorted by the frontend), `POST`, `DELETE /budget-periods` |
-| Expenses | `GET /expenses?budgetPeriodId=&page=&limit=20&sortBy=&sortOrder=`, one page at a time; its `totalAmount` feeds the Expenses card. `POST`, `PATCH`, `DELETE /expenses`. `GET /expenses/:id` only for a link to an expense that isn't on the page on screen (rows opened on screen are cached, so no request) |
+| Expenses | `GET /expenses?budgetPeriodId=&page=&limit=10&sortBy=&sortOrder=`, one page at a time; its `totalAmount` feeds the Expenses card. `POST`, `PATCH`, `DELETE /expenses`. `GET /expenses/:id` only for a link to an expense that isn't on the page on screen (rows opened on screen are cached, so no request) |
 | Installment plans | `n of N`, interval, first purchase date and end date come with each expense (`installment`). `GET`, `PATCH /installment-groups/:id` only for changing the amount (M-19) |
 | Incomes | `GET /incomes?budgetPeriodId=`, `POST`, `PATCH`, `DELETE /incomes` |
 | Envelopes | `GET /budget-envelopes?budgetPeriodId=` (with `spentAmount`), `GET /budget-envelopes/:id` only for a link to an envelope that isn't in the month on screen, `POST`, `DELETE /budget-envelopes` (no `PATCH`: budgets are read-only) |
