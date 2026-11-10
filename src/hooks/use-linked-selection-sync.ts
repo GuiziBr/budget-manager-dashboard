@@ -57,7 +57,10 @@ export function useLinkedSelectionSync({
 		? (query.isError && isMissing(query.error)) ||
 			(!!periodId && !!periods.data && !target)
 		: false
-	const failed = !!selection && query.isError && !isMissing(query.error)
+	// A background refetch failing (e.g. on window refocus, after `staleTime`)
+	// keeps the last good data; only a failure with nothing to show closes the panel.
+	const failed =
+		!!selection && query.isError && !query.data && !isMissing(query.error)
 
 	useEffect(() => {
 		if (!target) return
