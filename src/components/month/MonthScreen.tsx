@@ -2,6 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query"
 import { useRef, useState } from "react"
+import { toast } from "sonner"
 import { AddFab } from "@/components/month/AddFab"
 import { EnvelopeDetailsPanel } from "@/components/month/EnvelopeDetailsPanel"
 import { EnvelopesCard } from "@/components/month/EnvelopesCard"
@@ -16,16 +17,22 @@ import { MonthTable } from "@/components/month/MonthTable"
 import { SummaryCards } from "@/components/month/SummaryCards"
 import { translations } from "@/constants/translations"
 import { envelopeQueryKey } from "@/hooks/use-budget-envelopes"
-import { expenseQueryKey } from "@/hooks/use-expenses"
+import { expenseQueryKey, useUpdateExpense } from "@/hooks/use-expenses"
 import { useLinkedSelection } from "@/hooks/use-linked-selection"
 import { useLinkedSelectionSync } from "@/hooks/use-linked-selection-sync"
 import { PHONE_QUERY, useMediaQuery } from "@/hooks/use-media-query"
 import { useMonthAccess } from "@/hooks/use-month-access"
+import { todayIso } from "@/lib/format-date"
 import { monthLabel } from "@/lib/month"
+import { isUnpaid } from "@/lib/month-rows"
 import type { BudgetEnvelope, Expense } from "@/types"
 
+// A fixed id keeps repeated failures from stacking toasts
+const PAID_TOAST_ID = "paid-update-failed"
+
 export function MonthScreen() {
-	const { month, period, state, canEdit, error, refetch } = useMonthAccess()
+	const { month, period, state, canEdit, canEditEnvelopes, error, refetch } =
+		useMonthAccess()
 	const label = monthLabel(month)
 	const isPhone = useMediaQuery(PHONE_QUERY)
 	const [incomeFor, setIncomeFor] = useState<string | null>(null)
@@ -40,6 +47,23 @@ export function MonthScreen() {
 	if (panelMonth !== monthKey) {
 		setPanelMonth(monthKey)
 		setIncomeFor(null)
+	}
+	const updateExpense = useUpdateExpense({ optimistic: true })
+	// Ticking records today; unticking clears the date. The change shows at once and rolls back on failure
+	const togglePaid = (expense: Expense) => {
+		updateExpense.mutate(
+			{
+				id: expense.id,
+				input: { paidAt: isUnpaid(expense) ? todayIso() : null }
+			},
+			{
+				// Expenses can be changed in any opened month, so every failure is the generic one
+				onError: () =>
+					toast.error(translations.month.table.paidFailed, {
+						id: PAID_TOAST_ID
+					})
+			}
+		)
 	}
 	const incomeOpener = useRef<HTMLElement | null>(null)
 	const detailsOpener = useRef<HTMLElement | null>(null)
@@ -75,7 +99,7 @@ export function MonthScreen() {
 			)}
 			{state === "not-opened" && <MonthNotOpened label={label} />}
 			{state === "not-tracked" && <MonthNotTracked label={label} />}
-			{(state === "open" || state === "closed") && period && (
+			{(state === "open" || state === "past") && period && (
 				<>
 					<SummaryCards
 						periodId={period.id}
@@ -105,6 +129,7 @@ export function MonthScreen() {
 						canEdit={canEdit}
 						selectedId={selection?.kind === "expense" ? selection.id : null}
 						onSelectRow={(row) => selectExpense(row.expense)}
+						onTogglePaid={togglePaid}
 					/>
 					<ExpenseDetailsPanel
 						onClose={link.close}
@@ -112,6 +137,7 @@ export function MonthScreen() {
 						periodId={period.id}
 						expenseId={selection?.kind === "expense" ? selection.id : null}
 						canEdit={canEdit}
+						onTogglePaid={togglePaid}
 						returnFocusRef={detailsOpener}
 					/>
 					<EnvelopeDetailsPanel
@@ -120,7 +146,7 @@ export function MonthScreen() {
 						periodId={period.id}
 						month={month}
 						envelopeId={selection?.kind === "envelope" ? selection.id : null}
-						canEdit={canEdit}
+						canEdit={canEditEnvelopes}
 						returnFocusRef={detailsOpener}
 					/>
 					{isPhone && canEdit && <AddFab />}

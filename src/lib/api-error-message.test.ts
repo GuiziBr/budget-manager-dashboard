@@ -101,7 +101,7 @@ describe("describeApiError", () => {
 		}
 	})
 
-	it("422 is the closed month in any context", () => {
+	it("422 is the past-month envelope rule in any context", () => {
 		for (const context of [
 			save,
 			{ action: "mutate" },
@@ -109,7 +109,7 @@ describe("describeApiError", () => {
 		] as const) {
 			expect(describeApiError(new ApiError("past", 422), context)).toEqual({
 				kind: "monthClosed",
-				message: "This month is now closed and can't be changed."
+				message: "Envelopes of past months can't be changed."
 			})
 		}
 	})
@@ -160,7 +160,7 @@ describe("getApiErrorMessage", () => {
 	it("returns the message of the description", () => {
 		expect(
 			getApiErrorMessage(new ApiError("past", 422), { action: "mutate" })
-		).toBe("This month is now closed and can't be changed.")
+		).toBe("Envelopes of past months can't be changed.")
 	})
 })
 

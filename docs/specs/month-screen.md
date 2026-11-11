@@ -48,7 +48,7 @@ Status: **Ready** = the backend supports it today. **Placeholder** = shown, wait
 | M-23 | Add an envelope | Should | Ready |
 | M-24 | Delete an envelope | Should | Ready |
 | **Rules across the screen** | | | |
-| M-25 | Past months are read-only | Must | Ready |
+| M-25 | Past months are edited like the current one, except envelopes | Must | Ready |
 | M-26 | Remembered form values | Should | Ready (browser only) |
 
 ---
@@ -132,7 +132,7 @@ These terms and calculations are used throughout the document.
 - The salary field is optional. If left empty, a note says "You can add the salary later from the month".
 - The copied or entered salary is created as an income flagged as salary. Its description is "Salary".
 - "Copy last month's salary" is offered only when last month exists and has at least one salary income. Copied incomes keep their description.
-- Only the current month and future months can be opened. A past month that was never opened (for example, before you started using the app) shows "November 2025 wasn't tracked in the app" without an Open button. Past months that were opened are simply viewed through the month switcher (M-01).
+- Only the current month and future months can be opened. A past month that was never opened (for example, before you started using the app) shows "November 2025 wasn't tracked in the app" without an Open button. Past months that were opened are reached through the month switcher (M-01) and edited like the current month (M-25).
 
 **When something goes wrong**
 
@@ -306,7 +306,7 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 2. Below the amount and status, the details are in **tabs**, one per group: **Payment** (the default), **Dates**, **Installment plan** and **Recurring bill**. Payment and Dates are always there; the other two appear only for an installment or a recurring expense. The chosen tab is kept while stepping to another expense, and falls back to Payment if that expense doesn't have it. Details show the item (no type chip under the title: the number of an installment or the month of a recurring bill is in its tab), category (to the right of the amount) and amount; the status (paid, unpaid, overdue) is the first row of the Payment tab, a **Mark as paid today** button when unpaid, and every field not shown in the table: payment type, **bank, store**, **purchased**, due and paid dates.
 3. For installments they add the plan: `n of N`, interval, first purchase date and **end date**. There is no View plan button: these fields are all the row details need, and they come with the expense. The plan's amount per payment is not shown here, because the row's own amount can differ after a single-row edit (M-17).
 4. For recurring rows they add the bill's start month, "Month 11" (M-10) and a link to the bill on the Recurring screen.
-5. Actions: Mark paid / unpaid, Edit, Delete (hidden in past months).
+5. Actions: Mark paid / unpaid, Edit, Delete (an envelope's Delete is hidden in past months).
 6. **Shareable link.** The open expense or envelope is in the address: `?expense=<id>` or `?envelope=<id>`, next to `?period=` and `?page=`. Opening a row adds a history entry, so the back button closes the panel; closing it goes back to that entry, or just removes the param when the panel came from a pasted link. A link opens the details wherever the row is (any page, any sort, any month): if the address names another month than the one shown, the screen switches to the row's month (replacing the address, so back doesn't land on the wrong month). A link to something that doesn't exist, or whose month isn't opened, shows "This expense no longer exists." (or "This envelope…") and drops the param. An id that isn't shaped like one the API issues (a tampered address) is treated the same way, without a request: the id is never put into a request path unchecked. Changing month drops the selection.
 7. **Previous / next.** Two arrows at the top right, beside Close, show the previous and next expense in the order of the table (the server's sort). At the last row of a page, Next continues to the first row of the next page, and Previous at the first row goes to the last row of the previous page; the table moves to that page too. The address (`?page=` and `?expense=`) updates in one step without adding history, so the back button still closes the panel in one step. A count such as `(11/36)` to the left of the arrows shows the place of the open expense in the whole month (not just its page); it is left out for an expense that isn't on the page on screen. The neighbouring page is read only when the open expense is on the edge of its page. The Up and Down arrow keys do the same while the panel is open (not when typing in a field or with a modifier key held). The arrows are disabled at the very first and very last expense of the month, and for an expense that isn't on the page on screen (a pasted link). The envelope panel has its own arrows (M-11).
 
@@ -315,7 +315,7 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 
 **Acceptance criteria**
 - *Given* Car finance payment 78 of a 14-day plan with 104 payments starting 2023-11-10, *then* the details show 78 of 104 and the end date.
-- *Given* a past month, *then* the details show no Edit, Delete or paid actions.
+- *Given* a past month, *then* an expense's details show the same actions as in the current month, and an envelope's details show no Delete.
 - *Given* a link with `?expense=<id>` for an expense on page 3 of October and no `period`, *when* I open it, *then* October is shown and the details of that expense are open.
 - *Given* the details of the third expense on a page are open, *when* I choose Next, *then* the fourth expense's details show and `?expense=` holds its id, and *when* I then press back, *then* the panel is closed.
 - *Given* the last expense of page 1 is open, *when* I choose Next, *then* the first expense of page 2 shows, the table is on page 2 with that row highlighted, and `?page=2&expense=<id>` is in the address.
@@ -372,7 +372,7 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 5. A different paid date is set in the expense form (M-17).
 
 **Rules**
-- Not available in past months (M-25).
+- Available in past months (M-25).
 - Envelopes have no paid control.
 
 **When something goes wrong**
@@ -391,7 +391,7 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 - Overdue rows are flagged in the table only; there is no overdue count in the summary.
 
 **Rules**
-- Overdue = unpaid and due before today, in **any** month. A row left unpaid in a past month stays overdue, because past months can't be edited (known limitation, backend change under review in [todo.md](todo.md), BE-3).
+- Overdue = unpaid and due before today, in **any** month. A row left unpaid in a past month stays overdue until it is marked paid, which past months now allow (M-12).
 
 **Acceptance criteria**
 - *Given* today is 2026-11-15 and Hydro is due 2026-11-12 and unpaid, *then* Hydro's due date is in the danger colour with the alert icon.
@@ -485,7 +485,7 @@ The expense is created in the month being viewed (except installments, see M-15)
   - installment row: the other payments and the plan don't change. A note says "To change all remaining payments, edit the plan" with a link (M-19);
   - recurring row: the bill and other months don't change. A note links to the bill on the Recurring screen.
 - If the row uses a lookup that was deleted since, it stays selected with its name and a "(deleted)" mark (the name comes with the expense), but can't be chosen again once changed.
-- Not available in past months (M-25).
+- Available in past months (M-25).
 
 **Acceptance criteria**
 - *Given* a recurring Hydro row of 105.00, *when* I change it to 112.40, *then* only this month's Hydro shows 112.40 and next month's opens with 105.00.
@@ -505,7 +505,7 @@ The expense is created in the month being viewed (except installments, see M-15)
 
 **Rules**
 - Deleting an installment payment doesn't reduce N (`n of N` still counts it).
-- Not available in past months (M-25).
+- Available in past months (M-25).
 
 **Acceptance criteria**
 - *Given* a recurring row, *when* I delete it, *then* the row is gone from this month and the bill still appears on the Recurring screen.
@@ -538,7 +538,7 @@ The expense is created in the month being viewed (except installments, see M-15)
 
 **Rules**
 - Several incomes can be flagged as salary; all count towards the salary base.
-- Not available in past months (M-25, see question Q-2).
+- Available in past months (M-25).
 
 **Acceptance criteria**
 - *Given* I add "Salary" 6,144.00 with Salary on, *then* it shows a Salary badge and the salary base increases by 6,144.00.
@@ -551,7 +551,7 @@ The expense is created in the month being viewed (except installments, see M-15)
 - Each income has a menu with **Edit** (same form) and **Delete** (confirmation naming the income).
 
 **Rules**
-- Not available in past months (M-25).
+- Available in past months (M-25).
 
 **Acceptance criteria**
 - *Given* the only salary income, *when* I delete it, *then* the income footer says "No salary this month".
@@ -576,6 +576,7 @@ The expense is created in the month being viewed (except installments, see M-15)
 **How it works**
 1. **+ Add → Envelope** opens a form: Category (only categories that use envelopes and don't have one this month) and Budget. This is the one exception to M-22: `POST /budget-envelopes` requires an `allocatedAmount`, so the budget is entered once on creation and can't be changed afterwards. **Pending decision:** whether adding and deleting envelopes stay at all (see [todo.md](todo.md), U-2).
 2. If every such category already has an envelope, the option is disabled: "Every envelope category already has an envelope this month."
+3. Not available in past months (the backend answers 422; M-25).
 
 **Acceptance criteria**
 - *Given* I deleted the Fuel envelope, *when* I add an envelope, *then* Fuel is offered and the others aren't.
@@ -586,26 +587,31 @@ The expense is created in the month being viewed (except installments, see M-15)
 
 **How it works**
 - **Delete** in the envelope's details panel (opened from the Envelopes card), with a confirmation naming the category. Its spend leaves the totals.
+- Not available in past months (the backend answers 422; M-25).
 
 **Acceptance criteria**
 - *Given* the Parking envelope of 20.00, *when* I delete it, *then* it is gone from the Envelopes card, and the balance rises by the amount spent in it.
 
 ### Rules across the screen
 
-#### M-25 Past months are read-only
+#### M-25 Past months are edited like the current one, except envelopes
 
-*As the budget owner, I want to know at a glance that a past month can't be changed, instead of finding out when saving fails.*
+*As the budget owner, I want to fix, pay and add rows in a month that has ended, the same way as in the current month.*
 
 **How it works**
-- A banner under the header: "October 2026 is closed. You can view it but not change it."
-- Hidden in past months: paid controls, Edit, Delete and **+ Add**.
+- A small "Past month" pill beside the month name. Its note says: "You can edit this month. Envelopes of past months can't be changed."
+- In an opened past month, paid controls, Edit, Delete and **+ Add** for expenses and incomes work as in the current month.
+- Envelopes are the exception: the backend answers 422 when an envelope of a past period is created or deleted, so **+ Add → Envelope** and the envelope's Delete are hidden.
 
 **Rules**
 - A month is past when it's before the current month (UTC).
-- If a month becomes past while the screen is open (midnight at month end) and a change is rejected, the message is "This month is now closed and can't be changed", and the screen refreshes into read-only mode.
+- A past month that was never opened still shows "{Month} wasn't tracked in the app", with no Open action (M-02).
+- An installment plan's amount change applies only from the current month onward; past rows keep their amount (installment-group API).
+- If a month becomes past while the screen is open (midnight at month end) and an envelope change is rejected, the message is "Envelopes of past months can't be changed" and the screen refreshes.
 
 **Acceptance criteria**
-- *Given* today is in November 2026, *when* I view October 2026, *then* the banner shows and no row can be edited, deleted or ticked.
+- *Given* today is in November 2026, *when* I view an opened October 2026, *then* the Past month pill shows, and I can tick a row paid, edit and delete expenses and incomes, and add new ones.
+- *Given* the same month, *then* the envelope details have no Delete.
 
 #### M-26 Remembered form values
 
@@ -630,7 +636,7 @@ The expense is created in the month being viewed (except installments, see M-15)
 | 400 bank required | M-14 to M-17 | On the Bank field: "Bank is required for this payment type." |
 | 400 no period for installments | M-15 | "Open the month of the first payment before adding this plan." |
 | 404 lookup not found | Forms | "{Field} no longer exists. Choose another." The lists are refreshed |
-| 422 past period | Update or delete of an expense, income or envelope; creating an envelope | "This month is now closed and can't be changed." The screen switches to read-only. (The backend still accepts new incomes and expenses in past months; hiding **+ Add** there is a frontend rule, M-25) |
+| 422 past period | Creating or deleting an envelope of a past period (expenses and incomes no longer return it) | "Envelopes of past months can't be changed." |
 | Network or 500 | Any | Toast: "Something went wrong. Try again." Forms keep what was typed |
 
 ---
@@ -654,7 +660,6 @@ These came up while writing this document. They don't block the design but need 
 
 | ID | Gap | Effect on this screen |
 |---|---|---|
-| G-1 | `docs/APIs/expense.md` doesn't list the 422 for changing or deleting a past-month expense, while the software specification requires it | M-25 assumes the 422 exists |
 | G-4 | The software specification says creating a recurring expense also adds it to months after it that are already opened. The API doc only says months opened **afterwards** get a copy | M-16 needs to know which is true, to tell the user whether next month already has the row |
 | G-12 | Envelopes carry only `categoryId`, so the name of a category deleted after the envelope's month can't be shown | The Envelopes card and envelope details show "(deleted)" for it |
 
@@ -667,7 +672,7 @@ G-2, G-3, G-5 and G-6 were delivered by the backend on 2026-11-03 (plan size, lo
 | Question | Decision |
 |---|---|
 | Q-1 Show the category in the table? | Yes, as a small chip under the item (M-05) |
-| Q-2 Add rows to past months (migrating from the spreadsheet)? | Out of scope for now. Past months stay read-only, and past months that were never opened can't be opened (M-02, M-25) |
+| Q-2 Add rows to past months (migrating from the spreadsheet)? | Opened past months accept new expenses and incomes (M-25). Out of scope for now: opening a past month that was never opened, so those can't be opened or filled (M-02, M-25) |
 | Q-3 Envelope due date? | Envelopes have no due date. They can't be ticked off or become overdue (M-12, M-13) |
 | Q-4 Remember the store in the expense form? | No, payment type, bank and category only, for now (M-26) |
 | How does the open-month review save incomes? | One `POST /incomes` per income, after the month is created (M-02). Backend change under review (BE-1) |

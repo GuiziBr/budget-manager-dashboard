@@ -47,3 +47,8 @@ export function formatMonthYear(
 	if (Number.isNaN(date.getTime())) return null
 	return `${MONTHS[date.getUTCMonth()]} ${date.getUTCFullYear()}`
 }
+
+/** Today as "YYYY-MM-DD" in UTC, the day a "mark as paid" is recorded on. */
+export function todayIso(now: Date = new Date()): string {
+	return now.toISOString().slice(0, 10)
+}

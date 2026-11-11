@@ -1,6 +1,6 @@
 # Month Screen — Implementation Plan
 
-Status: draft 4 (backend delivered: spend, plan size, lookup names, months running) · Last updated: 2026-11-04
+Status: draft 5 (past months editable, except envelopes) · Last updated: 2026-11-10
 
 Breaks the [Month screen spec](../specs/month-screen.md) and the wireframes in `design.pen` into small tasks. Each task is one pull request to `development`, sized to be reviewed in one sitting.
 
@@ -39,7 +39,7 @@ Related: [Month spec](../specs/month-screen.md) · [Backlog](../specs/todo.md) �
 | T-14 | Envelope hooks | 1 | M-04 | T-02 | S | — |
 | T-15 | Installment group hooks | 1 | M-19 | T-02 | S | — |
 | T-16 | Month route and month switcher | 2 Read-only screen | M-01 | T-03, T-11 | M | — |
-| T-17 | Month states: loading, error, not opened, not tracked, closed | 2 | M-01, M-02, M-25 | T-16 | S | — |
+| T-17 | Month states: loading, error, not opened, not tracked, past | 2 | M-01, M-02, M-25 | T-16 | S | — |
 | T-18 | Summary cards | 2 | M-04 | T-05, T-08, T-12–T-14 | S | — |
 | T-19 | Envelopes card (collapsible) | 2 | M-04, M-11 | T-05, T-08, T-14 | M | G-12 |
 | T-20 | Month table and pagination (desktop) | 2 | M-05, M-09, M-10, M-13 | T-05, T-08, T-12 | L | — |
@@ -47,7 +47,7 @@ Related: [Month spec](../specs/month-screen.md) · [Backlog](../specs/todo.md) �
 | T-22 | Phone layout: list, pagination, envelope strip, add button | 2 | M-05, M-04 | T-18–T-20 | M | — |
 | T-23 | Income panel (read) | 3 Panels | M-07 | T-13, T-18 | M | — |
 | T-24 | Row details panel (read) | 3 | M-08 | T-20 | M | G-12 |
-| T-25 | Mark paid / unpaid | 4 Actions | M-12 | T-12, T-20, T-24 | S | BE-3 |
+| T-25 | Mark paid / unpaid | 4 Actions | M-12 | T-12, T-20, T-24 | S | — |
 | T-26 | Expense form: shared fields and one-time | 4 | M-14, M-26 | T-07, T-10, T-12 | L | — |
 | T-27 | Expense form: installments | 4 | M-15 | T-26 | M | — |
 | T-28 | Expense form: recurring | 4 | M-16 | T-26 | S | G-4 |
@@ -56,7 +56,7 @@ Related: [Month spec](../specs/month-screen.md) · [Backlog](../specs/todo.md) �
 | T-31 | Change an installment plan's amount | 4 | M-19 | T-15, T-24 | S | — |
 | T-32 | Add, edit, delete income | 4 | M-20, M-21 | T-13, T-23 | M | — |
 | T-33 | Add and delete envelopes | 4 | M-23, M-24 | T-14, T-19 | S | — |
-| T-34 | Closed-month guard (422 → read-only) | 4 | M-25 | T-07, T-17 | S | G-1, BE-3 |
+| T-34 | Past-month envelope guard (422 → message) | 4 | M-25 | T-07, T-17 | S | — |
 | T-35 | Open a month | 5 Month lifecycle | M-02 | T-11, T-17 | S | BE-1 |
 | T-36 | Open-month review: bills, installments, envelopes | 5 | M-02 | T-35 | M | — |
 | T-37 | Open-month review: salary | 5 | M-02 | T-36, T-13 | M | BE-1 |
@@ -165,7 +165,7 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 - **Done when:** the three M-01 acceptance criteria pass, and the back button returns to the previous month.
 
 #### T-17 Month states (M-01, M-02, M-25)
-- **Includes:** skeletons while loading; an inline error with Retry; "{Month} hasn't been opened yet" with an Open button (wired up in T-35); "{Month} wasn't tracked in the app" for past months never opened; the closed banner for past months, and a `useMonthAccess()` (or similar) that tells components whether actions are allowed.
+- **Includes:** skeletons while loading; an inline error with Retry; "{Month} hasn't been opened yet" with an Open button (wired up in T-35); "{Month} wasn't tracked in the app" for past months never opened; a quiet "Past month" pill for opened past months (it replaced the Closed banner on 2026-11-10), and `useMonthAccess()` returning `canEdit` (expenses and incomes: open and past months) and `canEditEnvelopes` (current and future months only, because the backend answers 422 for envelopes of past periods). The state is called `past`, not `closed`.
 - **Done when:** each state matches its `design.pen` frame (Not opened, Past month).
 
 #### T-18 Summary cards (M-04)
@@ -205,7 +205,7 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
   - the pagination footer under the list inside the card;
   - the Balance card holds Income and Expenses;
   - the envelope strip scrolls sideways and keeps the Hide / Show toggle of T-19 (done; spec M-04 updated 2026-11-09);
-  - the floating add button: phone only, hidden in past months (`canEdit`), above the bottom tab bar, 44px touch target; it does nothing until the + Add menu arrives in T-26 (`onAdd?` prop);
+  - the floating add button: phone only, hidden only while the month isn't editable (`canEdit`, which past months now satisfy), above the bottom tab bar, 44px touch target; it does nothing until the + Add menu arrives in T-26 (`onAdd?` prop);
   - no sorting on the phone.
 - **Done when:** nothing scrolls horizontally at 390px except the envelope strip, and the layout matches the Mobile 390 frames.
 - **Status: done (2026-11-09).** Most of the phone layout already came with T-18 to T-20; this task added the floating add button (`AddFab`, shown by `MonthScreen` on the phone when `canEdit`). It can be dragged anywhere and settles against the closest side (left or right) when let go, never over the bottom tab bar; the arrow keys switch sides or move it up and down; it remembers its spot on the device; it does nothing until the + Add menu (T-26). Manual QA at 390px is done by the owner.
@@ -215,7 +215,7 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 #### T-23 Income panel, read (M-07)
 - **Includes:** a side sheet on desktop and a bottom sheet on the phone, opened from the Income card or the phone's Income figure; total and "of this is salary"; the list with Salary badges and received dates; "No salary this month"; closes on X, Escape or the dimmed page. Add, edit and delete buttons are present but wired in T-32.
 - **Done when:** the M-07 acceptance criteria pass.
-- **Status: done (2026-11-09).** `IncomePanel` is opened from the Income card and the phone's Income figure; it is a 440px right sheet on desktop and a bottom sheet on the phone. Incomes are sorted salary first, then by received date (undated last) in `lib/month-incomes.ts`. The panel reads the summary's cached incomes, so opening it adds no request. Focus lands on the panel and returns to the opener on close. Add, Edit and Delete take optional handlers and do nothing until T-32; they are hidden in closed months.
+- **Status: done (2026-11-09).** `IncomePanel` is opened from the Income card and the phone's Income figure; it is a 440px right sheet on desktop and a bottom sheet on the phone. Incomes are sorted salary first, then by received date (undated last) in `lib/month-incomes.ts`. The panel reads the summary's cached incomes, so opening it adds no request. Focus lands on the panel and returns to the opener on close. Add, Edit and Delete take optional handlers and do nothing until T-32; they show in every opened month, past ones included (since 2026-11-10).
 
 #### T-24 Row details panel, read (M-08)
 - **Includes:** the panel for expenses and envelopes:
@@ -223,19 +223,20 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
   - Payment, Dates and Recurring bill sections;
   - for installments, the plan section (`n of N`, interval, first purchase, end date); no View plan button (dropped 2026-11-09, the section has all the details needed); the plan's amount per payment is not on the expense and is not shown;
   - the selected row highlighted;
-  - actions hidden in past months.
+  - actions hidden in past months only for envelopes (`canEditEnvelopes`); expense actions work in every opened month.
   Action buttons are wired in T-25, T-29 and T-30.
 - **Done when:** the M-08 acceptance criteria pass and the panel matches the "Expense details open" frame.
 - **Backend:** G-12 (envelopes carry no category name): an envelope whose category was deleted shows "(deleted)".
 - Months running, plan interval and end date come from the expense; the panel never reads the installment group.
-- **Status: done (2026-11-09).** The open expense or envelope is in the address (`?expense=<id>` or `?envelope=<id>`, `useLinkedSelection`, pure helpers in `lib/selection-link.ts`), so a link opens it and only one panel is open at a time. Opening adds a history entry and closing goes back to it (a pasted link just loses the param); changing month drops it. A link to a row on another month or page is read by id (`useExpense`, `useBudgetEnvelope`) and `useLinkedSelectionSync` switches the screen to that row's month; a missing or malformed id shows a toast and drops the param. Two arrows beside Close step to the previous and next expense of the page on screen (`link.show` replaces the address, so back still closes in one step). At the edge of a page they continue onto the neighbouring page (the panel reads that page only when standing on the edge, and sets `?page=` and `?expense=` together); a count (`(11/36)`) beside them shows the place in the month; they stop at the first and last expense of the month and don't apply to envelopes. Rows opened on screen are cached under their id, so no by-id request is made. `ExpenseDetailsPanel` and `EnvelopeDetailsPanel` (shared frame in `DetailsSheet`) read the page and envelopes already loaded; a recurring row also reads its bill (`useRecurringExpense`) for the month it started. The panel closes by itself if the expense leaves the page on screen. Action buttons (paid, Edit, Delete) take optional handlers and do nothing until T-25, T-29, T-30 and T-33; they are hidden in closed months. G-12: an envelope whose category is gone now shows "(deleted)" instead of being left out of the card.
+- **Status: done (2026-11-09).** The open expense or envelope is in the address (`?expense=<id>` or `?envelope=<id>`, `useLinkedSelection`, pure helpers in `lib/selection-link.ts`), so a link opens it and only one panel is open at a time. Opening adds a history entry and closing goes back to it (a pasted link just loses the param); changing month drops it. A link to a row on another month or page is read by id (`useExpense`, `useBudgetEnvelope`) and `useLinkedSelectionSync` switches the screen to that row's month; a missing or malformed id shows a toast and drops the param. Two arrows beside Close step to the previous and next expense of the page on screen (`link.show` replaces the address, so back still closes in one step). At the edge of a page they continue onto the neighbouring page (the panel reads that page only when standing on the edge, and sets `?page=` and `?expense=` together); a count (`(11/36)`) beside them shows the place in the month; they stop at the first and last expense of the month and don't apply to envelopes. Rows opened on screen are cached under their id, so no by-id request is made. `ExpenseDetailsPanel` and `EnvelopeDetailsPanel` (shared frame in `DetailsSheet`) read the page and envelopes already loaded; a recurring row also reads its bill (`useRecurringExpense`) for the month it started. The panel closes by itself if the expense leaves the page on screen. Action buttons (paid, Edit, Delete) take optional handlers and do nothing until T-25, T-29, T-30 and T-33; they show in every opened month, past ones included (since 2026-11-10). G-12: an envelope whose category is gone now shows "(deleted)" instead of being left out of the card.
 
 ### Phase 4 — Actions
 
 #### T-25 Mark paid / unpaid (M-12)
 - **Includes:** the row checkbox and the details panel's "Mark as paid today"; `PATCH /expenses/:id` with `paidAt` today or `null`; an optimistic update with rollback and the error toast.
 - **Done when:** the M-12 acceptance criteria pass, including the failure case.
-- **Backend:** BE-3 (paid date on past months). The paid control stays hidden in past months. If the backend allows `paidAt` alone on past-month expenses, show it there too (the rest of the row stays locked).
+- **Backend:** none. Past-month expenses are fully editable (BE-3 resolved 2026-11-10), so the control works in every opened month.
+- **Status: done (2026-11-10).** `MonthScreen` holds one `useUpdateExpense({ optimistic: true })` and passes `onTogglePaid` to the table, the phone list and the details panel. Ticking sends `paidAt` as today in UTC (`todayIso`), unticking sends `null`; the row stays in place. On failure the change rolls back and a toast says "Couldn't update the paid status. Try again." (every failure shows that text; expenses no longer return 422). Past months work the same way (updated 2026-11-10): the checkbox and the panel button are active whenever the month is opened.
 
 #### T-26 Expense form: shared fields and one-time (M-14, M-26)
 - **Includes:**
@@ -263,12 +264,12 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 - Prefill reads the ids from `expense.category.id`, `expense.paymentType.id`, `expense.bank?.id` and `expense.store?.id`; the request body still sends flat ids.
 
 #### T-30 Delete expense (M-18)
-- **Includes:** `ConfirmDeleteModal` with the three type-specific messages.
+- **Includes:** `ConfirmDeleteModal` with the three type-specific messages. Also available in past months.
 - **Done when:** the M-18 acceptance criteria pass.
 
 #### T-31 Change an installment plan's amount (M-19)
 - **Blocked by a decision:** View plan was dropped from the row details (T-24), so M-19 has no entry point yet. Decide where Change amount lives (for example an action in the details' installment section) before starting.
-- **Includes:** a Change amount field, opened from that entry point; the confirmation naming the current month; `PATCH /installment-groups/:id`; refresh of the months it affects.
+- **Includes:** a Change amount field, opened from that entry point; the confirmation naming the current month; `PATCH /installment-groups/:id`; refresh of the months it affects. The backend changes only rows from the current month onward, so opened from a past month the confirmation says the change applies from this month onward and past rows keep their amount.
 - **Done when:** the M-19 acceptance criteria pass.
 
 #### T-32 Add, edit, delete income (M-20, M-21)
@@ -278,13 +279,12 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 #### T-33 Add and delete envelopes (M-23, M-24)
 - **Includes:** **+ Add → Envelope**, offering only envelope categories without an envelope this month; delete from the envelope's details.
 - **Blocked by a decision:** U-2 in [todo.md](../specs/todo.md). Adding an envelope means entering its budget once (the one exception to M-22). Confirm that M-23 and M-24 stay before starting.
+- **Past months:** + Add → Envelope and the envelope's Delete are hidden in past months (`canEditEnvelopes`, M-25).
 
-#### T-34 Closed-month guard (M-25)
-- **Includes:** any 422 shows "This month is now closed and can't be changed", refreshes the periods, and switches the screen to read-only.
-- **Done when:** simulating a 422 on any mutation switches the screen to read-only.
-- **Backend:**
-  - G-1 (422 for expenses undocumented): confirm `PATCH` and `DELETE /expenses/:id` return 422 for past months, and ask for it to be added to `docs/APIs/expense.md`.
-  - BE-3 (paid date on past months): if adopted, a `paidAt`-only change must not trigger the read-only switch.
+#### T-34 Past-month envelope guard (M-25)
+- **Includes:** a 422 on creating or deleting an envelope shows "Envelopes of past months can't be changed" (`errors.monthClosed`, `isMonthClosedError`) and refreshes the envelopes. It only happens when a month ends while the screen is open, since the screen already hides those actions in past months.
+- **Done when:** simulating a 422 on an envelope mutation shows the message.
+- Expenses and incomes no longer return 422, so the read-only switch this task used to cover is gone (2026-11-10).
 
 ### Phase 5 — Month lifecycle
 
@@ -323,6 +323,8 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 
 These don't block any task, but each needs follow-up work once resolved (details in [todo.md](../specs/todo.md)). Each affected task also lists them in its own **Backend** line, with what to do now and what changes when the item lands.
 
+Resolved on 2026-11-10: past-month expenses and incomes can be changed (BE-3, G-1). `docs/software_specification.md` line 141 still says an expense can't be updated in a past month and needs the same update.
+
 Delivered on 2026-11-03 and no longer waited on: envelope spend (G-5), plan size on expenses (G-2), names of deleted lookups (G-3), recurring months running (G-6) and sorting by category and payment type name (BE-4).
 
 | Item | Affects | What changes when it lands |
@@ -330,8 +332,6 @@ Delivered on 2026-11-03 and no longer waited on: envelope spend (G-5), plan size
 | G-12 category name on envelopes | T-19, T-24 | Replace "(deleted)" with the real category name |
 | G-4 recurring backfill | T-28 | Decide whether later opened months are refreshed after adding a recurring bill |
 | BE-1 salary with the month | T-35, T-37 | Send the salary with `POST /budget-periods` |
-| BE-3 paid date on past months | T-25, T-34 | Allow the paid control in past months |
-| G-1 422 documented for expenses | T-34 | Confirm the guard covers expenses |
 
 ## 5. Open questions
 

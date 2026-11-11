@@ -67,7 +67,7 @@ Frequency decides prominence. The more often a task happens, the fewer steps it 
 | Open a new month | Monthly | A guided review that replaces "duplicate the tab" (section 8.1) |
 | Set envelope budgets | Monthly | Part of the open-month review; editable later on the row |
 | Enter expected income | Monthly | Part of the open-month review |
-| Look at a past month | Often | Month switcher; past months open read-only |
+| Look at a past month | Often | Month switcher; past months open editable, with a Past month pill |
 | Check installment progress and end date | Occasionally | `n of N` on the row, end month in the row details |
 | Change or cancel a recurring bill | Rarely | Recurring screen |
 | Manage categories, payment types, banks, stores | Rarely | Settings screen |
@@ -78,7 +78,7 @@ Frequency decides prominence. The more often a task happens, the fewer steps it 
 2. **Familiar first, better second.** Keep the spreadsheet's columns and order of entry so the switch is painless. Improve only where the sheet hurts: setup, phone editing, finding things.
 3. **Status at a glance.** Balance, what's unpaid and how envelopes are doing are answered before the user scrolls or taps.
 4. **Phone is a first-class device.** Every daily and weekly task works one-handed at 390px. Only the monthly setup may prefer the desktop, and it must still work on the phone.
-5. **Show the rules, don't just enforce them.** Past months look read-only, the bank field is marked required as soon as the payment type needs it, and lookups in use say so before a delete is attempted.
+5. **Show the rules, don't just enforce them.** Past months carry a Past month pill (envelopes are the one thing they lock), the bank field is marked required as soon as the payment type needs it, and lookups in use say so before a delete is attempted.
 6. **Honest placeholders.** Features waiting on the backend show a visible placeholder ("—" with a note), never invented numbers.
 7. **Follow the design system.** Tokens, components and patterns from `DESIGN_SYSTEM.md`. Deviations are deliberate and listed in section 11.
 
@@ -169,7 +169,7 @@ The detailed requirements for the Month screen now live in [`docs/specs/month-sc
 ### API
 - Expenses are listed newest first, filtered only by month, at most 100 per page. The table requests 20 at a time, sorted on the server (`sortBy`, `sortOrder`). Each response's `totalAmount` gives the month's expense total, so totals don't need every page.
 - No endpoint lists installment plans. End month and `N` come from `GET /installment-groups/:id`, one request per plan in the month. A plan summary on the expense row would avoid this.
-- Expenses in past months cannot be updated (`422`), so the paid date of a past row cannot be set. A row left unpaid when its month ends is shown as overdue (deferred, section 13).
+- Expenses and incomes of past months can be changed, so a past row can be marked paid. Envelopes of past periods can't be created or deleted (`422`).
 
 ## 12. Out of scope (for now)
 
@@ -186,7 +186,7 @@ None at the moment.
 
 ### Deferred
 
-- **Paying a bill after its month ends.** Past months are read-only, so a bill paid after its month has ended (for example, a 28-Nov due date paid on 2 December) can't be marked paid. For now such rows are simply shown as **overdue**; the user will resolve this later. Tracked as BE-3 in `docs/specs/todo.md` (letting the backend accept `paidAt` on past-month expenses).
+- **Paying a bill after its month ends.** Resolved on 2026-11-10: past months are editable, so such a bill can be marked paid like any other.
 
 ### Resolved in draft 2
 

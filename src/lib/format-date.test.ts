@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest"
-import { formatDayMonth, formatFullDate, formatMonthYear } from "./format-date"
+import {
+	formatDayMonth,
+	formatFullDate,
+	formatMonthYear,
+	todayIso
+} from "./format-date"
 
 describe("formatDayMonth", () => {
 	it("formats a date and a timestamp", () => {
@@ -42,5 +47,16 @@ describe("formatMonthYear", () => {
 		expect(formatMonthYear(null)).toBeNull()
 		expect(formatMonthYear("")).toBeNull()
 		expect(formatMonthYear("nope")).toBeNull()
+	})
+})
+
+describe("todayIso", () => {
+	it("returns the UTC day", () => {
+		expect(todayIso(new Date("2026-11-02T12:00:00Z"))).toBe("2026-11-02")
+	})
+
+	it("stays on the UTC day at the end of the month", () => {
+		expect(todayIso(new Date("2026-11-30T23:59:59Z"))).toBe("2026-11-30")
+		expect(todayIso(new Date("2026-12-01T00:00:00Z"))).toBe("2026-12-01")
 	})
 })

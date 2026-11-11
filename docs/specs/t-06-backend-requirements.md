@@ -1,22 +1,20 @@
 # T-06 — Backend Requirements
 
-Status: delivered and documented · Last updated: 2026-11-03
+Status: draft · Last updated: 2026-11-03
 
 What the backend needs to change so the Month table can sort by Category and Payment (task **T-06**, see [the frontend plan](../plans/t-06-expense-sort.md)). It is one change to `GET /expenses` (BE-4) plus three documentation clarifications. The # column (row type) is not sortable and needs nothing from the backend.
 
-**Outcome (2026-11-03):** the backend accepted BE-4 with the key names below, and [expense.md](../APIs/expense.md) now documents them. The `description` sort was case-sensitive and is fixed in the same change (D-1). D-2 and D-3 are confirmed. Sections 1 to 4 below are kept as the request that was made.
+**Nothing here blocks T-06.** The frontend ships sorting for Item, Due, Paid and Amount against the API as documented today. BE-4 only unlocks the Category and Payment headers.
 
-**Order of release:** the backend deploys first, then the frontend. An unknown key is a `400`, so the frontend must not run against a backend that lacks BE-4.
-
-Related: [Month spec](month-screen.md) (M-06) · [Backlog](todo.md) (BE-4) · [Expense API](../APIs/expense.md)
+Related: [Month spec](month-screen.md) (M-06) · [Backlog](todo.md) (BE-4) · [Expense API](APIs/expense.md)
 
 ---
 
 ## 1. What the API docs say today
 
-Checked against [expense.md](../APIs/expense.md) as of 2026-11-03 (last change: commit `f67b233`; no newer API docs are in the repository).
+Checked against [expense.md](APIs/expense.md) as of 2026-11-03 (last change: commit `f67b233`; no newer API docs are in the repository).
 
-`GET /expenses` accepts `sortBy` = `description`, `amount`, `purchasedAt`, `dueAt`, `paidAt`, `installmentNumber`, `createdAt` or `updatedAt`, and `sortOrder` = `asc` or `desc` (default `createdAt` / `desc`). Nullable fields sort **nulls last in both directions**, ties are broken by `id` (in the direction of `sortOrder`), and `totalAmount` covers the whole filtered set. An unknown value is a `400`.
+`GET /expenses` accepts `sortBy` = `description`, `amount`, `purchasedAt`, `dueAt`, `paidAt`, `installmentNumber`, `createdAt` or `updatedAt`, and `sortOrder` = `asc` or `desc` (default `createdAt` / `desc`). Nullable fields sort **nulls last in both directions**, ties are broken by `id`, and `totalAmount` covers the whole filtered set. An unknown value is a `400`.
 
 | Month table column | Needs | Covered today? |
 |---|---|---|
@@ -33,12 +31,12 @@ The # column is deliberately not sortable, so `installmentNumber` and the row ty
 
 ## 2. Summary
 
-| ID | Change | Priority | Needed by T-06? | Backend reply |
-|---|---|---|---|---|
-| BE-4 | New `sortBy` values `categoryName` and `paymentTypeName` | Should | No (only T-21's two extra headers) | Delivered |
-| D-1 | Document how `description` is compared | Should | No (affects what the user sees) | Was case-sensitive; fixed with BE-4 |
-| D-2 | Confirm `amount` sorts numerically | Could | No | Confirmed |
-| D-3 | Confirm every key sorts the whole filtered set before paging | Could | No | Confirmed |
+| ID | Change | Priority | Needed by T-06? |
+|---|---|---|---|
+| BE-4 | New `sortBy` values for the category name and payment type name | Should | No (only T-21's two extra headers) |
+| D-1 | Document how `description` is compared | Should | No (affects what the user sees) |
+| D-2 | Document that sorting applies before pagination for every key | Could | No |
+| D-3 | Document `sortBy` / `sortOrder` in the list's error cases | Could | No |
 
 ---
 
@@ -61,7 +59,8 @@ The names are suggestions: the frontend adapts to whatever keys the backend pick
 - **Names** are the names already returned in `category.name` and `paymentType.name`, **including soft-deleted lookups** (the same behaviour as the nested objects), so the order matches what the user sees.
 - **Case-insensitive** comparison for names ("bills" next to "Bills"), the same as the user would expect from a list of chips.
 - **No nulls:** category and payment type are required, so "nulls last" doesn't apply.
-- **Ties are broken by `id`**, as today, so paging stays stable. With `desc` the `id` tie-break is descending too: the whole ordering flips, as for the existing keys.
+- **Ties are broken by `id`**, as today, so paging stays stable.
+- `desc` reverses the order of the key and the `id` tie-break together (both descending), matching how the existing keys behave today.
 - Done in the same query as the page (a join on the lookups the response already resolves), not one query per row.
 - An unknown `sortBy` is still a `400`.
 
@@ -74,10 +73,10 @@ The names are suggestions: the frontend adapts to whatever keys the backend pick
 - `totalAmount` and `total` are the same for every `sortBy`.
 
 ### Docs to update
-Done: [expense.md](../APIs/expense.md) lists the keys and their order.
+[expense.md](APIs/expense.md): the `sortBy` row of the query table, plus one line per new key describing the order above.
 
 ### Rollout
-Additive and backwards compatible. The backend deploys first. The frontend has the new keys in its sort mapping and enables the two headers in T-21.
+Additive and backwards compatible. The frontend keeps the new keys out of its sort mapping until the backend is deployed (an unknown key would be a `400`), then adds them and enables the two headers (T-21). Tell the frontend the deployed key names and the date.
 
 ---
 
@@ -85,13 +84,13 @@ Additive and backwards compatible. The backend deploys first. The frontend has t
 
 None of these need code unless the answer differs from the assumption.
 
-| ID | Question | Frontend assumption | Why it matters | Reply |
-|---|---|---|---|---|
-| D-1 | How is `description` compared: case-insensitive? accents? | Case-insensitive, so "hydro" and "Hydro" are neighbours | The Item sort is user-visible; a case-sensitive sort puts every lower-case description after "Z" | Was case-sensitive (uppercase first); made case-insensitive with BE-4 |
-| D-2 | Does `amount` sort numerically (decimal), not as text? | Numeric | "1000.00" must come after "999.00" | Confirmed: numeric |
-| D-3 | Does the sort apply to the whole filtered set before the page is cut, for every key? | Yes (the docs say "across all pages" only implicitly) | The Month screen depends on it for M-06's acceptance criteria | Confirmed. `total` and `totalAmount` don't change with `sortBy` |
+| ID | Question | Frontend assumption | Why it matters |
+|---|---|---|---|
+| D-1 | How is `description` compared: case-insensitive? accents? | Case-insensitive, so "hydro" and "Hydro" are neighbours | The Item sort is user-visible; a case-sensitive sort puts every lower-case description after "Z" |
+| D-2 | Does `amount` sort numerically (decimal), not as text? | Numeric | "1000.00" must come after "999.00" |
+| D-3 | Does the sort apply to the whole filtered set before the page is cut, for every key? | Yes (the docs say "across all pages" only implicitly) | The Month screen depends on it for M-06's acceptance criteria |
 
-Documented in [expense.md](../APIs/expense.md) together with the new keys.
+If D-1 is case-sensitive today, the fix is a case-insensitive comparison on `description`, with `id` as the tie-break.
 
 ---
 
@@ -101,6 +100,6 @@ Found while reading the API docs; no new action, listed so they aren't lost.
 
 | Item | Where | Affects |
 |---|---|---|
-| G-1: `PATCH` and `DELETE /expenses/:id` don't document the `422` for past months, while [income.md](../APIs/income.md) and [budget-envelope.md](../APIs/budget-envelope.md) do | [todo.md](todo.md) | T-34 |
-| BE-3: allow `paidAt` alone on past-month expenses | [todo.md](todo.md) | T-25, T-34 |
+| G-1: resolved — `PATCH` and `DELETE /expenses/:id` no longer return `422` for past months (guard removed in #30); only [budget-envelope.md](../APIs/budget-envelope.md) keeps a past-period rule | [todo.md](todo.md) | T-34 |
+| BE-3: resolved — past-month expenses are fully editable, so `paidAt` alone is allowed | [todo.md](todo.md) | T-25, T-34 |
 | G-12: category name on envelopes | [todo.md](todo.md) | T-19, T-24 |

@@ -6,7 +6,7 @@ export type MonthState =
 	| "error"
 	| "not-opened"
 	| "not-tracked"
-	| "closed"
+	| "past"
 	| "open"
 
 export interface MonthStateInput {
@@ -25,10 +25,15 @@ export function getMonthState({
 	if (isLoading) return "loading"
 	if (error) return "error"
 	if (!period) return comparison === "past" ? "not-tracked" : "not-opened"
-	return comparison === "past" ? "closed" : "open"
+	return comparison === "past" ? "past" : "open"
 }
 
-/** Actions (add, edit, delete, mark paid) are allowed only in an opened current or future month. */
+/** Expenses and incomes can be changed in every opened month, past ones included. */
 export function canEditMonth(state: MonthState): boolean {
+	return state === "open" || state === "past"
+}
+
+/** Envelopes can't be created or deleted in a past month (the API answers 422). */
+export function canEditEnvelopes(state: MonthState): boolean {
 	return state === "open"
 }
