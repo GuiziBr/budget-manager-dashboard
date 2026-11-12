@@ -6,6 +6,7 @@ const { errors } = translations
 /** Backend texts of the two plain-string 400s (docs/APIs/expense.md). */
 const BANK_REQUIRED_TEXT = "bankId is required for this payment type"
 const NO_PERIOD_TEXT = "No matching budget periods found"
+const FUTURE_DATE_TEXT = "Date cannot be in the future"
 
 /** What the user was doing; the same status means different things per action. */
 export type ApiErrorContext =
@@ -21,20 +22,23 @@ export type ApiErrorKind =
 	| "envelopeExists"
 	| "bankRequired"
 	| "noPeriodForInstallments"
+	| "futureDate"
 	| "lookupGone"
 	| "monthClosed"
 	| "generic"
 
-export type ApiErrorField = "category" | "paymentType" | "bank" | "store"
+export type LookupField = "category" | "paymentType" | "bank" | "store"
+
+export type ApiErrorField = LookupField | "purchasedAt"
 
 export interface DescribedApiError {
 	kind: ApiErrorKind
 	message: string
-	/** The form field to attach the message to, for `bankRequired` and `lookupGone`. */
+	/** The form field to attach the message to, for `bankRequired`, `futureDate` and `lookupGone`. */
 	field?: ApiErrorField
 }
 
-const LOOKUP_ENTITIES: Record<string, ApiErrorField> = {
+const LOOKUP_ENTITIES: Record<string, LookupField> = {
 	Category: "category",
 	PaymentType: "paymentType",
 	Bank: "bank",
@@ -52,7 +56,7 @@ function generic(): DescribedApiError {
 }
 
 /** Reads the lookup from "<Entity> with id <id> not found"; other 404s give `undefined`. */
-function lookupField(message: string): ApiErrorField | undefined {
+function lookupField(message: string): LookupField | undefined {
 	const entity = /^(\w+) with id .+ not found/.exec(message)?.[1]
 	return entity ? LOOKUP_ENTITIES[entity] : undefined
 }
@@ -107,6 +111,13 @@ export function describeApiError(
 				kind: "bankRequired",
 				message: errors.bankRequired,
 				field: "bank"
+			}
+		}
+		if (message.includes(FUTURE_DATE_TEXT)) {
+			return {
+				kind: "futureDate",
+				message: errors.futureDate,
+				field: "purchasedAt"
 			}
 		}
 		if (message.includes(NO_PERIOD_TEXT)) {

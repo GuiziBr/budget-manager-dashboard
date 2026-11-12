@@ -3,10 +3,11 @@
 import { useQueryClient } from "@tanstack/react-query"
 import { useRef, useState } from "react"
 import { toast } from "sonner"
-import { AddFab } from "@/components/month/AddFab"
+import { AddFabMenu } from "@/components/month/AddMenu"
 import { EnvelopeDetailsPanel } from "@/components/month/EnvelopeDetailsPanel"
 import { EnvelopesCard } from "@/components/month/EnvelopesCard"
 import { ExpenseDetailsPanel } from "@/components/month/ExpenseDetailsPanel"
+import { ExpenseFormPanel } from "@/components/month/ExpenseFormPanel"
 import { IncomePanel } from "@/components/month/IncomePanel"
 import { MonthError } from "@/components/month/MonthError"
 import { MonthHeader } from "@/components/month/MonthHeader"
@@ -22,6 +23,7 @@ import { useLinkedSelection } from "@/hooks/use-linked-selection"
 import { useLinkedSelectionSync } from "@/hooks/use-linked-selection-sync"
 import { PHONE_QUERY, useMediaQuery } from "@/hooks/use-media-query"
 import { useMonthAccess } from "@/hooks/use-month-access"
+import { useMonthPage } from "@/hooks/use-month-page"
 import { todayIso } from "@/lib/format-date"
 import { monthLabel } from "@/lib/month"
 import { isUnpaid } from "@/lib/month-rows"
@@ -36,6 +38,7 @@ export function MonthScreen() {
 	const label = monthLabel(month)
 	const isPhone = useMediaQuery(PHONE_QUERY)
 	const [incomeFor, setIncomeFor] = useState<string | null>(null)
+	const [formOpen, setFormOpen] = useState(false)
 	const queryClient = useQueryClient()
 	// What the details panel shows (one expense or one envelope) lives in the address, so it can be shared
 	const link = useLinkedSelection()
@@ -47,6 +50,7 @@ export function MonthScreen() {
 	if (panelMonth !== monthKey) {
 		setPanelMonth(monthKey)
 		setIncomeFor(null)
+		setFormOpen(false)
 	}
 	const updateExpense = useUpdateExpense({ optimistic: true })
 	// Ticking records today; unticking clears the date. The change shows at once and rolls back on failure
@@ -67,6 +71,18 @@ export function MonthScreen() {
 	}
 	const incomeOpener = useRef<HTMLElement | null>(null)
 	const detailsOpener = useRef<HTMLElement | null>(null)
+	const formOpener = useRef<HTMLElement | null>(null)
+	const [fabMenuOpen, setFabMenuOpen] = useState(false)
+	const { page, setPage } = useMonthPage()
+	// One panel at a time: the form replaces whatever else is open
+	const openForm = (opener?: HTMLElement | null) => {
+		formOpener.current =
+			opener ?? (document.activeElement as HTMLElement | null)
+		setIncomeFor(null)
+		if (selection) link.close()
+		setFabMenuOpen(false)
+		setFormOpen(true)
+	}
 	// The row is cached under its own id, so the panel opens without asking the API for it
 	const selectExpense = (expense: Expense) => {
 		detailsOpener.current = document.activeElement as HTMLElement | null
@@ -92,7 +108,8 @@ export function MonthScreen() {
 	return (
 		<main className="mx-auto flex max-w-[1120px] flex-col gap-3 px-4 pt-4 lg:h-full lg:px-5 lg:pt-6">
 			<h1 className="sr-only">{translations.navigation.items.month}</h1>
-			<MonthHeader />
+			{/* The phone has the floating button instead */}
+			<MonthHeader onAddExpense={isPhone ? undefined : openForm} />
 			{state === "loading" && <MonthSkeleton />}
 			{state === "error" && (
 				<MonthError error={error} onRetry={() => refetch()} />
@@ -130,6 +147,7 @@ export function MonthScreen() {
 						selectedId={selection?.kind === "expense" ? selection.id : null}
 						onSelectRow={(row) => selectExpense(row.expense)}
 						onTogglePaid={togglePaid}
+						onAddExpense={() => openForm()}
 					/>
 					<ExpenseDetailsPanel
 						onClose={link.close}
@@ -149,7 +167,23 @@ export function MonthScreen() {
 						canEdit={canEditEnvelopes}
 						returnFocusRef={detailsOpener}
 					/>
-					{isPhone && canEdit && <AddFab />}
+					<ExpenseFormPanel
+						open={formOpen && canEdit}
+						onClose={() => setFormOpen(false)}
+						periodId={period.id}
+						month={month}
+						onSaved={() => {
+							if (page > 1) setPage(1)
+						}}
+						returnFocusRef={formOpener}
+					/>
+					{isPhone && canEdit && (
+						<AddFabMenu
+							open={fabMenuOpen}
+							onOpenChange={setFabMenuOpen}
+							onAddExpense={openForm}
+						/>
+					)}
 				</>
 			)}
 		</main>

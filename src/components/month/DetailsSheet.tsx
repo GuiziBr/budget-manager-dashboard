@@ -20,6 +20,12 @@ interface DetailsSheetProps {
 	onOpenChange: (open: boolean) => void
 	/** Shown above the title (the type chip). */
 	eyebrow?: ReactNode
+	/** Replaces the title's text size (`text-lg` by default). */
+	titleClassName?: string
+	/** Sits to the right of the title, on its line (the form's month). */
+	titleAside?: ReactNode
+	/** Draws a line between the header and the content. */
+	separated?: boolean
 	/** Buttons placed to the left of Close, at the top right. */
 	headerActions?: ReactNode
 	title: string
@@ -27,6 +33,10 @@ interface DetailsSheetProps {
 	description: string
 	/** The row or tile that opened the sheet; it gets the focus back on close. */
 	returnFocusRef?: RefObject<HTMLElement | null>
+	/** On the phone, fill the screen (a form) instead of stopping at 85% of its height. */
+	fullHeight?: boolean
+	/** A selector inside the panel to focus when it opens, instead of the panel itself (a form's first field). */
+	initialFocus?: string
 	children: ReactNode
 }
 
@@ -38,10 +48,15 @@ export function DetailsSheet({
 	open,
 	onOpenChange,
 	eyebrow,
+	titleClassName,
+	titleAside,
+	separated,
 	headerActions,
 	title,
 	description,
 	returnFocusRef,
+	fullHeight,
+	initialFocus,
 	children
 }: DetailsSheetProps) {
 	const isPhone = useMediaQuery(PHONE_QUERY)
@@ -50,10 +65,14 @@ export function DetailsSheet({
 		<Sheet open={open} onOpenChange={onOpenChange}>
 			<SheetContent
 				side={isPhone ? "bottom" : "right"}
-				// Land on the panel itself, not on the first button
+				// Land on the panel itself (or the field asked for), not on the first button
 				onOpenAutoFocus={(event) => {
 					event.preventDefault()
-					;(event.currentTarget as HTMLElement | null)?.focus()
+					const panel = event.currentTarget as HTMLElement | null
+					const target = initialFocus
+						? panel?.querySelector<HTMLElement>(initialFocus)
+						: null
+					;(target ?? panel)?.focus()
 				}}
 				onCloseAutoFocus={(event) => {
 					const opener = returnFocusRef?.current
@@ -64,15 +83,31 @@ export function DetailsSheet({
 				showCloseButton={false}
 				className={cn(
 					"gap-4 overflow-y-auto pt-5 pb-0 outline-none",
-					isPhone ? "max-h-[85dvh] rounded-t-[20px]" : "w-full sm:max-w-[440px]"
+					isPhone
+						? cn(
+								"rounded-t-[20px]",
+								fullHeight ? "h-[calc(100dvh-0.75rem)]" : "max-h-[85dvh]"
+							)
+						: "w-full sm:max-w-[440px]"
 				)}
 			>
 				{/* The title starts at the left edge like the rest of the panel, the chip under it; the buttons sit on the title's line */}
 				<div className="flex items-start gap-3 px-5">
 					<SheetHeader className="min-w-0 flex-1 gap-1 p-0">
-						<SheetTitle className="flex min-h-8 min-w-0 items-center break-words text-lg">
-							{title}
-						</SheetTitle>
+						{/* Centred against the Close button; the title and its aside share a baseline */}
+						<div className="flex min-h-8 min-w-0 items-center">
+							<div className="flex min-w-0 items-baseline gap-2">
+								<SheetTitle
+									className={cn(
+										"min-w-0 break-words",
+										titleClassName ?? "text-lg"
+									)}
+								>
+									{title}
+								</SheetTitle>
+								{titleAside}
+							</div>
+						</div>
 						{eyebrow && <div className="flex">{eyebrow}</div>}
 						<SheetDescription className="sr-only">
 							{description}
@@ -94,6 +129,7 @@ export function DetailsSheet({
 						</SheetClose>
 					</div>
 				</div>
+				{separated && <hr className="m-0 border-border border-t" />}
 				{children}
 			</SheetContent>
 		</Sheet>

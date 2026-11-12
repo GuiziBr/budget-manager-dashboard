@@ -12,6 +12,14 @@ export class ApiError extends Error {
 	}
 }
 
+/** Validation failures come as a list of issues; keep them as JSON text so nothing is lost. */
+function errorMessage(message: unknown): string {
+	if (typeof message === "string") return message
+	return message === undefined || message === null
+		? ""
+		: JSON.stringify(message)
+}
+
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
 
 interface FetchOptions extends RequestInit {
@@ -54,7 +62,7 @@ class ApiClient {
 		if (!response.ok) {
 			const errorData = await response.json().catch(() => ({}))
 			throw new ApiError(
-				errorData.message || `API Error: ${response.status}`,
+				errorMessage(errorData.message) || `API Error: ${response.status}`,
 				response.status
 			)
 		}

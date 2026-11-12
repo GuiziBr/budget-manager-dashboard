@@ -111,6 +111,53 @@ export const translations = {
 			paidFailed: "Couldn't update the paid status. Try again.",
 			rowActions: "Actions for {item}"
 		},
+		addMenu: {
+			trigger: "Add",
+			expense: { label: "Expense", hint: "A purchase or a bill" },
+			income: { label: "Income", hint: "Salary or other money in" },
+			envelope: {
+				label: "Envelope",
+				hint: "Set aside a budget for a category"
+			}
+		},
+		form: {
+			title: "Add expense",
+			description: "Add an expense to {month}",
+			loading: "Loading the form",
+			loadError: "Couldn't load the form options",
+			retry: "Retry",
+			none: "None",
+			fields: {
+				description: "Description",
+				category: "Category",
+				paymentType: "Payment type",
+				bank: "Bank",
+				store: "Store",
+				amount: "Amount",
+				purchased: "Purchased",
+				due: "Due",
+				paid: "Paid"
+			},
+			placeholders: {
+				description: "What did you pay for?",
+				category: "Select a category",
+				paymentType: "Select type",
+				bank: "Select bank",
+				store: "Optional",
+				amount: "0.00"
+			},
+			validation: {
+				description: "Enter a description.",
+				category: "Choose a category.",
+				paymentType: "Choose a payment type.",
+				amount: "Enter an amount above 0, up to 2 decimals.",
+				amountTooLarge: "The amount can't be more than 99,999,999.99."
+			},
+			finishClose: "Finish & close",
+			finishAddAnother: "Finish & add another",
+			cancel: "Cancel",
+			saved: "{item} added to {month}."
+		},
 		details: {
 			close: "Close",
 			previousExpense: "Previous expense",
@@ -188,6 +235,7 @@ export const translations = {
 			"Open the month of the first payment before adding this plan.",
 		lookupGone: "{field} no longer exists. Choose another.",
 		monthClosed: "Envelopes of past months can't be changed.",
+		futureDate: "The purchase date can't be in the future.",
 		generic: "Something went wrong. Try again.",
 		fields: {
 			category: "Category",

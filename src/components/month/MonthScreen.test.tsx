@@ -250,12 +250,18 @@ describe("MonthScreen add button", () => {
 		expect(await screen.findByRole("button", { name: "Add" })).toBeVisible()
 	})
 
-	it("is hidden on desktop", async () => {
+	it("is hidden on desktop, where the header has the Add menu instead", async () => {
 		stubPhone(false)
 		openMonth("")
 		setup()
 		await screen.findByRole("region", { name: "Month summary" })
-		expect(screen.queryByRole("button", { name: "Add" })).toBeNull()
+		expect(
+			screen.queryByRole("button", {
+				name: "Add",
+				description: "Drag to move, or use the arrow keys"
+			})
+		).toBeNull()
+		expect(screen.getByRole("button", { name: "Add" })).toBeVisible()
 	})
 
 	it("shows in a past month, which is edited like the current one", async () => {
@@ -263,6 +269,114 @@ describe("MonthScreen add button", () => {
 		openMonth("period=2026-10")
 		setup()
 		expect(await screen.findByRole("button", { name: "Add" })).toBeVisible()
+	})
+})
+
+describe("MonthScreen add expense", () => {
+	const stubPhone = (matches: boolean) =>
+		vi.stubGlobal("matchMedia", (query: string) => ({
+			matches,
+			media: query,
+			addEventListener: () => {},
+			removeEventListener: () => {}
+		}))
+	const openMonth = (
+		search: string,
+		periods = [make(2026, 11), make(2026, 10)]
+	) => {
+		nav.search = search
+		vi.spyOn(api, "getPage").mockResolvedValue({
+			data: [],
+			total: 0,
+			totalAmount: 0,
+			page: 1,
+			limit: 10
+		} as never)
+		vi.spyOn(api, "get").mockImplementation(((endpoint: string) =>
+			Promise.resolve(
+				endpoint.includes("budget-periods") ? periods : []
+			)) as never)
+	}
+	afterEach(() => vi.unstubAllGlobals())
+
+	it("opens the form from the header Add menu on desktop", async () => {
+		stubPhone(false)
+		openMonth("")
+		const user = setup()
+		await user.click(await screen.findByRole("button", { name: "Add" }))
+		await user.click(await screen.findByRole("menuitem", { name: /Expense/ }))
+		expect(
+			await screen.findByRole("dialog", { name: "Add expense" })
+		).toHaveTextContent("November 2026")
+	})
+
+	it("opens the form from the floating button's menu on the phone", async () => {
+		stubPhone(true)
+		openMonth("")
+		const user = setup()
+		const fab = await screen.findByRole("button", { name: "Add" })
+		await user.click(fab)
+		expect(fab).toHaveAttribute("aria-expanded", "true")
+		await user.click(await screen.findByRole("menuitem", { name: /Expense/ }))
+		expect(
+			await screen.findByRole("dialog", { name: "Add expense" })
+		).toBeVisible()
+	})
+
+	it("closes the phone menu with a second press on the button", async () => {
+		stubPhone(true)
+		openMonth("")
+		const user = setup()
+		const fab = await screen.findByRole("button", { name: "Add" })
+		await user.click(fab)
+		await screen.findByRole("menuitem", { name: /Expense/ })
+		await user.click(fab)
+		await vi.waitFor(() =>
+			expect(screen.queryByRole("menuitem")).not.toBeInTheDocument()
+		)
+		expect(fab).toHaveAttribute("aria-expanded", "false")
+	})
+
+	it("opens the form from the empty table", async () => {
+		stubPhone(false)
+		openMonth("")
+		const user = setup()
+		await user.click(await screen.findByRole("button", { name: "Add expense" }))
+		expect(
+			await screen.findByRole("dialog", { name: "Add expense" })
+		).toBeVisible()
+	})
+
+	it("adds to a past month too", async () => {
+		stubPhone(false)
+		openMonth("period=2026-10")
+		const user = setup()
+		await user.click(await screen.findByRole("button", { name: "Add" }))
+		await user.click(await screen.findByRole("menuitem", { name: /Expense/ }))
+		expect(
+			await screen.findByRole("dialog", { name: "Add expense" })
+		).toHaveTextContent("October 2026")
+	})
+
+	it("has no Add menu in a month that isn't opened", async () => {
+		stubPhone(false)
+		openMonth("period=2027-03")
+		setup()
+		await screen.findByText("March 2027 hasn't been opened yet")
+		expect(screen.queryByRole("button", { name: "Add" })).toBeNull()
+	})
+
+	it("closes the form on Escape", async () => {
+		stubPhone(false)
+		openMonth("")
+		const user = setup()
+		await user.click(await screen.findByRole("button", { name: "Add" }))
+		await user.click(await screen.findByRole("menuitem", { name: /Expense/ }))
+		await screen.findByRole("dialog", { name: "Add expense" })
+		await user.keyboard("{Escape}")
+		await vi.waitFor(() =>
+			expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+		)
 	})
 })
 
