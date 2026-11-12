@@ -90,12 +90,12 @@ When `bankId` or `storeId` is provided (non-null), the bank or store must exist 
 
 ### type `one-time`
 
-| Field | Type | Required |
-|---|---|---|
-| `amount` | number | yes |
-| `purchasedAt` | date | no |
-| `dueAt` | date | no |
-| `paidAt` | date | no |
+| Field | Type | Required | Rules |
+|---|---|---|---|
+| `amount` | number | yes | |
+| `purchasedAt` | date | no | cannot be in the future |
+| `dueAt` | date | no | |
+| `paidAt` | date | no | |
 
 Creates one expense in `budgetPeriodId`.
 
@@ -129,7 +129,7 @@ Besides the expense, a recurring-expense template is created (see [recurring-exp
 | `amountPerInstallment` | number | yes | monetary amount |
 | `totalInstallments` | integer | yes | ≥ 2 |
 | `paymentIntervalDays` | integer | yes | ≥ 1 |
-| `firstPurchasedAt` | date | yes | |
+| `firstPurchasedAt` | date | yes | cannot be in the future |
 
 `budgetPeriodId` is validated as an existing period but is **not** used to place the installments. Instead an `InstallmentGroup` is created (see [installment-group.md](installment-group.md)) and installment *i* (1-based) is generated with:
 
@@ -143,7 +143,7 @@ Installments whose due date has no existing budget period are skipped for now; t
 ### Responses
 
 - **201** the created `Expense` (see above for which one is returned for installments)
-- **400** validation failure; `bankId is required for this payment type`; or (installment) `No matching budget periods found for any installment due date`
+- **400** validation failure (including a future `purchasedAt` / `firstPurchasedAt`, message `Date cannot be in the future`); `bankId is required for this payment type`; or (installment) `No matching budget periods found for any installment due date`
 - **404** budget period, category, payment type, bank or store not found
 - **500**
 
@@ -159,14 +159,14 @@ Updates one expense only (including installment expenses; use [installment group
 | `paymentTypeId` | uuid | existing payment type |
 | `bankId` | uuid \| null | `null` clears it |
 | `storeId` | uuid \| null | `null` clears it |
-| `purchasedAt` | date \| null | `null` clears it |
+| `purchasedAt` | date \| null | `null` clears it; cannot be in the future |
 | `dueAt` | date \| null | `null` clears it |
 | `paidAt` | date \| null | `null` clears it (marks unpaid) |
 
 At least one field is required. `budgetPeriodId` and `type` cannot be changed. If `paymentTypeId` changes or `bankId` is cleared, and the resulting payment type has `hasStatement = true`, a bank must remain set.
 
 - **200** updated `Expense`
-- **400** validation failure, empty body, or `bankId is required for this payment type`
+- **400** validation failure (including a future `purchasedAt`), empty body, or `bankId is required for this payment type`
 - **404** expense, category, payment type, bank or store not found (`bankId` / `storeId` are only checked when non-null)
 - **500**
 
