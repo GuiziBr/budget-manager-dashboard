@@ -1,6 +1,6 @@
 "use client"
 
-import { Plus } from "lucide-react"
+import { Plus, X } from "lucide-react"
 import { useLayoutEffect, useRef, useState } from "react"
 import { translations } from "@/constants/translations"
 import {
@@ -18,8 +18,11 @@ import {
 } from "@/lib/fab-position"
 
 interface AddFabProps {
-	/** Opens the + Add menu (wired in T-26). Until then the button does nothing. */
+	/** Opens or closes the + Add menu. */
 	onAdd?: () => void
+	/** The menu is open: the button shows a close icon. */
+	open?: boolean
+	ref?: React.Ref<HTMLButtonElement>
 }
 
 const viewport = () => ({
@@ -70,7 +73,7 @@ const saveOffset = (offset: FabOffset) => {
  * side when let go (the arrow keys switch sides or move it up and down); the position is remembered on this device. The caller shows it only
  * where editing is allowed.
  */
-export function AddFab({ onAdd }: AddFabProps) {
+export function AddFab({ onAdd, open, ref }: AddFabProps) {
 	const [offset, setOffset] = useState<FabOffset>(FAB_DEFAULT)
 	const [dragging, setDragging] = useState(false)
 	const drag = useRef<{
@@ -150,7 +153,10 @@ export function AddFab({ onAdd }: AddFabProps) {
 
 	return (
 		<button
+			ref={ref}
 			type="button"
+			aria-haspopup={onAdd ? "menu" : undefined}
+			aria-expanded={onAdd ? !!open : undefined}
 			onClick={() => {
 				if (!justDragged.current) onAdd?.()
 			}}
@@ -164,7 +170,11 @@ export function AddFab({ onAdd }: AddFabProps) {
 			style={{ right: offset.right, bottom: offset.bottom }}
 			className={`fixed z-30 flex size-14 touch-none select-none items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${dragging ? "cursor-grabbing scale-105" : "cursor-grab transition-[bottom,right,transform] duration-200"}`}
 		>
-			<Plus className="size-6" aria-hidden="true" />
+			{open ? (
+				<X className="size-6" aria-hidden="true" />
+			) : (
+				<Plus className="size-6" aria-hidden="true" />
+			)}
 		</button>
 	)
 }

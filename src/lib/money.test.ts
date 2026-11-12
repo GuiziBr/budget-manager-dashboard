@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { formatCad } from "./money"
+import { checkMoney, formatCad, formatMoneyInput, parseMoney } from "./money"
 
 describe("formatCad", () => {
 	it("formats an amount with the currency and no sign", () => {
@@ -58,5 +58,91 @@ describe("formatCad", () => {
 		const expenses = 6013.62 + 516.86
 		expect(formatCad(expenses)).toBe("CAD 6,530.48")
 		expect(formatCad(7375.67 - expenses)).toBe("CAD 845.19")
+	})
+})
+
+describe("checkMoney / parseMoney", () => {
+	it.each([
+		["25", 25],
+		["25.5", 25.5],
+		["25.00", 25],
+		[" 0.01 ", 0.01],
+		["1,250.50", 1250.5],
+		["99,999,999.99", 99_999_999.99],
+		["99999999.99", 99_999_999.99]
+	])("accepts %s", (text, value) => {
+		expect(checkMoney(text)).toBe("ok")
+		expect(parseMoney(text)).toBe(value)
+	})
+
+	it.each([
+		"",
+		" ",
+		"0",
+		"0.00",
+		"-5",
+		"+5",
+		"12.345",
+		"1,25",
+		"1e3",
+		".5",
+		"5.",
+		"abc"
+	])("rejects %j as invalid", (text) => {
+		expect(checkMoney(text)).toBe("invalid")
+		expect(parseMoney(text)).toBeNull()
+	})
+
+	it("flags amounts above the limit", () => {
+		expect(checkMoney("100000000")).toBe("tooLarge")
+		expect(checkMoney("99999999.995")).toBe("invalid")
+		expect(parseMoney("100000000")).toBeNull()
+	})
+})
+
+describe("formatMoneyInput", () => {
+	it.each([
+		["", ""],
+		["abc", ""],
+		["0", ""],
+		["00", ""],
+		["1", "0.01"],
+		["10", "0.10"],
+		["100", "1.00"],
+		["10050", "100.50"],
+		["1005000", "10,050.00"],
+		["100050000", "1,000,500.00"],
+		["9999999999", "99,999,999.99"],
+		["99999999999", "999,999,999.99"],
+		["10000000000", "100,000,000.00"],
+		["100.50", "100.50"],
+		["1,050.00", "1,050.00"],
+		["$ 25", "0.25"],
+		["0025", "0.25"]
+	])("turns %j into %j", (raw, formatted) => {
+		expect(formatMoneyInput(raw)).toBe(formatted)
+	})
+
+	it("keeps reformatting stable as the user keeps typing or deletes", () => {
+		expect(formatMoneyInput("100.50")).toBe("100.50")
+		expect(formatMoneyInput("100.5")).toBe("10.05")
+		expect(formatMoneyInput("10.0")).toBe("1.00")
+	})
+
+	it("never drops digits, so an amount over the limit is rejected instead of changed", () => {
+		// 100,000,000.00 pasted in: it must not turn into a smaller valid amount
+		const shown = formatMoneyInput("100000000.00")
+		expect(shown).toBe("100,000,000.00")
+		expect(checkMoney(shown)).toBe("tooLarge")
+		expect(parseMoney(shown)).toBeNull()
+		expect(checkMoney(formatMoneyInput("123456789012"))).toBe("tooLarge")
+		// The largest amount still passes
+		expect(checkMoney(formatMoneyInput("9999999999"))).toBe("ok")
+	})
+
+	it("always gives text that parseMoney accepts", () => {
+		for (const raw of ["1", "50", "10050", "1005000", "9999999999"]) {
+			expect(parseMoney(formatMoneyInput(raw))).not.toBeNull()
+		}
 	})
 })

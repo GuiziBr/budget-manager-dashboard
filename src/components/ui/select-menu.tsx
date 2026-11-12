@@ -23,8 +23,17 @@ export interface SelectMenuProps {
 	id?: string
 	disabled?: boolean
 	error?: string
+	/** Red border for a message shown elsewhere (under the field), without the tooltip icon. */
+	invalid?: boolean
+	/** Adds an entry that empties the field (an optional field); picking it gives `""`. */
+	clearLabel?: string
+	/** The id of the text that explains the field (its error), read with the trigger. */
+	"aria-describedby"?: string
 	className?: string
 }
+
+// Radix Select can't hold an item with an empty value, so "no choice" uses a stand-in
+const CLEAR_VALUE = "__clear__"
 
 const getLabel = (option: SelectOption) => option.description || option.name
 
@@ -48,7 +57,10 @@ export const SelectMenu = React.forwardRef<
 		id,
 		disabled,
 		error,
-		className
+		invalid,
+		clearLabel,
+		className,
+		"aria-describedby": ariaDescribedBy
 	},
 	ref
 ) {
@@ -56,7 +68,9 @@ export const SelectMenu = React.forwardRef<
 		<div className={cn("relative w-full min-w-0", className)}>
 			<SelectPrimitive.Root
 				value={value}
-				onValueChange={onValueChange}
+				onValueChange={(next) =>
+					onValueChange(next === CLEAR_VALUE ? "" : next)
+				}
 				name={name}
 				disabled={disabled}
 			>
@@ -64,13 +78,15 @@ export const SelectMenu = React.forwardRef<
 					ref={ref}
 					id={id}
 					onBlur={onBlur}
-					aria-invalid={!!error}
+					aria-invalid={!!error || invalid}
+					aria-describedby={ariaDescribedBy}
 					className={cn(
 						"flex h-10 w-full cursor-pointer items-center gap-2 rounded-lg border border-input bg-card px-3 text-left text-sm text-foreground shadow-xs outline-none transition-colors",
 						"focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring/30",
 						"data-[state=open]:border-primary data-[state=open]:ring-2 data-[state=open]:ring-ring/30",
 						"data-[placeholder]:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
-						error && "border-danger pr-14"
+						error && "pr-14",
+						(error || invalid) && "border-danger"
 					)}
 				>
 					<span className="min-w-0 flex-1 truncate">
@@ -95,6 +111,14 @@ export const SelectMenu = React.forwardRef<
 						)}
 					>
 						<SelectPrimitive.Viewport className="p-1">
+							{clearLabel && (
+								<SelectPrimitive.Item
+									value={CLEAR_VALUE}
+									className="relative flex w-full cursor-pointer items-center rounded-md py-2 pr-8 pl-2 text-muted-foreground text-sm outline-none select-none focus:bg-accent focus:text-accent-foreground"
+								>
+									<SelectPrimitive.ItemText>{clearLabel}</SelectPrimitive.ItemText>
+								</SelectPrimitive.Item>
+							)}
 							{options.map((option) => (
 								<SelectPrimitive.Item
 									key={option.id}

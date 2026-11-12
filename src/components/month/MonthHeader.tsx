@@ -1,6 +1,7 @@
 "use client"
 
 import { ChevronDown, ChevronLeft, ChevronRight, Ellipsis } from "lucide-react"
+import { AddMenu, type AddMenuActions } from "@/components/month/AddMenu"
 import { PastMonthPill } from "@/components/month/PastMonthPill"
 import { Button } from "@/components/ui/button"
 import {
@@ -14,8 +15,9 @@ import { translations } from "@/constants/translations"
 import { useMonthAccess } from "@/hooks/use-month-access"
 import { groupPeriodsByYear, monthLabel } from "@/lib/month"
 
-export function MonthHeader() {
-	const { month, periods, prev, next, select, state } = useMonthAccess()
+export function MonthHeader(actions: AddMenuActions) {
+	const { month, periods, prev, next, select, state, canEdit } =
+		useMonthAccess()
 	const groups = groupPeriodsByYear(periods)
 	const t = translations.month
 
@@ -95,16 +97,19 @@ export function MonthHeader() {
 			</div>
 			{/* Desktop: to the right of the whole switcher */}
 			{state === "past" && <PastMonthPill className="hidden lg:flex" />}
-			{/* Placeholder: Delete month arrives with T-38 */}
-			<Button
-				variant="outline"
-				size="icon"
-				disabled
-				className="ml-auto hidden rounded-[10px] shadow-none lg:inline-flex"
-				aria-label={t.moreActions}
-			>
-				<Ellipsis className="size-4" />
-			</Button>
+			<div className="ml-auto hidden items-center gap-2 lg:flex">
+				{/* Placeholder: Delete month arrives with T-38 */}
+				<Button
+					variant="outline"
+					size="icon"
+					disabled
+					className="rounded-[10px] shadow-none"
+					aria-label={t.moreActions}
+				>
+					<Ellipsis className="size-4" />
+				</Button>
+				{canEdit && <AddMenu {...actions} />}
+			</div>
 		</header>
 	)
 }

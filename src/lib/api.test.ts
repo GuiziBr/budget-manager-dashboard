@@ -72,6 +72,20 @@ describe("ApiClient", () => {
 		expect(error).toMatchObject({ message: "Not found", status: 404 })
 	})
 
+	it("keeps a list of validation issues as JSON text", async () => {
+		const issues = [
+			{ path: ["purchasedAt"], message: "Date cannot be in the future" }
+		]
+		vi.spyOn(globalThis, "fetch").mockResolvedValue(
+			jsonResponse(400, { message: issues })
+		)
+
+		const error = (await api.post("expenses", {}).catch((e) => e)) as ApiError
+		expect(error).toBeInstanceOf(ApiError)
+		expect(JSON.parse(error.message)).toEqual(issues)
+		expect(error.status).toBe(400)
+	})
+
 	it("falls back to a generic message when the error body is not JSON", async () => {
 		vi.spyOn(globalThis, "fetch").mockResolvedValue(
 			new Response("oops", { status: 500 })

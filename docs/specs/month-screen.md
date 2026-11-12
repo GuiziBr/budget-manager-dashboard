@@ -49,7 +49,7 @@ Status: **Ready** = the backend supports it today. **Placeholder** = shown, wait
 | M-24 | Delete an envelope | Should | Ready |
 | **Rules across the screen** | | | |
 | M-25 | Past months are edited like the current one, except envelopes | Must | Ready |
-| M-26 | Remembered form values | Should | Ready (browser only) |
+| M-26 | Remembered form values | Should | Dropped (2026-11-12) |
 
 ---
 
@@ -399,7 +399,9 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 
 ### Expenses
 
-All expense forms open from **+ Add → Expense**, as a dialog on desktop and a full-height sheet on the phone. The form starts with a **type** choice: One-time, Installments, Recurring.
+All expense forms open from **+ Add → Expense**, as a side panel on desktop (like the expense details) and a full-height sheet on the phone. The form will start with a **type** choice (One-time, Installments, Recurring); until installments and recurring bills are built (M-15, M-16) it holds only the one-time fields, on one page. Required fields are marked with a red asterisk. A field that fails validation gets a red border and no message text (screen readers still hear the reason). Problems only the server can detect (a deleted lookup, the bank rule, a future purchase date it rejects) also show as a toast.
+
+The panel ends with **Finish & close**, **Finish & add another** (saves, keeps the panel open and clears the form, keeping the category, payment type and bank) and **Cancel**.
 
 **Fields shared by all types**
 
@@ -421,10 +423,13 @@ The expense is created in the month being viewed (except installments, see M-15)
 
 **Rules**
 - Amount: positive, at most 2 decimals, at most 99,999,999.99.
+- Amount field: the digits fill in from the cents as they are typed (`10050` reads `100.50`, `1005000` reads `10,050.00`).
+- Purchased date: not after today (UTC, as the API checks). The date picker stops at today, and a later date gets the red border. Due and Paid dates are not limited.
 
 **Acceptance criteria**
-- *Given* I fill Description, Category, Payment type Credit Card, Bank CIBC and Amount 25.00, *when* I save, *then* the row appears last in the table and the totals update.
-- *Given* a payment type with a statement and no bank, *when* I save, *then* the Bank field shows "Bank is required for this payment type" and nothing is saved.
+- *Given* I fill Description, Category, Payment type Credit Card, Bank CIBC and Amount 25.00, *when* I choose Finish & close, *then* the panel closes, the table goes back to page 1 with the new row, and the totals update.
+- *Given* the same values, *when* I choose Finish & add another, *then* the expense is saved, the panel stays open with Description and Amount empty, and Category, Payment type and Bank unchanged.
+- *Given* a payment type with a statement and no bank, *when* I save, *then* the Bank field gets a red border and nothing is saved.
 
 #### M-15 Add an installment purchase
 
@@ -448,6 +453,7 @@ The expense is created in the month being viewed (except installments, see M-15)
 - Due date of payment *n* = first purchase date + (n − 1) × interval days. "Monthly" is 30 days, so due dates drift slowly against calendar dates; the preview shows the real end date.
 - The plan is placed by its dates, not by the month being viewed. If the first payment falls in another month, the row doesn't appear in the current table, and the toast says so.
 - Only the first payment has a purchase date.
+- The first purchase date can't be in the future (the API answers 400).
 - At least one payment must fall in an opened month; otherwise the form says "Open the month of the first payment before adding this plan."
 
 **Acceptance criteria**
@@ -615,14 +621,7 @@ The expense is created in the month being viewed (except installments, see M-15)
 
 #### M-26 Remembered form values
 
-*As the budget owner, I want the expense form to start with the values I use most, since most of my rows are Credit Card + CIBC.*
-
-**How it works**
-- A new expense starts with the **payment type, bank and category** of the last expense I saved on this device.
-- Values that no longer exist (deleted lookups) are dropped.
-
-**Acceptance criteria**
-- *Given* my last expense used Credit Card and CIBC, *when* I add a new one, *then* the form starts with Credit Card and CIBC.
+*Dropped on 2026-11-12.* The expense form always opens empty; nothing is remembered between expenses. The only carry-over is within one sitting: **Finish & add another** keeps the category, payment type and bank for the next expense (M-14).
 
 ---
 
@@ -633,9 +632,10 @@ The expense is created in the month being viewed (except installments, see M-15)
 | 409 month exists | M-02 | "{Month} is already open." |
 | 409 month not empty | M-03 | "Remove this month's expenses, incomes and envelopes first." |
 | 409 envelope exists | M-23 | "{Category} already has an envelope this month." |
-| 400 bank required | M-14 to M-17 | On the Bank field: "Bank is required for this payment type." |
+| 400 bank required | M-14 to M-17 | Red border on the Bank field, and a toast: "Bank is required for this payment type." |
 | 400 no period for installments | M-15 | "Open the month of the first payment before adding this plan." |
-| 404 lookup not found | Forms | "{Field} no longer exists. Choose another." The lists are refreshed |
+| 400 future purchase date | M-14 to M-17 | Red border on the Purchased field, and a toast: "The purchase date can't be in the future." (installments: the first purchase date, M-15) |
+| 404 lookup not found | Forms | Red border on the field, and a toast: "{Field} no longer exists. Choose another." The lists are refreshed |
 | 422 past period | Creating or deleting an envelope of a past period (expenses and incomes no longer return it) | "Envelopes of past months can't be changed." |
 | Network or 500 | Any | Toast: "Something went wrong. Try again." Forms keep what was typed |
 
@@ -674,7 +674,7 @@ G-2, G-3, G-5 and G-6 were delivered by the backend on 2026-11-03 (plan size, lo
 | Q-1 Show the category in the table? | Yes, as a small chip under the item (M-05) |
 | Q-2 Add rows to past months (migrating from the spreadsheet)? | Opened past months accept new expenses and incomes (M-25). Out of scope for now: opening a past month that was never opened, so those can't be opened or filled (M-02, M-25) |
 | Q-3 Envelope due date? | Envelopes have no due date. They can't be ticked off or become overdue (M-12, M-13) |
-| Q-4 Remember the store in the expense form? | No, payment type, bank and category only, for now (M-26) |
+| Q-4 Remember the store in the expense form? | No. Later (2026-11-12) the remembered values were dropped altogether (M-26) |
 | How does the open-month review save incomes? | One `POST /incomes` per income, after the month is created (M-02). Backend change under review (BE-1) |
 | Which incomes can be copied when opening a month? | Only last month's salary incomes (M-02) |
 | Simplification (2026-10-30) | Incomes move off the page into an income panel opened from the Income card (M-07). Bank, Store and Purchased leave the table for the row details panel, opened by clicking a row (M-05, M-08). Envelopes stay mixed in the list; their spend shows under the item, and the Spent column is removed (M-11). Paid rows are dimmed (M-05, M-12) |

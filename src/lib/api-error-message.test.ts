@@ -9,6 +9,36 @@ import {
 const GENERIC = "Something went wrong. Try again."
 const save = { action: "saveExpense" } as const
 
+describe("future purchase dates", () => {
+	const expected = {
+		kind: "futureDate",
+		message: "The purchase date can't be in the future.",
+		field: "purchasedAt"
+	}
+
+	it("400 with the backend's text points at the purchase date", () => {
+		expect(
+			describeApiError(new ApiError("Date cannot be in the future", 400), save)
+		).toEqual(expected)
+	})
+
+	it("also reads it from a list of validation issues", () => {
+		const issues = [
+			{ path: ["purchasedAt"], message: "Date cannot be in the future" }
+		]
+		expect(
+			describeApiError(new ApiError(JSON.stringify(issues), 400), save)
+		).toEqual(expected)
+	})
+
+	it("other validation lists stay generic", () => {
+		const issues = [{ path: ["amount"], message: "Invalid input" }]
+		expect(
+			describeApiError(new ApiError(JSON.stringify(issues), 400), save)
+		).toEqual({ kind: "generic", message: GENERIC })
+	})
+})
+
 describe("describeApiError", () => {
 	it("409 when opening a month names the month", () => {
 		expect(

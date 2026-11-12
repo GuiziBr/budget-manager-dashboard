@@ -129,4 +129,18 @@ describe("SelectMenu", () => {
 		ref.current?.focus()
 		expect(screen.getByRole("combobox")).toHaveFocus()
 	})
+
+	it("forwards aria-describedby to the trigger, so an invalid field is read with its reason", () => {
+		setup("", { invalid: true, "aria-describedby": "why" })
+
+		const trigger = screen.getByRole("combobox")
+		expect(trigger).toHaveAttribute("aria-invalid", "true")
+		expect(trigger).toHaveAttribute("aria-describedby", "why")
+	})
+
+	it("has no description reference unless given one", () => {
+		setup()
+
+		expect(screen.getByRole("combobox")).not.toHaveAttribute("aria-describedby")
+	})
 })
