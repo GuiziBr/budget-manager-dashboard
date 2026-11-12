@@ -47,16 +47,14 @@ export function parseMoney(input: string): number | null {
 
 const toNumber = (text: string) => Number(text.replace(/,/g, ""))
 
-/** Digits that fit under `MAX_AMOUNT` (99,999,999.99) when read as cents. */
-const MAX_DIGITS = 10
-
 /**
  * Formats an amount field as it is typed: the digits fill in from the cents, so
  * "10050" reads "100.50" and "1005000" reads "10,050.00". Anything that isn't a digit
- * is ignored, and digits beyond the largest amount are dropped.
+ * is ignored. Digits are never dropped, so an amount over the limit stays visible as
+ * typed or pasted and `checkMoney` rejects it as too large.
  */
 export function formatMoneyInput(raw: string): string {
-	const digits = raw.replace(/\D/g, "").replace(/^0+/, "").slice(0, MAX_DIGITS)
+	const digits = raw.replace(/\D/g, "").replace(/^0+/, "")
 	if (!digits) return ""
 	const padded = digits.padStart(3, "0")
 	const whole = padded.slice(0, -2).replace(/\B(?=(\d{3})+$)/g, ",")

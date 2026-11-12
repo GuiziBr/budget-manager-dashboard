@@ -113,7 +113,8 @@ describe("formatMoneyInput", () => {
 		["1005000", "10,050.00"],
 		["100050000", "1,000,500.00"],
 		["9999999999", "99,999,999.99"],
-		["99999999999", "99,999,999.99"],
+		["99999999999", "999,999,999.99"],
+		["10000000000", "100,000,000.00"],
 		["100.50", "100.50"],
 		["1,050.00", "1,050.00"],
 		["$ 25", "0.25"],
@@ -126,6 +127,17 @@ describe("formatMoneyInput", () => {
 		expect(formatMoneyInput("100.50")).toBe("100.50")
 		expect(formatMoneyInput("100.5")).toBe("10.05")
 		expect(formatMoneyInput("10.0")).toBe("1.00")
+	})
+
+	it("never drops digits, so an amount over the limit is rejected instead of changed", () => {
+		// 100,000,000.00 pasted in: it must not turn into a smaller valid amount
+		const shown = formatMoneyInput("100000000.00")
+		expect(shown).toBe("100,000,000.00")
+		expect(checkMoney(shown)).toBe("tooLarge")
+		expect(parseMoney(shown)).toBeNull()
+		expect(checkMoney(formatMoneyInput("123456789012"))).toBe("tooLarge")
+		// The largest amount still passes
+		expect(checkMoney(formatMoneyInput("9999999999"))).toBe("ok")
 	})
 
 	it("always gives text that parseMoney accepts", () => {

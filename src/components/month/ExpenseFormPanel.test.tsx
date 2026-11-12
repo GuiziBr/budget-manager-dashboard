@@ -261,6 +261,24 @@ describe("ExpenseFormPanel", () => {
 		expect(post).not.toHaveBeenCalled()
 	})
 
+	it("rejects an amount over the limit instead of changing it", async () => {
+		const post = vi.spyOn(api, "post")
+		const { user } = setup()
+		await ready()
+		await fillRequired(user)
+		const field = screen.getByLabelText("Amount")
+		await user.clear(field)
+		// One digit past the largest amount, 99,999,999.99
+		await user.type(field, "10000000000")
+		expect(field).toHaveValue("100,000,000.00")
+		await user.click(screen.getByRole("button", { name: "Finish & close" }))
+		expect(
+			await screen.findByText("The amount can't be more than 99,999,999.99.")
+		).toBeInTheDocument()
+		expect(field).toHaveAttribute("aria-invalid", "true")
+		expect(post).not.toHaveBeenCalled()
+	})
+
 	it("formats the amount as it is typed, filling in from the cents", async () => {
 		const { user } = setup()
 		await ready()
