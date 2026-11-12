@@ -115,6 +115,8 @@ export function AddFabMenu(
 ) {
 	const { open, onOpenChange, ...handlers } = actions
 	const fab = useRef<HTMLButtonElement>(null)
+	// Set when an entry opens a panel, which then owns the focus
+	const handedOff = useRef(false)
 	const entries = entriesFor(handlers)
 	if (entries.length === 0) return null
 
@@ -144,6 +146,11 @@ export function AddFabMenu(
 					}}
 					onCloseAutoFocus={(event) => {
 						event.preventDefault()
+						// Radix runs this after the panel took the focus; don't pull it back to the button
+						if (handedOff.current) {
+							handedOff.current = false
+							return
+						}
 						fab.current?.focus()
 					}}
 				>
@@ -154,6 +161,7 @@ export function AddFabMenu(
 							role="menuitem"
 							className="flex cursor-pointer items-center gap-3 rounded-lg px-2.5 py-2.5 text-left text-muted-foreground outline-none hover:bg-accent focus-visible:bg-accent"
 							onClick={() => {
+								handedOff.current = true
 								onOpenChange(false)
 								entry.run(fab.current)
 							}}
