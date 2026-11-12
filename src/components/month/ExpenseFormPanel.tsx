@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useQueryClient } from "@tanstack/react-query"
 import { Check, DollarSign, Plus } from "lucide-react"
-import { type RefObject, useEffect, useMemo, useRef } from "react"
+import { type RefObject, useEffect, useMemo, useRef, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { DetailsSheet } from "@/components/month/DetailsSheet"
@@ -88,12 +88,15 @@ export function ExpenseFormPanel({
 	returnFocusRef
 }: ExpenseFormPanelProps) {
 	const label = monthLabel(month)
+	// While a save is in flight, the panel stays: closing it would leave the request
+	// running with nothing on screen to say whether it worked
+	const [saving, setSaving] = useState(false)
 
 	return (
 		<DetailsSheet
 			open={open}
 			onOpenChange={(next) => {
-				if (!next) onClose()
+				if (!next && !saving) onClose()
 			}}
 			title={t.title}
 			titleAside={
@@ -111,6 +114,7 @@ export function ExpenseFormPanel({
 				monthName={label}
 				onClose={onClose}
 				onSaved={onSaved}
+				onSavingChange={setSaving}
 			/>
 		</DetailsSheet>
 	)
@@ -120,12 +124,14 @@ function ExpenseFormBody({
 	periodId,
 	monthName,
 	onClose,
-	onSaved
+	onSaved,
+	onSavingChange
 }: {
 	periodId: Id
 	monthName: string
 	onClose: () => void
 	onSaved?: () => void
+	onSavingChange: (saving: boolean) => void
 }) {
 	const categories = useCategories()
 	const paymentTypes = usePaymentTypes()
@@ -181,6 +187,7 @@ function ExpenseFormBody({
 			monthName={monthName}
 			onClose={onClose}
 			onSaved={onSaved}
+			onSavingChange={onSavingChange}
 		/>
 	)
 }
@@ -192,13 +199,15 @@ function ExpenseForm({
 	periodId,
 	monthName,
 	onClose,
-	onSaved
+	onSaved,
+	onSavingChange
 }: {
 	lookups: Lookups
 	periodId: Id
 	monthName: string
 	onClose: () => void
 	onSaved?: () => void
+	onSavingChange: (saving: boolean) => void
 }) {
 	const queryClient = useQueryClient()
 	const createExpense = useCreateExpense()
@@ -280,6 +289,11 @@ function ExpenseForm({
 		})
 
 	const busy = isSubmitting
+	// Tells the panel to hold off dismissal (Close, Escape, outside click) during a save
+	useEffect(() => {
+		onSavingChange(busy)
+		return () => onSavingChange(false)
+	}, [busy, onSavingChange])
 	const describedBy = (id: string, hasError: boolean) =>
 		hasError ? fieldErrorId(id) : undefined
 
@@ -508,7 +522,12 @@ function ExpenseForm({
 					<Plus className="size-4" aria-hidden="true" />
 					{t.finishAddAnother}
 				</Button>
-				<Button type="button" variant="outline" onClick={onClose}>
+				<Button
+					type="button"
+					variant="outline"
+					disabled={busy}
+					onClick={onClose}
+				>
 					{t.cancel}
 				</Button>
 			</div>

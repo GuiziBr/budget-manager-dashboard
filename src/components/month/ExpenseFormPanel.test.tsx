@@ -448,6 +448,44 @@ describe("ExpenseFormPanel", () => {
 		expect(toast.success).not.toHaveBeenCalled()
 	})
 
+	it("can't be dismissed while the save is in flight", async () => {
+		let finish: (expense: unknown) => void = () => {}
+		const post = vi.spyOn(api, "post").mockReturnValue(
+			new Promise((resolve) => {
+				finish = resolve
+			}) as never
+		)
+		const { user, onClose } = setup()
+		await ready()
+		await fillRequired(user)
+		await user.click(screen.getByRole("button", { name: "Finish & close" }))
+		await vi.waitFor(() => expect(post).toHaveBeenCalled())
+
+		// Every way out is held back until the request answers
+		expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled()
+		await user.click(screen.getByRole("button", { name: "Close" }))
+		await user.keyboard("{Escape}")
+		expect(onClose).not.toHaveBeenCalled()
+		expect(screen.getByRole("dialog", { name: "Add expense" })).toBeVisible()
+
+		finish(created)
+		await vi.waitFor(() => expect(onClose).toHaveBeenCalledOnce())
+	})
+
+	it("can be dismissed again once a failed save is over", async () => {
+		vi.spyOn(api, "post").mockRejectedValue(new ApiError("boom", 500))
+		const { user, onClose } = setup()
+		await ready()
+		await fillRequired(user)
+		await user.click(screen.getByRole("button", { name: "Finish & close" }))
+		await vi.waitFor(() => expect(toast.error).toHaveBeenCalled())
+		await vi.waitFor(() =>
+			expect(screen.getByRole("button", { name: "Cancel" })).toBeEnabled()
+		)
+		await user.keyboard("{Escape}")
+		expect(onClose).toHaveBeenCalledOnce()
+	})
+
 	it("closes without saving on Cancel", async () => {
 		const post = vi.spyOn(api, "post")
 		const { user, onClose } = setup()
