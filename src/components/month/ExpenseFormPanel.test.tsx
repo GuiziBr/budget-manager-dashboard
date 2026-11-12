@@ -197,6 +197,29 @@ describe("ExpenseFormPanel", () => {
 		expect(onClose).not.toHaveBeenCalled()
 	})
 
+	it("points each invalid select at its reason, like the text fields", async () => {
+		const { user } = setup()
+		await ready()
+		await user.click(screen.getByRole("button", { name: "Finish & close" }))
+		await vi.waitFor(() =>
+			expect(
+				screen.getByRole("combobox", { name: "Category" })
+			).toHaveAttribute("aria-invalid", "true")
+		)
+		for (const [name, id] of [
+			["Category", "expense-category-error"],
+			["Payment type", "expense-payment-type-error"]
+		]) {
+			const trigger = screen.getByRole("combobox", { name })
+			expect(trigger).toHaveAttribute("aria-describedby", id)
+			expect(document.getElementById(id)).toHaveTextContent(/Choose a/)
+		}
+		// A select that is fine points at nothing
+		expect(screen.getByRole("combobox", { name: "Store" })).not.toHaveAttribute(
+			"aria-describedby"
+		)
+	})
+
 	it("requires a bank for a payment type with a statement (M-14)", async () => {
 		const post = vi.spyOn(api, "post")
 		const { user } = setup()

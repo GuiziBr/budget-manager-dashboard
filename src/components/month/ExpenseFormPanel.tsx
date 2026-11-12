@@ -350,6 +350,10 @@ function ExpenseForm({
 									onBlur={field.onBlur}
 									placeholder={t.placeholders.category}
 									invalid={!!errors.categoryId}
+									aria-describedby={describedBy(
+										"expense-category",
+										!!errors.categoryId
+									)}
 								/>
 							)}
 						/>
@@ -378,6 +382,10 @@ function ExpenseForm({
 									onBlur={field.onBlur}
 									placeholder={t.placeholders.paymentType}
 									invalid={!!errors.paymentTypeId}
+									aria-describedby={describedBy(
+										"expense-payment-type",
+										!!errors.paymentTypeId
+									)}
 								/>
 							)}
 						/>
@@ -406,6 +414,10 @@ function ExpenseForm({
 									placeholder={t.placeholders.bank}
 									clearLabel={bankRequired ? undefined : t.none}
 									invalid={!!errors.bankId}
+									aria-describedby={describedBy(
+										"expense-bank",
+										!!errors.bankId
+									)}
 								/>
 							)}
 						/>
@@ -430,6 +442,10 @@ function ExpenseForm({
 									placeholder={t.placeholders.store}
 									clearLabel={t.none}
 									invalid={!!errors.storeId}
+									aria-describedby={describedBy(
+										"expense-store",
+										!!errors.storeId
+									)}
 								/>
 							)}
 						/>

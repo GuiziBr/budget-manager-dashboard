@@ -27,6 +27,8 @@ export interface SelectMenuProps {
 	invalid?: boolean
 	/** Adds an entry that empties the field (an optional field); picking it gives `""`. */
 	clearLabel?: string
+	/** The id of the text that explains the field (its error), read with the trigger. */
+	"aria-describedby"?: string
 	className?: string
 }
 
@@ -57,7 +59,8 @@ export const SelectMenu = React.forwardRef<
 		error,
 		invalid,
 		clearLabel,
-		className
+		className,
+		"aria-describedby": ariaDescribedBy
 	},
 	ref
 ) {
@@ -76,6 +79,7 @@ export const SelectMenu = React.forwardRef<
 					id={id}
 					onBlur={onBlur}
 					aria-invalid={!!error || invalid}
+					aria-describedby={ariaDescribedBy}
 					className={cn(
 						"flex h-10 w-full cursor-pointer items-center gap-2 rounded-lg border border-input bg-card px-3 text-left text-sm text-foreground shadow-xs outline-none transition-colors",
 						"focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring/30",
