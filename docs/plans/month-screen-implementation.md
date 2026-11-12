@@ -1,6 +1,6 @@
 # Month Screen — Implementation Plan
 
-Status: draft 5 (past months editable, except envelopes) · Last updated: 2026-11-10
+Status: draft 6 (T-26 done) · Last updated: 2026-11-10
 
 Breaks the [Month screen spec](../specs/month-screen.md) and the wireframes in `design.pen` into small tasks. Each task is one pull request to `development`, sized to be reviewed in one sitting.
 
@@ -48,7 +48,7 @@ Related: [Month spec](../specs/month-screen.md) · [Backlog](../specs/todo.md) �
 | T-23 | Income panel (read) | 3 Panels | M-07 | T-13, T-18 | M | — |
 | T-24 | Row details panel (read) | 3 | M-08 | T-20 | M | G-12 |
 | T-25 | Mark paid / unpaid | 4 Actions | M-12 | T-12, T-20, T-24 | S | — |
-| T-26 | Expense form: shared fields and one-time | 4 | M-14, M-26 | T-07, T-10, T-12 | L | — |
+| T-26 | Expense form: shared fields and one-time | 4 | M-14 | T-07, T-10, T-12 | L | — |
 | T-27 | Expense form: installments | 4 | M-15 | T-26 | M | — |
 | T-28 | Expense form: recurring | 4 | M-16 | T-26 | S | G-4 |
 | T-29 | Edit expense | 4 | M-17 | T-26 | M | — |
@@ -238,19 +238,22 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 - **Backend:** none. Past-month expenses are fully editable (BE-3 resolved 2026-11-10), so the control works in every opened month.
 - **Status: done (2026-11-10).** `MonthScreen` holds one `useUpdateExpense({ optimistic: true })` and passes `onTogglePaid` to the table, the phone list and the details panel. Ticking sends `paidAt` as today in UTC (`todayIso`), unticking sends `null`; the row stays in place. On failure the change rolls back and a toast says "Couldn't update the paid status. Try again." (every failure shows that text; expenses no longer return 422). Past months work the same way (updated 2026-11-10): the checkbox and the panel button are active whenever the month is opened.
 
-#### T-26 Expense form: shared fields and one-time (M-14, M-26)
+#### T-26 Expense form: shared fields and one-time (M-14)
 - **Includes:**
-  - **+ Add** menu: Expense, Income, Envelope;
-  - form shell: a dialog on desktop, a full-height sheet on the phone, react-hook-form + Zod;
-  - type choice;
-  - shared fields: Description, Category, Payment type, Bank (required when the payment type has a statement), Store;
-  - one-time fields: Amount, Purchased, Due, Paid;
-  - shared money validation: positive, 2 decimals, at most 99,999,999.99;
-  - remembered payment type, bank and category (M-26).
-- **Done when:** the M-14 and M-26 acceptance criteria pass, and backend errors use T-07's messages.
+  - **+ Add** menu: Expense, Income, Envelope (each with a hint line). Desktop: a dropdown on the header's Add button; phone: the floating add button opens it above itself, over a dimmed page, and turns into a close button. Income and Envelope appear when T-32 and T-33 add their handlers; Envelope stays hidden in past months;
+  - the form is a **side panel** on desktop (the shell of the expense details) and a **full-height sheet** on the phone, react-hook-form + Zod, on **one page: no type tabs yet** (the type choice arrives with T-27 and T-28);
+  - fields: Description\*, Category\* and Payment type\*, Bank (\* only when the payment type has a statement) and Store, Amount\* (with a `$` icon), Purchased, Due, Paid. Required fields carry a red asterisk; an invalid field gets a red border and no visible message (the reason stays in the page for screen readers), and errors only the server can find also show as a toast;
+  - shared money validation (`checkMoney`, `parseMoney`): above 0, at most 2 decimals, at most 99,999,999.99; the Amount field formats as typed (`formatMoneyInput`: `10050` reads `100.50`);
+  - the Purchased date can't be after today (UTC): the picker stops at today, the schema rejects a later date, and the API's 400 "Date cannot be in the future" marks the field (`describeApiError` kind `futureDate`; `api.ts` now keeps a list of validation issues as JSON text so the mapper can read it);
+  - three buttons: **Finish & close**, **Finish & add another** (saves, keeps the panel open, clears the fields except category, payment type and bank, focuses Description) and **Cancel**;
+  - the form always opens empty; remembering the payment type, bank and category (M-26) was built and then dropped on 2026-11-12.
+- **Done when:** the M-14 acceptance criteria pass, and backend errors use T-07's messages.
+- **Design:** `design.pen`, frames "Month — Add menu", "Month — Add expense" (dark, errors, light) and the Mobile 390 versions. The two "errors" frames still show message text under the fields; the app dropped it (red border only), so those frames need the message rows removed.
+- **Backend:** none for T-26. **Found while testing (2026-11-10):** in the dev database every payment type, bank and store has an id the backend's own UUID check rejects (for example `c3d4e5f6-0001-0000-0000-000000000000`), so `POST /expenses` answers 400 for any of them. Categories are fine. The seed data needs valid UUIDs.
+- **Status: done (2026-11-10).** `ExpenseFormPanel` (built on `DetailsSheet`, which gained `fullHeight` and `initialFocus`), `AddMenu` / `AddFabMenu`, `FormField`, and `SelectMenu` with `invalid` and `clearLabel`. Logic in `lib/expense-form.ts` and `lib/money.ts`. Saving goes back to page 1; the form closes when the month changes and only one panel is open at a time. Checked in the browser (desktop, 390px, light and dark, a past month) with the `POST` stubbed because of the seed data above.
 
 #### T-27 Expense form: installments (M-15)
-- **Includes:** amount per payment, number of payments (at least 2), interval presets (30 / 14 / custom), first purchase date; the live plan preview; the toast saying which months received payments.
+- **Includes:** amount per payment, number of payments (at least 2), interval presets (30 / 14 / custom), first purchase date; (not in the future, like the purchase date in T-26: reuse `todayIso` and the `futureDate` message); the live plan preview; the toast saying which months received payments.
 - **Done when:** the M-15 acceptance criteria pass.
 
 #### T-28 Expense form: recurring (M-16)

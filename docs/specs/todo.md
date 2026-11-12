@@ -76,7 +76,7 @@ One tab per lookup, plus appearance. Lists are short and not paginated.
 | Budget forecasting and goals | UX brief §12 | |
 | Installment deferral (move a payment to the end of the plan) | UX brief §12 | Planned backend feature; design when it exists |
 | Recurring bills that start in a future month | UX brief §12 | Planned backend feature; design when it exists |
-| Remembering the store in the expense form | Month spec §7 (Q-4) | "Fine for now" |
+| Remembering values in the expense form (store, payment type, bank, category) | Month spec §7 (Q-4, M-26) | Dropped on 2026-11-12: the form always opens empty |
 | % of salary (per row, on the total row and in the summary) | Design review 2026-10-28 | Removed from the Month screen for now; to be addressed later. Salary is still flagged on incomes and the salary base is shown in the income footer |
 | Summary cards for Unpaid and Envelopes | Design review 2026-10-28 | Removed; overdue bills are flagged on their rows only. Envelope spend lives in the Envelopes card |
 | Sorting on the phone | Design review 2026-10-28 | The phone list has no headers and no sort control, so it always shows order of entry |
