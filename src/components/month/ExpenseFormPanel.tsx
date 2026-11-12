@@ -133,7 +133,10 @@ function ExpenseFormBody({
 	const stores = useStores()
 	const queries = [categories, paymentTypes, banks, stores]
 
-	if (queries.some((query) => query.isError)) {
+	// A failed refetch keeps the earlier lists, so only a list that never loaded blocks the form
+	// (swapping the form out would throw away what the user typed)
+	const failed = queries.filter((query) => query.isError && !query.data)
+	if (failed.length > 0) {
 		return (
 			<div
 				role="alert"
@@ -143,7 +146,7 @@ function ExpenseFormBody({
 				<Button
 					variant="outline"
 					onClick={() => {
-						for (const query of queries) if (query.isError) query.refetch()
+						for (const query of failed) query.refetch()
 					}}
 				>
 					{t.retry}

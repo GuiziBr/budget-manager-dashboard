@@ -54,7 +54,7 @@ afterEach(() => {
 
 const setup = (props: { onSaved?: () => void } = {}) => {
 	const onClose = vi.fn()
-	const { wrapper } = createQueryWrapper()
+	const { wrapper, queryClient } = createQueryWrapper()
 	render(
 		<ExpenseFormPanel
 			open
@@ -65,7 +65,7 @@ const setup = (props: { onSaved?: () => void } = {}) => {
 		/>,
 		{ wrapper }
 	)
-	return { onClose, user: userEvent.setup() }
+	return { onClose, queryClient, user: userEvent.setup() }
 }
 
 const ready = () => screen.findByLabelText("Description")
@@ -456,6 +456,25 @@ describe("ExpenseFormPanel", () => {
 		await user.click(screen.getByRole("button", { name: "Cancel" }))
 		expect(onClose).toHaveBeenCalledOnce()
 		expect(post).not.toHaveBeenCalled()
+	})
+
+	it("keeps the form and what was typed when a refetch of the lists fails", async () => {
+		const { user, queryClient } = setup()
+		await ready()
+		await user.type(screen.getByLabelText("Description"), "Draft expense")
+
+		// The lists were loaded; a later refetch (window focus, say) fails
+		vi.mocked(api.get).mockRejectedValue(new ApiError("boom", 500))
+		await queryClient.refetchQueries({ queryKey: ["categories"] })
+
+		await vi.waitFor(() =>
+			expect(queryClient.getQueryState(["categories"])?.status).toBe("error")
+		)
+		// Let the screen react to the failed refetch
+		await new Promise((resolve) => setTimeout(resolve, 50))
+		expect(screen.queryByText("Couldn't load the form options")).toBeNull()
+		expect(screen.getByLabelText("Description")).toHaveValue("Draft expense")
+		expect(screen.getByRole("combobox", { name: "Category" })).toBeVisible()
 	})
 
 	it("offers a retry when the lists don't load", async () => {
