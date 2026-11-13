@@ -441,7 +441,7 @@ The expense is created in the month being viewed (except installments, see M-15)
 |---|---|---|
 | Amount per payment | Yes | |
 | Number of payments | Yes | At least 2 |
-| Interval | Yes | Presets: Monthly (30 days), Every 2 weeks (14 days), or a custom number of days |
+| Interval | Yes | Presets: Monthly (30 days), Bi-weekly (14 days), or a custom number of days |
 | First purchase date | Yes | |
 
 **How it works**

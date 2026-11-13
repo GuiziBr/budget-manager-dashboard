@@ -2,12 +2,22 @@ import { z } from "zod"
 import { translations } from "@/constants/translations"
 import { todayIso } from "@/lib/format-date"
 import { checkMoney, parseMoney } from "@/lib/money"
-import type { CreateOneTimeExpenseInput, Id } from "@/types"
+import type {
+	CreateInstallmentExpenseInput,
+	CreateOneTimeExpenseInput,
+	Id
+} from "@/types"
 
 const t = translations.month.form
 
 /** What the form holds while it is being filled in: every field is text, `""` means empty. */
+export type FormExpenseType = "one-time" | "installment"
+
+/** Interval presets of an installment plan: monthly (30 days), every 2 weeks (14), or custom. */
+export type IntervalPreset = "30" | "14" | "custom"
+
 export interface ExpenseFormValues {
+	type: FormExpenseType
 	description: string
 	categoryId: string
 	paymentTypeId: string
@@ -17,9 +27,15 @@ export interface ExpenseFormValues {
 	purchasedAt: string
 	dueAt: string
 	paidAt: string
+	/** Installments: number of payments, the interval and the first purchase date. */
+	installmentCount: string
+	intervalPreset: IntervalPreset
+	customIntervalDays: string
+	firstPurchasedAt: string
 }
 
 export const EMPTY_EXPENSE_FORM: ExpenseFormValues = {
+	type: "one-time",
 	description: "",
 	categoryId: "",
 	paymentTypeId: "",
@@ -28,13 +44,18 @@ export const EMPTY_EXPENSE_FORM: ExpenseFormValues = {
 	amount: "",
 	purchasedAt: "",
 	dueAt: "",
-	paidAt: ""
+	paidAt: "",
+	installmentCount: "",
+	intervalPreset: "30",
+	customIntervalDays: "",
+	firstPurchasedAt: ""
 }
 
-/** A fresh form for the next expense, keeping category, payment type and bank (Finish & add another). */
+/** A fresh form for the next expense, keeping type, category, payment type and bank (Finish & add another). */
 export function afterAddAnother(values: ExpenseFormValues): ExpenseFormValues {
 	return {
 		...EMPTY_EXPENSE_FORM,
+		type: values.type,
 		categoryId: values.categoryId,
 		paymentTypeId: values.paymentTypeId,
 		bankId: values.bankId
@@ -52,6 +73,7 @@ export function createExpenseFormSchema(
 ) {
 	return z
 		.object({
+			type: z.enum(["one-time", "installment"]),
 			description: z.string().trim().min(1, t.validation.description),
 			categoryId: z.string().min(1, t.validation.category),
 			paymentTypeId: z.string().min(1, t.validation.paymentType),
@@ -60,7 +82,11 @@ export function createExpenseFormSchema(
 			amount: z.string(),
 			purchasedAt: z.string(),
 			dueAt: z.string(),
-			paidAt: z.string()
+			paidAt: z.string(),
+			installmentCount: z.string(),
+			intervalPreset: z.enum(["30", "14", "custom"]),
+			customIntervalDays: z.string(),
+			firstPurchasedAt: z.string()
 		})
 		.superRefine((values, ctx) => {
 			const amount = checkMoney(values.amount)
@@ -74,12 +100,45 @@ export function createExpenseFormSchema(
 							: t.validation.amount
 				})
 			}
-			if (values.purchasedAt > today) {
+			if (values.type === "one-time" && values.purchasedAt > today) {
 				ctx.addIssue({
 					code: "custom",
 					path: ["purchasedAt"],
 					message: translations.errors.futureDate
 				})
+			}
+			if (values.type === "installment") {
+				const count = parseWhole(values.installmentCount)
+				if (count === null || count < 2) {
+					ctx.addIssue({
+						code: "custom",
+						path: ["installmentCount"],
+						message: t.validation.installmentCount
+					})
+				}
+				if (
+					values.intervalPreset === "custom" &&
+					(parseWhole(values.customIntervalDays) ?? 0) < 1
+				) {
+					ctx.addIssue({
+						code: "custom",
+						path: ["customIntervalDays"],
+						message: t.validation.interval
+					})
+				}
+				if (!values.firstPurchasedAt) {
+					ctx.addIssue({
+						code: "custom",
+						path: ["firstPurchasedAt"],
+						message: t.validation.firstPurchase
+					})
+				} else if (values.firstPurchasedAt > today) {
+					ctx.addIssue({
+						code: "custom",
+						path: ["firstPurchasedAt"],
+						message: translations.errors.futureDate
+					})
+				}
 			}
 			if (
 				values.paymentTypeId &&
@@ -95,11 +154,64 @@ export function createExpenseFormSchema(
 		})
 }
 
-/** The `POST /expenses` body for a one-time expense in the given month. */
+/** A whole number of at least 1 typed as digits, or `null`. */
+function parseWhole(input: string): number | null {
+	return /^\d+$/.test(input.trim()) ? Number(input.trim()) : null
+}
+
+/** The payments of the plan being typed, or `null` while it isn't a valid plan. */
+export function parsePlan(values: ExpenseFormValues): {
+	amount: number
+	count: number
+	intervalDays: number
+	firstPurchasedAt: string
+} | null {
+	const amount = parseMoney(values.amount)
+	const count = parseWhole(values.installmentCount)
+	const intervalDays =
+		values.intervalPreset === "custom"
+			? parseWhole(values.customIntervalDays)
+			: Number(values.intervalPreset)
+	if (
+		amount === null ||
+		count === null ||
+		count < 2 ||
+		intervalDays === null ||
+		intervalDays < 1 ||
+		!values.firstPurchasedAt
+	) {
+		return null
+	}
+	return {
+		amount,
+		count,
+		intervalDays,
+		firstPurchasedAt: values.firstPurchasedAt
+	}
+}
+
+/** The `POST /expenses` body for the form: a one-time expense in the given month, or a plan. */
 export function buildCreateExpenseInput(
 	values: ExpenseFormValues,
 	budgetPeriodId: Id
-): CreateOneTimeExpenseInput {
+): CreateOneTimeExpenseInput | CreateInstallmentExpenseInput {
+	if (values.type === "installment") {
+		const plan = parsePlan(values)
+		if (!plan) throw new Error("The plan is not valid")
+		return {
+			type: "installment",
+			budgetPeriodId,
+			categoryId: values.categoryId,
+			paymentTypeId: values.paymentTypeId,
+			bankId: values.bankId || null,
+			storeId: values.storeId || null,
+			description: values.description.trim(),
+			amountPerInstallment: plan.amount,
+			totalInstallments: plan.count,
+			paymentIntervalDays: plan.intervalDays,
+			firstPurchasedAt: plan.firstPurchasedAt
+		}
+	}
 	const amount = parseMoney(values.amount)
 	if (amount === null) throw new Error("The amount is not valid")
 	return {

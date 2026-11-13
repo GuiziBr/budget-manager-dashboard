@@ -31,7 +31,11 @@ const data: Record<string, unknown[]> = {
 		lookup("cash", "Cash", { hasStatement: false })
 	],
 	banks: [lookup("b1", "CIBC"), lookup("b2", "RBC")],
-	stores: [lookup("s1", "Costco")]
+	stores: [lookup("s1", "Costco")],
+	"budget-periods": [
+		{ id: "p1", year: 2026, month: 11 },
+		{ id: "p2", year: 2026, month: 12 }
+	]
 }
 
 const created = { id: "e1" }
@@ -569,5 +573,186 @@ describe("ExpenseFormPanel", () => {
 			Promise.resolve(data[endpoint] ?? [])) as never)
 		await user.click(within(alert).getByRole("button", { name: "Retry" }))
 		expect(await ready()).toBeVisible()
+	})
+
+	describe("installments (M-15)", () => {
+		const fillPlan = async (user: ReturnType<typeof userEvent.setup>) => {
+			await user.click(screen.getByRole("tab", { name: "Installments" }))
+			await user.type(screen.getByLabelText("Description"), "Laptop")
+			await choose(user, "Category", "Groceries")
+			await choose(user, "Payment type", "Cash")
+			await user.type(screen.getByLabelText("Amount per payment"), "5000")
+			await user.type(screen.getByLabelText("Number of payments"), "3")
+			await user.type(
+				screen.getByLabelText("First purchase date"),
+				"2026-11-15"
+			)
+		}
+
+		it("swaps the one-time dates for the plan fields and keeps the shared values", async () => {
+			const { user } = setup()
+			await ready()
+			await user.type(screen.getByLabelText("Description"), "Laptop")
+			expect(screen.getByLabelText("Purchased")).toBeVisible()
+
+			await user.click(screen.getByRole("tab", { name: "Installments" }))
+
+			expect(screen.getByLabelText("Description")).toHaveValue("Laptop")
+			expect(screen.queryByLabelText("Purchased")).toBeNull()
+			expect(screen.queryByLabelText("Paid")).toBeNull()
+			expect(screen.getByLabelText("Amount per payment")).toBeVisible()
+			expect(screen.getByLabelText("Number of payments")).toBeVisible()
+			expect(screen.getByLabelText("First purchase date")).toBeVisible()
+			expect(
+				screen.getByRole("combobox", { name: "Interval" })
+			).toHaveTextContent("Monthly (30 days)")
+		})
+
+		it("shows the plan as it is typed", async () => {
+			const { user } = setup()
+			await ready()
+			expect(screen.queryByTestId("plan-summary")).toBeNull()
+			await fillPlan(user)
+			expect(screen.getByTestId("plan-summary")).toHaveTextContent(
+				"3 payments of CAD 50.00, every 30 days, from 15 Nov 2026 to 14 Jan 2027. Total CAD 150.00."
+			)
+
+			await choose(user, "Interval", "Bi-weekly (14 days)")
+			expect(screen.getByTestId("plan-summary")).toHaveTextContent(
+				"every 14 days, from 15 Nov 2026 to 13 Dec 2026"
+			)
+		})
+
+		it("asks for the number of days on a custom interval", async () => {
+			const { user } = setup()
+			await ready()
+			await fillPlan(user)
+			await choose(user, "Interval", "Custom")
+			await user.type(screen.getByLabelText("Days between payments"), "10")
+			expect(screen.getByTestId("plan-summary")).toHaveTextContent(
+				"every 10 days, from 15 Nov 2026 to 5 Dec 2026"
+			)
+		})
+
+		it("saves the plan and says which months got payments", async () => {
+			const post = vi.spyOn(api, "post").mockResolvedValue(created as never)
+			const { user, onClose } = setup()
+			await ready()
+			await fillPlan(user)
+
+			await user.click(screen.getByRole("button", { name: "Finish & close" }))
+
+			await vi.waitFor(() => expect(onClose).toHaveBeenCalled())
+			expect(post).toHaveBeenCalledWith("expenses", {
+				type: "installment",
+				budgetPeriodId: "p1",
+				categoryId: "c1",
+				paymentTypeId: "cash",
+				bankId: null,
+				storeId: null,
+				description: "Laptop",
+				amountPerInstallment: 50,
+				totalInstallments: 3,
+				paymentIntervalDays: 30,
+				firstPurchasedAt: "2026-11-15"
+			})
+			expect(toast.success).toHaveBeenCalledWith(
+				"2 payments added to Nov 2026 – Dec 2026. The rest will appear as those months are opened."
+			)
+		})
+
+		it("needs at least 2 payments and the first purchase date", async () => {
+			const post = vi.spyOn(api, "post")
+			const { user } = setup()
+			await ready()
+			await user.click(screen.getByRole("tab", { name: "Installments" }))
+			await user.type(screen.getByLabelText("Number of payments"), "1")
+			await user.click(screen.getByRole("button", { name: "Finish & close" }))
+
+			expect(screen.getByLabelText("Number of payments")).toHaveAttribute(
+				"aria-invalid",
+				"true"
+			)
+			expect(screen.getByLabelText("First purchase date")).toHaveAttribute(
+				"aria-invalid",
+				"true"
+			)
+			expect(post).not.toHaveBeenCalled()
+		})
+
+		it("doesn't offer a first purchase date after today", async () => {
+			const { user } = setup()
+			await ready()
+			await user.click(screen.getByRole("tab", { name: "Installments" }))
+			expect(screen.getByLabelText("First purchase date")).toHaveAttribute(
+				"max",
+				todayIso()
+			)
+		})
+
+		it("stops a plan that falls in no opened month, before sending", async () => {
+			const post = vi.spyOn(api, "post")
+			const { user } = setup()
+			await ready()
+			await fillPlan(user)
+			const date = screen.getByLabelText("First purchase date")
+			await user.clear(date)
+			await user.type(date, "2026-06-01")
+			await user.click(screen.getByRole("button", { name: "Finish & close" }))
+
+			expect(post).not.toHaveBeenCalled()
+			expect(date).toHaveAttribute("aria-invalid", "true")
+			expect(toast.error).toHaveBeenCalledWith(
+				"Open the month of the first payment before adding this plan.",
+				expect.anything()
+			)
+		})
+
+		it("marks the first purchase date when the backend rejects it as in the future", async () => {
+			vi.spyOn(api, "post").mockRejectedValue(
+				new ApiError("Date cannot be in the future", 400)
+			)
+			const { user } = setup()
+			await ready()
+			await fillPlan(user)
+			await user.click(screen.getByRole("button", { name: "Finish & close" }))
+
+			await vi.waitFor(() =>
+				expect(screen.getByLabelText("First purchase date")).toHaveAttribute(
+					"aria-invalid",
+					"true"
+				)
+			)
+			expect(toast.error).toHaveBeenCalledWith(
+				"The purchase date can't be in the future.",
+				expect.anything()
+			)
+		})
+
+		it("keeps the type and shared values and clears the plan with Finish & add another", async () => {
+			vi.spyOn(api, "post").mockResolvedValue(created as never)
+			const { user, onClose } = setup()
+			await ready()
+			await fillPlan(user)
+
+			await user.click(
+				screen.getByRole("button", { name: "Finish & add another" })
+			)
+
+			await vi.waitFor(() =>
+				expect(screen.getByLabelText("Description")).toHaveValue("")
+			)
+			expect(onClose).not.toHaveBeenCalled()
+			expect(screen.getByRole("tab", { name: "Installments" })).toHaveAttribute(
+				"data-state",
+				"active"
+			)
+			expect(
+				screen.getByRole("combobox", { name: "Category" })
+			).toHaveTextContent("Groceries")
+			expect(screen.getByLabelText("Amount per payment")).toHaveValue("")
+			expect(screen.getByLabelText("Number of payments")).toHaveValue("")
+			expect(screen.getByLabelText("First purchase date")).toHaveValue("")
+		})
 	})
 })
