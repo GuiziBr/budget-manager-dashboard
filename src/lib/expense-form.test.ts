@@ -296,3 +296,98 @@ describe("installment form", () => {
 		})
 	})
 })
+
+describe("recurring form", () => {
+	const bill: ExpenseFormValues = {
+		...filled,
+		type: "recurring",
+		purchasedAt: ""
+	}
+	const billSchema = createExpenseFormSchema(
+		(id) => id === "card",
+		"2026-11-15"
+	)
+	const issues = (values: ExpenseFormValues) => {
+		const result = billSchema.safeParse(values)
+		if (result.success) return {}
+		return Object.fromEntries(
+			result.error.issues.map((issue) => [issue.path[0], issue.message])
+		)
+	}
+
+	it("accepts a complete bill", () => {
+		expect(billSchema.safeParse(bill).success).toBe(true)
+	})
+
+	it("asks for the shared fields and the amount", () => {
+		expect(issues({ ...EMPTY_EXPENSE_FORM, type: "recurring" })).toMatchObject({
+			description: "Enter a description.",
+			categoryId: "Choose a category.",
+			paymentTypeId: "Choose a payment type.",
+			amount: "Enter an amount above 0, up to 2 decimals."
+		})
+	})
+
+	it("requires a bank when the payment type has a statement", () => {
+		expect(issues({ ...bill, bankId: "" })).toEqual({
+			bankId: "Bank is required for this payment type."
+		})
+	})
+
+	it("ignores a purchase date left over from another type, and the plan fields", () => {
+		expect(
+			issues({ ...bill, purchasedAt: "2026-12-31", installmentCount: "1" })
+		).toEqual({})
+	})
+
+	it("builds the bill without a purchase date", () => {
+		expect(
+			buildCreateExpenseInput({ ...bill, purchasedAt: "2026-11-04" }, "p1")
+		).toEqual({
+			type: "recurring",
+			budgetPeriodId: "p1",
+			categoryId: "c1",
+			paymentTypeId: "card",
+			bankId: "b1",
+			storeId: "s1",
+			description: "Groceries",
+			amount: 25
+		})
+	})
+
+	it("includes the due and paid dates when set and sends empty lookups as null", () => {
+		const input = buildCreateExpenseInput(
+			{
+				...bill,
+				bankId: "",
+				storeId: "",
+				dueAt: "2026-11-20",
+				paidAt: "2026-11-21"
+			},
+			"p1"
+		)
+		expect(input).toMatchObject({
+			bankId: null,
+			storeId: null,
+			dueAt: "2026-11-20",
+			paidAt: "2026-11-21"
+		})
+	})
+
+	it("refuses an invalid amount", () => {
+		expect(() =>
+			buildCreateExpenseInput({ ...bill, amount: "" }, "p1")
+		).toThrow()
+	})
+
+	it("keeps the recurring type after Finish & add another", () => {
+		expect(afterAddAnother(bill)).toMatchObject({
+			type: "recurring",
+			categoryId: "c1",
+			paymentTypeId: "card",
+			bankId: "b1",
+			amount: "",
+			description: ""
+		})
+	})
+})

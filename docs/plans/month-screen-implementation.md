@@ -50,7 +50,7 @@ Related: [Month spec](../specs/month-screen.md) · [Backlog](../specs/todo.md) �
 | T-25 | Mark paid / unpaid | 4 Actions | M-12 | T-12, T-20, T-24 | S | — |
 | T-26 | Expense form: shared fields and one-time | 4 | M-14 | T-07, T-10, T-12 | L | — |
 | T-27 | Expense form: installments | 4 | M-15 | T-26 | M | — |
-| T-28 | Expense form: recurring | 4 | M-16 | T-26 | S | G-4 |
+| T-28 | Expense form: recurring | 4 | M-16 | T-26 | S | — |
 | T-29 | Edit expense | 4 | M-17 | T-26 | M | — |
 | T-30 | Delete expense | 4 | M-18 | T-12, T-24 | S | — |
 | T-31 | Change an installment plan's amount | 4 | M-19 | T-15, T-24 | S | — |
@@ -260,7 +260,8 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 #### T-28 Expense form: recurring (M-16)
 - **Includes:** the explanatory note; `type: "recurring"`.
 - **Done when:** the M-16 acceptance criteria pass.
-- **Backend:** G-4 (recurring backfill). Confirm whether the backend also adds the bill to later months that are already open. If yes, invalidate those months' expenses after saving, and keep the note's wording; if no, change the note to say only months opened from now on get it.
+- **Backend:** none. G-4 is resolved (2026-11-13): the backend also adds the bill to later months that are already open (checked by creating a bill in October and reading the opened November). No code change was needed, because `useCreateExpense` already refreshes every month's expenses, and the note's wording stays.
+- **Status: done (2026-11-13).** A third **Recurring** tab on the form (`FormExpenseType` gained `"recurring"`), with the M-16 note under the tabs. A recurring bill shows Amount, Due and Paid and no Purchased date; `buildCreateExpenseInput` sends `type: "recurring"` without `purchasedAt` (a purchase date typed before switching is dropped) and doesn't send `monthsAlreadyPaid` (R-04). Shared fields stay when the type changes; Finish & add another keeps the type. Checked in the browser against the real API: validation (red borders, bank required for a statement payment type), `POST /expenses` 201 with the expected body, the "Month 1" chip and totals, the 390px sheet in light theme with no horizontal scroll; test rows and bills removed afterwards. Not run in the browser: Finish & add another and the server-error toasts (covered by the component tests).
 
 #### T-29 Edit expense (M-17)
 - **Includes:** the form prefilled, type locked, clearable Bank and Store; notes for installment and recurring rows; deleted lookups kept selected with their name and a "(deleted)" mark (a lookup is deleted when its id is missing from the active list); only changed fields sent in the `PATCH`.
@@ -329,12 +330,13 @@ These don't block any task, but each needs follow-up work once resolved (details
 
 Resolved on 2026-11-10: past-month expenses and incomes can be changed (BE-3, G-1). `docs/software_specification.md` line 141 still says an expense can't be updated in a past month and needs the same update.
 
+Resolved on 2026-11-13: G-4 (recurring backfill). The backend also adds a new recurring bill to later months that are already opened; only the API docs still need to say so.
+
 Delivered on 2026-11-03 and no longer waited on: envelope spend (G-5), plan size on expenses (G-2), names of deleted lookups (G-3), recurring months running (G-6) and sorting by category and payment type name (BE-4).
 
 | Item | Affects | What changes when it lands |
 |---|---|---|
 | G-12 category name on envelopes | T-19, T-24 | Replace "(deleted)" with the real category name |
-| G-4 recurring backfill | T-28 | Decide whether later opened months are refreshed after adding a recurring bill |
 | BE-1 salary with the month | T-35, T-37 | Send the salary with `POST /budget-periods` |
 
 ## 5. Open questions

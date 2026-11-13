@@ -399,7 +399,7 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 
 ### Expenses
 
-All expense forms open from **+ Add → Expense**, as a side panel on desktop (like the expense details) and a full-height sheet on the phone. The form will start with a **type** choice (One-time, Installments, Recurring); until installments and recurring bills are built (M-15, M-16) it holds only the one-time fields, on one page. Required fields are marked with a red asterisk. A field that fails validation gets a red border and no message text (screen readers still hear the reason). Problems only the server can detect (a deleted lookup, the bank rule, a future purchase date it rejects) also show as a toast.
+All expense forms open from **+ Add → Expense**, as a side panel on desktop (like the expense details) and a full-height sheet on the phone. The form starts with a **type** choice (One-time, Installments, Recurring); the shared fields stay when the type changes. Required fields are marked with a red asterisk. A field that fails validation gets a red border and no message text (screen readers still hear the reason). Problems only the server can detect (a deleted lookup, the bank rule, a future purchase date it rejects) also show as a toast.
 
 The panel ends with **Finish & close**, **Finish & add another** (saves, keeps the panel open and clears the form, keeping the category, payment type and bank) and **Cancel**.
 
@@ -413,7 +413,7 @@ The panel ends with **Finish & close**, **Finish & add another** (saves, keeps t
 | Bank | When the payment type has a statement | Always visible; marked required when needed |
 | Store | No | |
 
-The expense is created in the month being viewed (except installments, see M-15).
+The expense is created in the month being viewed (except installments, see M-15). A recurring bill has no Purchased date (M-16).
 
 #### M-14 Add a one-time expense
 
@@ -472,7 +472,7 @@ The expense is created in the month being viewed (except installments, see M-15)
 
 **Rules**
 - The bill starts in the month being viewed.
-- Months after this one that are already opened: see gap G-4.
+- Months after this one that are already opened also get the bill (confirmed against the backend on 2026-11-13, gap G-4): adding a bill in October added a copy to the already-opened November.
 
 **Acceptance criteria**
 - *Given* I add "Netflix" as recurring in November 2026, *when* I open December 2026, *then* December has a Netflix row with the same amount, payment type, bank and store.
@@ -660,7 +660,7 @@ These came up while writing this document. They don't block the design but need 
 
 | ID | Gap | Effect on this screen |
 |---|---|---|
-| G-4 | The software specification says creating a recurring expense also adds it to months after it that are already opened. The API doc only says months opened **afterwards** get a copy | M-16 needs to know which is true, to tell the user whether next month already has the row |
+| G-4 | ~~Does creating a recurring expense also add it to later months that are already opened?~~ **Resolved 2026-11-13:** yes, the backend adds a copy to every later opened month (verified: a bill created in October appeared in the opened November). `docs/APIs/expense.md` and `recurring-expense.md` don't say so yet | M-16 | Align the API docs with the backend |
 | G-12 | Envelopes carry only `categoryId`, so the name of a category deleted after the envelope's month can't be shown | The Envelopes card and envelope details show "(deleted)" for it |
 
 G-2, G-3, G-5 and G-6 were delivered by the backend on 2026-11-03 (plan size, lookup names, envelope spend and months running now come with the API responses).

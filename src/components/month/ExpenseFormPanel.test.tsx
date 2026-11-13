@@ -833,4 +833,117 @@ describe("ExpenseFormPanel", () => {
 			expect(screen.getByLabelText("First purchase date")).toHaveValue("")
 		})
 	})
+
+	describe("recurring (M-16)", () => {
+		const fillBill = async (user: ReturnType<typeof userEvent.setup>) => {
+			await user.click(screen.getByRole("tab", { name: "Recurring" }))
+			await user.type(screen.getByLabelText("Description"), "Netflix")
+			await choose(user, "Category", "Groceries")
+			await choose(user, "Payment type", "Cash")
+			await user.type(screen.getByLabelText("Amount"), "1599")
+		}
+
+		it("shows the note and drops the Purchased date, keeping the shared values", async () => {
+			const { user } = setup()
+			await ready()
+			await user.type(screen.getByLabelText("Description"), "Netflix")
+			expect(screen.queryByTestId("recurring-note")).not.toBeInTheDocument()
+
+			await user.click(screen.getByRole("tab", { name: "Recurring" }))
+
+			expect(screen.getByTestId("recurring-note")).toHaveTextContent(
+				"Added to this month and copied into every month you open from now on. Manage it on the Recurring screen."
+			)
+			expect(screen.getByLabelText("Description")).toHaveValue("Netflix")
+			expect(screen.queryByLabelText("Purchased")).not.toBeInTheDocument()
+			expect(screen.getByLabelText("Due")).toBeVisible()
+			expect(screen.getByLabelText("Paid")).toBeVisible()
+
+			await user.click(screen.getByRole("tab", { name: "One-time" }))
+			expect(screen.getByLabelText("Purchased")).toBeVisible()
+			expect(screen.queryByTestId("recurring-note")).not.toBeInTheDocument()
+		})
+
+		it("saves a recurring bill in the month on screen", async () => {
+			const post = vi.spyOn(api, "post").mockResolvedValue(created as never)
+			const { user, onClose } = setup()
+			await ready()
+			await fillBill(user)
+			await user.type(screen.getByLabelText("Due"), "2026-11-20")
+
+			await user.click(screen.getByRole("button", { name: "Finish & close" }))
+
+			await vi.waitFor(() => expect(onClose).toHaveBeenCalled())
+			expect(post).toHaveBeenCalledWith("expenses", {
+				type: "recurring",
+				budgetPeriodId: "p1",
+				categoryId: "c1",
+				paymentTypeId: "cash",
+				bankId: null,
+				storeId: null,
+				description: "Netflix",
+				amount: 15.99,
+				dueAt: "2026-11-20"
+			})
+			expect(toast.success).toHaveBeenCalledWith(
+				"Netflix added to November 2026."
+			)
+		})
+
+		it("doesn't send a purchase date typed before switching to recurring", async () => {
+			const post = vi.spyOn(api, "post").mockResolvedValue(created as never)
+			const { user, onClose } = setup()
+			await ready()
+			await user.type(screen.getByLabelText("Purchased"), "2026-11-30")
+			await fillBill(user)
+
+			await user.click(screen.getByRole("button", { name: "Finish & close" }))
+
+			await vi.waitFor(() => expect(onClose).toHaveBeenCalled())
+			expect(post.mock.calls[0][1]).not.toHaveProperty("purchasedAt")
+		})
+
+		it("keeps the type and shared values with Finish & add another", async () => {
+			vi.spyOn(api, "post").mockResolvedValue(created as never)
+			const { user, onClose } = setup()
+			await ready()
+			await fillBill(user)
+
+			await user.click(
+				screen.getByRole("button", { name: "Finish & add another" })
+			)
+
+			await vi.waitFor(() =>
+				expect(screen.getByLabelText("Description")).toHaveValue("")
+			)
+			expect(onClose).not.toHaveBeenCalled()
+			expect(screen.getByRole("tab", { name: "Recurring" })).toHaveAttribute(
+				"data-state",
+				"active"
+			)
+			expect(
+				screen.getByRole("combobox", { name: "Category" })
+			).toHaveTextContent("Groceries")
+			expect(screen.getByLabelText("Amount")).toHaveValue("")
+		})
+
+		it("asks for the required fields without sending anything", async () => {
+			const post = vi.spyOn(api, "post")
+			const { user } = setup()
+			await ready()
+			await user.click(screen.getByRole("tab", { name: "Recurring" }))
+
+			await user.click(screen.getByRole("button", { name: "Finish & close" }))
+
+			expect(screen.getByLabelText("Description")).toHaveAttribute(
+				"aria-invalid",
+				"true"
+			)
+			expect(screen.getByLabelText("Amount")).toHaveAttribute(
+				"aria-invalid",
+				"true"
+			)
+			expect(post).not.toHaveBeenCalled()
+		})
+	})
 })

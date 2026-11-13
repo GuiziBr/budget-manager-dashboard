@@ -93,7 +93,7 @@ U-1 (marking a bill paid after its month ends) and BE-3 were resolved on 2026-11
 
 | ID | Gap | Affects | Suggested fix |
 |---|---|---|---|
-| G-4 | The software specification says a new recurring expense is also added to months after it that are already opened; the API doc says only months opened afterwards get a copy | M-16 | Confirm which is true and align the docs |
+| G-4 | ~~Does a new recurring expense also reach later months that are already opened?~~ **Resolved 2026-11-13:** yes, verified against the backend (a bill created in October appeared in the opened November) | M-16 | Align `docs/APIs/expense.md`, `recurring-expense.md` and `software_specification.md` (the spec is right; the API docs omit the backfill) |
 | G-7 | Lookup names: the software specification says unique ignoring case, the API docs say exact (case-sensitive) match | S-02, S-06, S-09, S-11, S-14 | Confirm which rule applies |
 | G-9 | No endpoint lists installment plans, so plans can only be reached from their expense rows | M-19 | `GET /installment-groups`, if a list of plans is ever wanted |
 | G-12 | `BudgetEnvelope` carries only `categoryId`, so the name of a category deleted after the envelope's month can't be shown (the same problem G-3 had for expenses) | M-04, M-08 | Return `category: { id, name }` on envelopes |
