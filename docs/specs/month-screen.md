@@ -467,7 +467,7 @@ The expense is created in the month being viewed (except installments, see M-15)
 **Extra fields:** Amount (required), Due date, Paid date (optional).
 
 **How it works**
-1. A note under the type choice explains: "Added to this month and copied into every month you open from now on. Manage it on the Recurring screen."
+1. A note under the type choice explains: "Added to this month and any later months that are already open, and copied into every month you open from now on. Manage it on the Recurring screen."
 2. On save, this month's row and the bill (template) are created together.
 
 **Rules**

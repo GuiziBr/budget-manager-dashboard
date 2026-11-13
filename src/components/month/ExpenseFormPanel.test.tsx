@@ -852,7 +852,7 @@ describe("ExpenseFormPanel", () => {
 			await user.click(screen.getByRole("tab", { name: "Recurring" }))
 
 			expect(screen.getByTestId("recurring-note")).toHaveTextContent(
-				"Added to this month and copied into every month you open from now on. Manage it on the Recurring screen."
+				"Added to this month and any later months that are already open, and copied into every month you open from now on. Manage it on the Recurring screen."
 			)
 			expect(screen.getByLabelText("Description")).toHaveValue("Netflix")
 			expect(screen.queryByLabelText("Purchased")).not.toBeInTheDocument()

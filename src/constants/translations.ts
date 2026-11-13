@@ -134,7 +134,7 @@ export const translations = {
 				recurring: "Recurring"
 			},
 			recurring: {
-				note: "Added to this month and copied into every month you open from now on. Manage it on the Recurring screen."
+				note: "Added to this month and any later months that are already open, and copied into every month you open from now on. Manage it on the Recurring screen."
 			},
 			plan: {
 				amountPerPayment: "Amount per payment",
