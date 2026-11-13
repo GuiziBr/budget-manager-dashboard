@@ -148,7 +148,8 @@ export const translations = {
 				added: "{count} payments added to {range}.",
 				addedOne: "{count} payment added to {range}.",
 				notInViewed: "None are in {month}.",
-				rest: "The rest will appear as those months are opened."
+				rest: "The rest will appear as those months are opened.",
+				savedUnplaced: "{item} added as an installment plan."
 			},
 			fields: {
 				description: "Description",

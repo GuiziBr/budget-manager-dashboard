@@ -708,6 +708,84 @@ describe("ExpenseFormPanel", () => {
 			)
 		})
 
+		it("asks again before deciding a plan can't be placed, in case a month was opened elsewhere", async () => {
+			let opened = [{ id: "p0", year: 2026, month: 10 }]
+			vi.spyOn(api, "get").mockImplementation(((endpoint: string) =>
+				Promise.resolve(
+					endpoint === "budget-periods" ? opened : (data[endpoint] ?? [])
+				)) as never)
+			const post = vi.spyOn(api, "post").mockResolvedValue(created as never)
+			const { user, onClose } = setup()
+			await ready()
+			await fillPlan(user)
+			// November opens in another tab after this list was loaded
+			opened = [...opened, { id: "p1", year: 2026, month: 11 }]
+
+			await user.click(screen.getByRole("button", { name: "Finish & close" }))
+
+			await vi.waitFor(() => expect(onClose).toHaveBeenCalled())
+			expect(post).toHaveBeenCalledOnce()
+			expect(toast.success).toHaveBeenCalledWith(
+				"1 payment added to Nov 2026. The rest will appear as those months are opened."
+			)
+		})
+
+		it("lets the server decide when the opened months can't be refreshed", async () => {
+			let failing = false
+			vi.spyOn(api, "get").mockImplementation(((endpoint: string) => {
+				if (endpoint === "budget-periods") {
+					return failing
+						? Promise.reject(new ApiError("Server error", 500))
+						: Promise.resolve([{ id: "p0", year: 2026, month: 10 }])
+				}
+				return Promise.resolve(data[endpoint] ?? [])
+			}) as never)
+			const post = vi
+				.spyOn(api, "post")
+				.mockRejectedValue(
+					new ApiError(
+						"No matching budget periods found for any installment due date",
+						400
+					)
+				)
+			const { user } = setup()
+			await ready()
+			await fillPlan(user)
+			failing = true
+
+			await user.click(screen.getByRole("button", { name: "Finish & close" }))
+
+			await vi.waitFor(() => expect(post).toHaveBeenCalledOnce())
+			await vi.waitFor(() =>
+				expect(screen.getByLabelText("First purchase date")).toHaveAttribute(
+					"aria-invalid",
+					"true"
+				)
+			)
+			expect(toast.error).toHaveBeenCalledWith(
+				"Open the month of the first payment before adding this plan.",
+				expect.anything()
+			)
+		})
+
+		it("doesn't name a month when it can't tell where the plan went", async () => {
+			vi.spyOn(api, "get").mockImplementation(((endpoint: string) =>
+				endpoint === "budget-periods"
+					? Promise.reject(new ApiError("Server error", 500))
+					: Promise.resolve(data[endpoint] ?? [])) as never)
+			vi.spyOn(api, "post").mockResolvedValue(created as never)
+			const { user, onClose } = setup()
+			await ready()
+			await fillPlan(user)
+
+			await user.click(screen.getByRole("button", { name: "Finish & close" }))
+
+			await vi.waitFor(() => expect(onClose).toHaveBeenCalled())
+			expect(toast.success).toHaveBeenCalledWith(
+				"Laptop added as an installment plan."
+			)
+		})
+
 		it("marks the first purchase date when the backend rejects it as in the future", async () => {
 			vi.spyOn(api, "post").mockRejectedValue(
 				new ApiError("Date cannot be in the future", 400)

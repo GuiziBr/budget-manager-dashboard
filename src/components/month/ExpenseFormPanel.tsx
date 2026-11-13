@@ -309,28 +309,28 @@ function ExpenseForm({
 
 	const save = (then: Submit) =>
 		handleSubmit(async (values) => {
-			// Nothing to place: say so before asking the backend
+			// Where the payments go, from the opened months we know about
 			const plan = values.type === "installment" ? parsePlan(values) : null
-			const placement =
-				plan && periods.data
-					? planPlacement(
-							planDueDates(
-								plan.firstPurchasedAt,
-								plan.count,
-								plan.intervalDays
-							),
-							periods.data,
-							month
-						)
-					: null
+			const dueDates = plan
+				? planDueDates(plan.firstPurchasedAt, plan.count, plan.intervalDays)
+				: []
+			const placeIn = (known: typeof periods.data) =>
+				plan && known ? planPlacement(dueDates, known, month) : null
+			let placement = placeIn(periods.data)
 			if (placement && placement.created === 0) {
-				setError("firstPurchasedAt", {
-					message: translations.errors.noPeriodForInstallments
-				})
-				toast.error(translations.errors.noPeriodForInstallments, {
-					id: SAVE_FAILED_TOAST_ID
-				})
-				return
+				// The list may be stale (a month opened elsewhere): ask again before
+				// deciding. If that fails, let the server decide
+				const fresh = await periods.refetch()
+				placement = fresh.isError ? null : placeIn(fresh.data)
+				if (placement && placement.created === 0) {
+					setError("firstPurchasedAt", {
+						message: translations.errors.noPeriodForInstallments
+					})
+					toast.error(translations.errors.noPeriodForInstallments, {
+						id: SAVE_FAILED_TOAST_ID
+					})
+					return
+				}
 			}
 			try {
 				await createExpense.mutateAsync(
@@ -357,12 +357,13 @@ function ExpenseForm({
 				}
 				return
 			}
-			toast.success(
-				(placement && planToast(placement, monthName)) ??
-					translations.month.form.saved
-						.replace("{item}", values.description.trim())
-						.replace("{month}", monthName)
-			)
+			const item = values.description.trim()
+			// A plan is placed by its dates, so without them don't claim a month
+			const fallback =
+				values.type === "installment"
+					? t.plan.savedUnplaced.replace("{item}", item)
+					: t.saved.replace("{item}", item).replace("{month}", monthName)
+			toast.success((placement && planToast(placement, monthName)) ?? fallback)
 			onSaved?.()
 			if (then === "close") {
 				onClose()
