@@ -255,6 +255,7 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 #### T-27 Expense form: installments (M-15)
 - **Includes:** amount per payment, number of payments (at least 2), interval presets (30 / 14 / custom), first purchase date; (not in the future, like the purchase date in T-26: reuse `todayIso` and the `futureDate` message); the live plan preview; the toast saying which months received payments.
 - **Done when:** the M-15 acceptance criteria pass.
+- **Status: built (2026-11-12), browser QA pending.** A type control (One-time / Installments) tops the form and keeps the shared fields when switched. Plan fields: amount per payment, number of payments (at least 2), interval (Monthly 30, Bi-weekly 14, Custom days), first purchase date (not after today). A live summary line shows the plan; the toast names the months that received payments (`lib/installment-plan.ts`, worked out from the plan dates and the opened months, because the response is only one expense). A plan with no payment in an opened month is stopped before sending; the server's future-date 400 marks the first purchase date. Finish & add another keeps the type, category, payment type and bank. Backend: nothing blocks; optionally ask for the count and months of the created payments in the response.
 
 #### T-28 Expense form: recurring (M-16)
 - **Includes:** the explanatory note; `type: "recurring"`.

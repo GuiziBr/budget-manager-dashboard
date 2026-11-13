@@ -12,8 +12,10 @@ import { FormField, fieldErrorId } from "@/components/ui/form-field"
 import { Input } from "@/components/ui/input"
 import { SelectMenu } from "@/components/ui/select-menu"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { translations } from "@/constants/translations"
 import { BANKS_QUERY_KEY, useBanks } from "@/hooks/use-banks"
+import { useBudgetPeriods } from "@/hooks/use-budget-periods"
 import { CATEGORIES_QUERY_KEY, useCategories } from "@/hooks/use-categories"
 import { useCreateExpense } from "@/hooks/use-expenses"
 import {
@@ -27,9 +29,18 @@ import {
 	buildCreateExpenseInput,
 	createExpenseFormSchema,
 	EMPTY_EXPENSE_FORM,
-	type ExpenseFormValues
+	type ExpenseFormValues,
+	type FormExpenseType,
+	parsePlan
 } from "@/lib/expense-form"
 import { todayIso } from "@/lib/format-date"
+import {
+	MAX_PAYMENTS,
+	planDueDates,
+	planPlacement,
+	planSummary,
+	planToast
+} from "@/lib/installment-plan"
 import { formatMoneyInput } from "@/lib/money"
 import type { Month } from "@/lib/month"
 import { monthLabel } from "@/lib/month"
@@ -58,6 +69,22 @@ const FIELD_FOR_ERROR = {
 	store: "storeId",
 	purchasedAt: "purchasedAt"
 } as const satisfies Record<ApiErrorField, keyof ExpenseFormValues>
+
+/** The purchase date error belongs to the first purchase date on a plan. */
+function errorField(
+	field: ApiErrorField,
+	type: FormExpenseType
+): keyof ExpenseFormValues {
+	return field === "purchasedAt" && type === "installment"
+		? "firstPurchasedAt"
+		: FIELD_FOR_ERROR[field]
+}
+
+const INTERVAL_OPTIONS = [
+	{ id: "30", name: t.plan.monthly },
+	{ id: "14", name: t.plan.biweekly },
+	{ id: "custom", name: t.plan.custom }
+]
 
 /** The lists to refresh when a lookup turns out to be gone. */
 const LOOKUP_KEYS: Partial<Record<ApiErrorField, readonly string[]>> = {
@@ -111,6 +138,7 @@ export function ExpenseFormPanel({
 		>
 			<ExpenseFormBody
 				periodId={periodId}
+				month={month}
 				monthName={label}
 				onClose={onClose}
 				onSaved={onSaved}
@@ -122,12 +150,14 @@ export function ExpenseFormPanel({
 
 function ExpenseFormBody({
 	periodId,
+	month,
 	monthName,
 	onClose,
 	onSaved,
 	onSavingChange
 }: {
 	periodId: Id
+	month: Month
 	monthName: string
 	onClose: () => void
 	onSaved?: () => void
@@ -184,6 +214,7 @@ function ExpenseFormBody({
 				stores: stores.data
 			}}
 			periodId={periodId}
+			month={month}
 			monthName={monthName}
 			onClose={onClose}
 			onSaved={onSaved}
@@ -197,6 +228,7 @@ type Submit = "close" | "another"
 function ExpenseForm({
 	lookups,
 	periodId,
+	month,
 	monthName,
 	onClose,
 	onSaved,
@@ -204,6 +236,7 @@ function ExpenseForm({
 }: {
 	lookups: Lookups
 	periodId: Id
+	month: Month
 	monthName: string
 	onClose: () => void
 	onSaved?: () => void
@@ -211,6 +244,7 @@ function ExpenseForm({
 }) {
 	const queryClient = useQueryClient()
 	const createExpense = useCreateExpense()
+	const periods = useBudgetPeriods()
 
 	// The latest purchase date allowed, fixed while the form is open
 	const today = useRef(todayIso()).current
@@ -244,21 +278,71 @@ function ExpenseForm({
 		setFocus("description")
 	}, [setFocus])
 
+	const type = watch("type")
+	const isPlan = type === "installment"
 	const paymentTypeId = watch("paymentTypeId")
+	const planValues = watch([
+		"amount",
+		"installmentCount",
+		"intervalPreset",
+		"customIntervalDays",
+		"firstPurchasedAt"
+	])
+	const intervalPreset = planValues[2]
+	const summary = (() => {
+		if (!isPlan) return ""
+		const plan = parsePlan({
+			...EMPTY_EXPENSE_FORM,
+			amount: planValues[0],
+			installmentCount: planValues[1],
+			intervalPreset,
+			customIntervalDays: planValues[3],
+			firstPurchasedAt: planValues[4]
+		})
+		return plan && plan.firstPurchasedAt <= today && plan.count <= MAX_PAYMENTS
+			? planSummary(plan)
+			: ""
+	})()
 	const bankRequired =
 		lookups.paymentTypes.find((type) => type.id === paymentTypeId)
 			?.hasStatement ?? false
 
 	const save = (then: Submit) =>
 		handleSubmit(async (values) => {
+			// Where the payments go, from the opened months we know about
+			const plan = values.type === "installment" ? parsePlan(values) : null
+			const dueDates = plan
+				? planDueDates(plan.firstPurchasedAt, plan.count, plan.intervalDays)
+				: []
+			const placeIn = (known: typeof periods.data) =>
+				plan && known ? planPlacement(dueDates, known, month) : null
+			let placement = placeIn(periods.data)
+			if (placement && placement.created === 0) {
+				// The list may be stale (a month opened elsewhere): ask again before
+				// deciding. If that fails, let the server decide
+				const fresh = await periods.refetch()
+				placement = fresh.isError ? null : placeIn(fresh.data)
+				if (placement && placement.created === 0) {
+					setError("firstPurchasedAt", {
+						message: translations.errors.noPeriodForInstallments
+					})
+					toast.error(translations.errors.noPeriodForInstallments, {
+						id: SAVE_FAILED_TOAST_ID
+					})
+					return
+				}
+			}
 			try {
 				await createExpense.mutateAsync(
 					buildCreateExpenseInput(values, periodId)
 				)
 			} catch (error) {
 				const problem = describeApiError(error, { action: "saveExpense" })
-				if (problem.field) {
-					setError(FIELD_FOR_ERROR[problem.field], {
+				if (problem.kind === "noPeriodForInstallments") {
+					setError("firstPurchasedAt", { message: problem.message })
+					toast.error(problem.message, { id: SAVE_FAILED_TOAST_ID })
+				} else if (problem.field) {
+					setError(errorField(problem.field, values.type), {
 						message: problem.message
 					})
 					// A lookup that is gone: refresh the lists so the choice disappears
@@ -273,11 +357,13 @@ function ExpenseForm({
 				}
 				return
 			}
-			toast.success(
-				translations.month.form.saved
-					.replace("{item}", values.description.trim())
-					.replace("{month}", monthName)
-			)
+			const item = values.description.trim()
+			// A plan is placed by its dates, so without them don't claim a month
+			const fallback =
+				values.type === "installment"
+					? t.plan.savedUnplaced.replace("{item}", item)
+					: t.saved.replace("{item}", item).replace("{month}", monthName)
+			toast.success((placement && planToast(placement, monthName)) ?? fallback)
 			onSaved?.()
 			if (then === "close") {
 				onClose()
@@ -304,6 +390,24 @@ function ExpenseForm({
 			className="flex min-h-0 flex-1 flex-col"
 		>
 			<div className="flex flex-1 flex-col gap-4 overflow-y-auto px-5 pb-4">
+				<Controller
+					control={control}
+					name="type"
+					render={({ field }) => (
+						<Tabs
+							value={field.value}
+							onValueChange={field.onChange}
+							className="gap-0"
+						>
+							<TabsList aria-label={t.typeLabel}>
+								<TabsTrigger value="one-time">{t.types.oneTime}</TabsTrigger>
+								<TabsTrigger value="installment">
+									{t.types.installment}
+								</TabsTrigger>
+							</TabsList>
+						</Tabs>
+					)}
+				/>
 				<FormField
 					id="expense-description"
 					label={t.fields.description}
@@ -454,7 +558,7 @@ function ExpenseForm({
 
 				<FormField
 					id="expense-amount"
-					label={t.fields.amount}
+					label={isPlan ? t.plan.amountPerPayment : t.fields.amount}
 					required
 					error={errors.amount?.message}
 				>
@@ -492,36 +596,148 @@ function ExpenseForm({
 					/>
 				</FormField>
 
-				<div className="grid grid-cols-2 gap-3">
-					<FormField
-						id="expense-purchased"
-						label={t.fields.purchased}
-						error={errors.purchasedAt?.message}
-					>
-						<Input
-							id="expense-purchased"
-							type="date"
-							max={today}
-							aria-invalid={!!errors.purchasedAt}
-							aria-describedby={describedBy(
-								"expense-purchased",
-								!!errors.purchasedAt
-							)}
-							className={
-								errors.purchasedAt
-									? "border-danger focus-within:border-danger"
-									: undefined
-							}
-							{...register("purchasedAt")}
-						/>
-					</FormField>
-					<FormField id="expense-due" label={t.fields.due}>
-						<Input id="expense-due" type="date" {...register("dueAt")} />
-					</FormField>
-				</div>
-				<FormField id="expense-paid" label={t.fields.paid}>
-					<Input id="expense-paid" type="date" {...register("paidAt")} />
-				</FormField>
+				{isPlan ? (
+					<>
+						<div className="grid grid-cols-2 gap-3">
+							<FormField
+								id="expense-count"
+								label={t.plan.count}
+								required
+								error={errors.installmentCount?.message}
+							>
+								<Input
+									id="expense-count"
+									inputMode="numeric"
+									maxLength={3}
+									autoComplete="off"
+									placeholder={t.plan.countPlaceholder}
+									aria-required="true"
+									aria-invalid={!!errors.installmentCount}
+									aria-describedby={describedBy(
+										"expense-count",
+										!!errors.installmentCount
+									)}
+									className={
+										errors.installmentCount
+											? "border-danger focus-within:border-danger"
+											: undefined
+									}
+									{...register("installmentCount")}
+								/>
+							</FormField>
+							<FormField id="expense-interval" label={t.plan.interval} required>
+								<Controller
+									control={control}
+									name="intervalPreset"
+									render={({ field }) => (
+										<SelectMenu
+											id="expense-interval"
+											ref={field.ref}
+											name={field.name}
+											options={INTERVAL_OPTIONS}
+											value={field.value}
+											onValueChange={field.onChange}
+											onBlur={field.onBlur}
+										/>
+									)}
+								/>
+							</FormField>
+						</div>
+						{intervalPreset === "custom" && (
+							<FormField
+								id="expense-custom-days"
+								label={t.plan.customDays}
+								required
+								error={errors.customIntervalDays?.message}
+							>
+								<Input
+									id="expense-custom-days"
+									inputMode="numeric"
+									maxLength={4}
+									autoComplete="off"
+									placeholder={t.plan.daysPlaceholder}
+									aria-required="true"
+									aria-invalid={!!errors.customIntervalDays}
+									aria-describedby={describedBy(
+										"expense-custom-days",
+										!!errors.customIntervalDays
+									)}
+									className={
+										errors.customIntervalDays
+											? "border-danger focus-within:border-danger"
+											: undefined
+									}
+									{...register("customIntervalDays")}
+								/>
+							</FormField>
+						)}
+						<FormField
+							id="expense-first-purchase"
+							label={t.plan.firstPurchase}
+							required
+							error={errors.firstPurchasedAt?.message}
+						>
+							<Input
+								id="expense-first-purchase"
+								type="date"
+								max={today}
+								aria-required="true"
+								aria-invalid={!!errors.firstPurchasedAt}
+								aria-describedby={describedBy(
+									"expense-first-purchase",
+									!!errors.firstPurchasedAt
+								)}
+								className={
+									errors.firstPurchasedAt
+										? "border-danger focus-within:border-danger"
+										: undefined
+								}
+								{...register("firstPurchasedAt")}
+							/>
+						</FormField>
+						{summary && (
+							<p
+								data-testid="plan-summary"
+								className="rounded-xl bg-muted px-3 py-2.5 text-foreground text-sm"
+							>
+								{summary}
+							</p>
+						)}
+					</>
+				) : (
+					<>
+						<div className="grid grid-cols-2 gap-3">
+							<FormField
+								id="expense-purchased"
+								label={t.fields.purchased}
+								error={errors.purchasedAt?.message}
+							>
+								<Input
+									id="expense-purchased"
+									type="date"
+									max={today}
+									aria-invalid={!!errors.purchasedAt}
+									aria-describedby={describedBy(
+										"expense-purchased",
+										!!errors.purchasedAt
+									)}
+									className={
+										errors.purchasedAt
+											? "border-danger focus-within:border-danger"
+											: undefined
+									}
+									{...register("purchasedAt")}
+								/>
+							</FormField>
+							<FormField id="expense-due" label={t.fields.due}>
+								<Input id="expense-due" type="date" {...register("dueAt")} />
+							</FormField>
+						</div>
+						<FormField id="expense-paid" label={t.fields.paid}>
+							<Input id="expense-paid" type="date" {...register("paidAt")} />
+						</FormField>
+					</>
+				)}
 			</div>
 
 			<div className="flex shrink-0 flex-col gap-2 border-border border-t px-5 py-5">

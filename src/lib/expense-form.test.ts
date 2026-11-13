@@ -8,6 +8,7 @@ import {
 } from "./expense-form"
 
 const filled: ExpenseFormValues = {
+	...EMPTY_EXPENSE_FORM,
 	description: "  Groceries ",
 	categoryId: "c1",
 	paymentTypeId: "card",
@@ -176,6 +177,122 @@ describe("afterAddAnother", () => {
 			purchasedAt: "",
 			dueAt: "",
 			paidAt: ""
+		})
+	})
+})
+
+describe("installment form", () => {
+	const plan: ExpenseFormValues = {
+		...filled,
+		type: "installment",
+		purchasedAt: "",
+		amount: "50.00",
+		installmentCount: "12",
+		intervalPreset: "30",
+		customIntervalDays: "",
+		firstPurchasedAt: "2026-11-04"
+	}
+	const planSchema = createExpenseFormSchema(
+		(id) => id === "card",
+		"2026-11-15"
+	)
+	const issues = (values: ExpenseFormValues) => {
+		const result = planSchema.safeParse(values)
+		return result.success
+			? {}
+			: Object.fromEntries(
+					result.error.issues.map((issue) => [issue.path[0], issue.message])
+				)
+	}
+
+	it("accepts a complete plan", () => {
+		expect(planSchema.safeParse(plan).success).toBe(true)
+	})
+
+	it("asks for the plan fields", () => {
+		expect(
+			issues({ ...plan, installmentCount: "", firstPurchasedAt: "" })
+		).toEqual({
+			installmentCount: "Enter at least 2 payments.",
+			firstPurchasedAt: "Choose the first purchase date."
+		})
+	})
+
+	it("needs at least 2 whole payments", () => {
+		for (const count of ["1", "0", "2.5", "-3", "ab"]) {
+			expect(issues({ ...plan, installmentCount: count })).toHaveProperty(
+				"installmentCount"
+			)
+		}
+	})
+
+	it("needs the days of a custom interval", () => {
+		const custom = { ...plan, intervalPreset: "custom" as const }
+		expect(issues(custom)).toHaveProperty("customIntervalDays")
+		expect(issues({ ...custom, customIntervalDays: "0" })).toHaveProperty(
+			"customIntervalDays"
+		)
+		expect(
+			planSchema.safeParse({ ...custom, customIntervalDays: "10" }).success
+		).toBe(true)
+	})
+
+	it("rejects a first purchase date after today", () => {
+		expect(issues({ ...plan, firstPurchasedAt: "2026-11-16" })).toEqual({
+			firstPurchasedAt: "The purchase date can't be in the future."
+		})
+	})
+
+	it("ignores plan fields on a one-time expense and the purchase date on a plan", () => {
+		expect(
+			planSchema.safeParse({ ...filled, installmentCount: "1" }).success
+		).toBe(true)
+		expect(
+			planSchema.safeParse({ ...plan, purchasedAt: "2030-01-01" }).success
+		).toBe(true)
+	})
+
+	it("builds the plan body", () => {
+		expect(buildCreateExpenseInput(plan, "p1")).toEqual({
+			type: "installment",
+			budgetPeriodId: "p1",
+			categoryId: "c1",
+			paymentTypeId: "card",
+			bankId: "b1",
+			storeId: "s1",
+			description: "Groceries",
+			amountPerInstallment: 50,
+			totalInstallments: 12,
+			paymentIntervalDays: 30,
+			firstPurchasedAt: "2026-11-04"
+		})
+	})
+
+	it("uses the custom days and the 14-day preset", () => {
+		expect(
+			buildCreateExpenseInput({ ...plan, intervalPreset: "14" }, "p1")
+		).toMatchObject({ paymentIntervalDays: 14 })
+		expect(
+			buildCreateExpenseInput(
+				{ ...plan, intervalPreset: "custom", customIntervalDays: "45" },
+				"p1"
+			)
+		).toMatchObject({ paymentIntervalDays: 45 })
+	})
+
+	it("refuses to build an invalid plan", () => {
+		expect(() =>
+			buildCreateExpenseInput({ ...plan, installmentCount: "1" }, "p1")
+		).toThrow()
+	})
+
+	it("keeps the type with Finish & add another and clears the plan", () => {
+		expect(afterAddAnother(plan)).toEqual({
+			...EMPTY_EXPENSE_FORM,
+			type: "installment",
+			categoryId: "c1",
+			paymentTypeId: "card",
+			bankId: "b1"
 		})
 	})
 })

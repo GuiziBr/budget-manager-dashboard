@@ -127,6 +127,30 @@ export const translations = {
 			loadError: "Couldn't load the form options",
 			retry: "Retry",
 			none: "None",
+			typeLabel: "Expense type",
+			types: {
+				oneTime: "One-time",
+				installment: "Installments"
+			},
+			plan: {
+				amountPerPayment: "Amount per payment",
+				count: "Number of payments",
+				interval: "Interval",
+				firstPurchase: "First purchase date",
+				monthly: "Monthly (30 days)",
+				biweekly: "Bi-weekly (14 days)",
+				custom: "Custom",
+				customDays: "Days between payments",
+				countPlaceholder: "At least 2",
+				daysPlaceholder: "Days",
+				summary:
+					"{count} payments of {amount}, every {interval} days, from {start} to {end}. Total {total}.",
+				added: "{count} payments added to {range}.",
+				addedOne: "{count} payment added to {range}.",
+				notInViewed: "None are in {month}.",
+				rest: "The rest will appear as those months are opened.",
+				savedUnplaced: "{item} added as an installment plan."
+			},
 			fields: {
 				description: "Description",
 				category: "Category",
@@ -151,7 +175,10 @@ export const translations = {
 				category: "Choose a category.",
 				paymentType: "Choose a payment type.",
 				amount: "Enter an amount above 0, up to 2 decimals.",
-				amountTooLarge: "The amount can't be more than 99,999,999.99."
+				amountTooLarge: "The amount can't be more than 99,999,999.99.",
+				installmentCount: "Enter at least 2 payments.",
+				interval: "Enter the days between payments.",
+				firstPurchase: "Choose the first purchase date."
 			},
 			finishClose: "Finish & close",
 			finishAddAnother: "Finish & add another",
