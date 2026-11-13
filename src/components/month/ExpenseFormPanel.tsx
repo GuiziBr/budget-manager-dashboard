@@ -103,8 +103,8 @@ interface Lookups {
 
 /**
  * Add an expense to the month on screen (M-14, M-26): a panel from the right on desktop,
- * a full-height sheet on the phone. One-time expenses only for now; installments and
- * recurring bills come with their own fields later.
+ * a full-height sheet on the phone. A type control switches between one-time expenses,
+ * installment plans (M-15) and recurring bills (M-16).
  */
 export function ExpenseFormPanel({
 	open,
@@ -280,6 +280,7 @@ function ExpenseForm({
 
 	const type = watch("type")
 	const isPlan = type === "installment"
+	const isRecurring = type === "recurring"
 	const paymentTypeId = watch("paymentTypeId")
 	const planValues = watch([
 		"amount",
@@ -404,6 +405,7 @@ function ExpenseForm({
 								<TabsTrigger value="installment">
 									{t.types.installment}
 								</TabsTrigger>
+								<TabsTrigger value="recurring">{t.types.recurring}</TabsTrigger>
 							</TabsList>
 						</Tabs>
 					)}
@@ -707,36 +709,57 @@ function ExpenseForm({
 				) : (
 					<>
 						<div className="grid grid-cols-2 gap-3">
-							<FormField
-								id="expense-purchased"
-								label={t.fields.purchased}
-								error={errors.purchasedAt?.message}
-							>
-								<Input
+							{!isRecurring && (
+								<FormField
 									id="expense-purchased"
-									type="date"
-									max={today}
-									aria-invalid={!!errors.purchasedAt}
-									aria-describedby={describedBy(
-										"expense-purchased",
-										!!errors.purchasedAt
-									)}
-									className={
-										errors.purchasedAt
-											? "border-danger focus-within:border-danger"
-											: undefined
-									}
-									{...register("purchasedAt")}
-								/>
-							</FormField>
+									label={t.fields.purchased}
+									error={errors.purchasedAt?.message}
+								>
+									<Input
+										id="expense-purchased"
+										type="date"
+										max={today}
+										aria-invalid={!!errors.purchasedAt}
+										aria-describedby={describedBy(
+											"expense-purchased",
+											!!errors.purchasedAt
+										)}
+										className={
+											errors.purchasedAt
+												? "border-danger focus-within:border-danger"
+												: undefined
+										}
+										{...register("purchasedAt")}
+									/>
+								</FormField>
+							)}
 							<FormField id="expense-due" label={t.fields.due}>
 								<Input id="expense-due" type="date" {...register("dueAt")} />
 							</FormField>
+							{isRecurring && (
+								<FormField id="expense-paid" label={t.fields.paid}>
+									<Input
+										id="expense-paid"
+										type="date"
+										{...register("paidAt")}
+									/>
+								</FormField>
+							)}
 						</div>
-						<FormField id="expense-paid" label={t.fields.paid}>
-							<Input id="expense-paid" type="date" {...register("paidAt")} />
-						</FormField>
+						{!isRecurring && (
+							<FormField id="expense-paid" label={t.fields.paid}>
+								<Input id="expense-paid" type="date" {...register("paidAt")} />
+							</FormField>
+						)}
 					</>
+				)}
+				{isRecurring && (
+					<p
+						data-testid="recurring-note"
+						className="text-muted-foreground text-sm"
+					>
+						{t.recurring.note}
+					</p>
 				)}
 			</div>
 

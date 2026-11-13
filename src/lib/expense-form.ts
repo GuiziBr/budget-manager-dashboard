@@ -5,13 +5,14 @@ import { checkMoney, parseMoney } from "@/lib/money"
 import type {
 	CreateInstallmentExpenseInput,
 	CreateOneTimeExpenseInput,
+	CreateRecurringExpenseInput,
 	Id
 } from "@/types"
 
 const t = translations.month.form
 
 /** What the form holds while it is being filled in: every field is text, `""` means empty. */
-export type FormExpenseType = "one-time" | "installment"
+export type FormExpenseType = "one-time" | "installment" | "recurring"
 
 /** Interval presets of an installment plan: monthly (30 days), every 2 weeks (14), or custom. */
 export type IntervalPreset = "30" | "14" | "custom"
@@ -73,7 +74,7 @@ export function createExpenseFormSchema(
 ) {
 	return z
 		.object({
-			type: z.enum(["one-time", "installment"]),
+			type: z.enum(["one-time", "installment", "recurring"]),
 			description: z.string().trim().min(1, t.validation.description),
 			categoryId: z.string().min(1, t.validation.category),
 			paymentTypeId: z.string().min(1, t.validation.paymentType),
@@ -190,11 +191,14 @@ export function parsePlan(values: ExpenseFormValues): {
 	}
 }
 
-/** The `POST /expenses` body for the form: a one-time expense in the given month, or a plan. */
+/** The `POST /expenses` body for the form: a one-time or recurring expense in the given month, or a plan. */
 export function buildCreateExpenseInput(
 	values: ExpenseFormValues,
 	budgetPeriodId: Id
-): CreateOneTimeExpenseInput | CreateInstallmentExpenseInput {
+):
+	| CreateOneTimeExpenseInput
+	| CreateInstallmentExpenseInput
+	| CreateRecurringExpenseInput {
 	if (values.type === "installment") {
 		const plan = parsePlan(values)
 		if (!plan) throw new Error("The plan is not valid")
@@ -214,8 +218,7 @@ export function buildCreateExpenseInput(
 	}
 	const amount = parseMoney(values.amount)
 	if (amount === null) throw new Error("The amount is not valid")
-	return {
-		type: "one-time",
+	const shared = {
 		budgetPeriodId,
 		categoryId: values.categoryId,
 		paymentTypeId: values.paymentTypeId,
@@ -223,8 +226,14 @@ export function buildCreateExpenseInput(
 		storeId: values.storeId || null,
 		description: values.description.trim(),
 		amount,
-		...(values.purchasedAt && { purchasedAt: values.purchasedAt }),
 		...(values.dueAt && { dueAt: values.dueAt }),
 		...(values.paidAt && { paidAt: values.paidAt })
+	}
+	// A recurring bill has no purchase date: it starts in the month being viewed.
+	if (values.type === "recurring") return { type: "recurring", ...shared }
+	return {
+		type: "one-time",
+		...shared,
+		...(values.purchasedAt && { purchasedAt: values.purchasedAt })
 	}
 }
