@@ -109,7 +109,8 @@ export const translations = {
 			paidState: "Paid: {item}",
 			unpaidState: "Not paid: {item}",
 			paidFailed: "Couldn't update the paid status. Try again.",
-			rowActions: "Actions for {item}"
+			rowActions: "Actions for {item}",
+			edit: "Edit"
 		},
 		addMenu: {
 			trigger: "Add",
@@ -123,6 +124,18 @@ export const translations = {
 		form: {
 			title: "Add expense",
 			description: "Add an expense to {month}",
+			editTitle: "Edit expense",
+			editDescription: "Edit an expense of {month}",
+			save: "Save",
+			savedEdit: "{item} updated.",
+			deleted: "(deleted)",
+			editNotes: {
+				installment:
+					"Changes apply to this payment only. To change all remaining payments, edit the plan.",
+				recurring:
+					"Changes apply to this month only. The bill itself stays as it is.",
+				recurringLink: "Edit the bill on the Recurring screen"
+			},
 			loading: "Loading the form",
 			loadError: "Couldn't load the form options",
 			retry: "Retry",

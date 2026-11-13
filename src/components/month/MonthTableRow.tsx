@@ -4,6 +4,12 @@ import { CircleAlert, EllipsisVertical } from "lucide-react"
 import { ExpenseTypeChip } from "@/components/month/ExpenseTypeChip"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu"
 import { translations } from "@/constants/translations"
 import { formatDayMonth } from "@/lib/format-date"
 import { formatCad } from "@/lib/money"
@@ -16,6 +22,8 @@ interface MonthRowProps {
 	onSelect: () => void
 	/** Ticks or unticks the paid control. Without it the control is a read-only display. */
 	onTogglePaid?: () => void
+	/** Opens the expense in the form. Without it the row has no menu. */
+	onEdit?: () => void
 }
 
 const t = translations.month.table
@@ -51,7 +59,8 @@ export function MonthTableRow({
 	row,
 	selected,
 	onSelect,
-	onTogglePaid
+	onTogglePaid,
+	onEdit
 }: MonthRowProps) {
 	const { expense } = row
 	const due = formatDayMonth(expense.dueAt)
@@ -120,14 +129,29 @@ export function MonthTableRow({
 				{formatCad(expense.amount, { compact: true })}
 			</td>
 			<td className={cn(cell, dim)}>
-				<button
-					type="button"
-					aria-label={t.rowActions.replace("{item}", expense.description)}
-					onClick={(event) => event.stopPropagation()}
-					className="flex size-8 cursor-pointer items-center justify-center rounded text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-				>
-					<EllipsisVertical className="size-4" aria-hidden="true" />
-				</button>
+				{onEdit && (
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<button
+								type="button"
+								aria-label={t.rowActions.replace("{item}", expense.description)}
+								onClick={(event) => event.stopPropagation()}
+								onKeyDown={(event) => event.stopPropagation()}
+								className="flex size-8 cursor-pointer items-center justify-center rounded text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+							>
+								<EllipsisVertical className="size-4" aria-hidden="true" />
+							</button>
+						</DropdownMenuTrigger>
+						{/* The menu is portaled, but React events still bubble to the row */}
+						<DropdownMenuContent
+							align="end"
+							onClick={(event) => event.stopPropagation()}
+							onKeyDown={(event) => event.stopPropagation()}
+						>
+							<DropdownMenuItem onSelect={onEdit}>{t.edit}</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
+				)}
 			</td>
 		</tr>
 	)

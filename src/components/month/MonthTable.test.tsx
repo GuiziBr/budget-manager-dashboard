@@ -64,6 +64,7 @@ function setup(
 		onAddExpense?: () => void
 		selectedId?: string | null
 		onSelectRow?: (row: MonthRow) => void
+		onEdit?: (expense: Expense) => void
 	} = {}
 ) {
 	const { wrapper } = createQueryWrapper()
@@ -318,7 +319,7 @@ describe("MonthTable rows", () => {
 	it("selects a row on click and keeps the checkbox and menu from selecting", async () => {
 		mockPages(all.slice(0, 2))
 		const onSelectRow = vi.fn()
-		const user = setup({ onSelectRow })
+		const user = setup({ onSelectRow, onEdit: vi.fn() })
 		const row = (await screen.findByText("Expense 1")).closest(
 			"tr"
 		) as HTMLElement
@@ -327,11 +328,36 @@ describe("MonthTable rows", () => {
 			within(row).getByRole("button", { name: "Actions for Expense 1" })
 		)
 		expect(onSelectRow).not.toHaveBeenCalled()
+		// The open menu hides the rest of the page from assistive tech
+		await user.keyboard("{Escape}")
 		await user.click(screen.getByRole("button", { name: "Expense 1" }))
 		expect(onSelectRow).toHaveBeenCalledOnce()
 		expect(onSelectRow.mock.calls[0][0].expense.id).toBe("1")
 		await user.click(row)
 		expect(onSelectRow).toHaveBeenCalledTimes(2)
+	})
+
+	it("edits a row from its menu without selecting it", async () => {
+		mockPages(all.slice(0, 2))
+		const onSelectRow = vi.fn()
+		const onEdit = vi.fn()
+		const user = setup({ onSelectRow, onEdit })
+		await user.click(
+			await screen.findByRole("button", { name: "Actions for Expense 2" })
+		)
+		await user.click(screen.getByRole("menuitem", { name: "Edit" }))
+		expect(onEdit).toHaveBeenCalledOnce()
+		expect(onEdit.mock.calls[0][0].id).toBe("2")
+		expect(onSelectRow).not.toHaveBeenCalled()
+	})
+
+	it("has no row menu without an edit handler or when the month can't be edited", async () => {
+		mockPages(all.slice(0, 2))
+		setup({ canEdit: false, onEdit: vi.fn() })
+		await screen.findByText("Expense 1")
+		expect(
+			screen.queryByRole("button", { name: /Actions for/ })
+		).not.toBeInTheDocument()
 	})
 
 	it("highlights the row whose details are open", async () => {

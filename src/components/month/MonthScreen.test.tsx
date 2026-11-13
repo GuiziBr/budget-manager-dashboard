@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen } from "@testing-library/react"
+import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { ApiError, api } from "@/lib/api"
@@ -17,7 +17,7 @@ const notify = () => {
 	for (const listener of nav.listeners) listener()
 }
 const toSearch = (href: string) => href.replace(/^\?/, "")
-const toast = vi.hoisted(() => ({ error: vi.fn() }))
+const toast = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }))
 vi.mock("sonner", () => ({ toast }))
 vi.mock("next/navigation", async () => {
 	const { useSyncExternalStore } = await import("react")
@@ -908,6 +908,55 @@ describe("MonthScreen mark paid", () => {
 			await screen.findByRole("button", { name: "Mark as unpaid" })
 		)
 		expect(patch).toHaveBeenLastCalledWith(`expenses/${ID}`, { paidAt: null })
+	})
+
+	it("edits a row from its menu and saves only the change", async () => {
+		const patch = open("", {})
+		const user = setup()
+		await user.click(
+			await screen.findByRole("button", { name: "Actions for Hydro bill" })
+		)
+		await user.click(await screen.findByRole("menuitem", { name: "Edit" }))
+		const dialog = await screen.findByRole("dialog", { name: "Edit expense" })
+		const description = within(dialog).getByLabelText("Description")
+		expect(description).toHaveValue("Hydro bill")
+		await user.type(description, " 2")
+		await user.click(within(dialog).getByRole("button", { name: "Save" }))
+		await vi.waitFor(() =>
+			expect(patch).toHaveBeenCalledWith(`expenses/${ID}`, {
+				description: "Hydro bill 2"
+			})
+		)
+		await vi.waitFor(
+			() =>
+				expect(
+					screen.queryByRole("dialog", { name: "Edit expense" })
+				).not.toBeInTheDocument(),
+			{ timeout: 3000 }
+		)
+	})
+
+	it("edits from the details panel, replacing it with the form", async () => {
+		open("", {})
+		const user = setup()
+		await user.click(await screen.findByRole("button", { name: "Hydro bill" }))
+		await user.click(await screen.findByRole("button", { name: "Edit" }))
+		expect(
+			await screen.findByRole("dialog", { name: "Edit expense" })
+		).toBeVisible()
+		expect(nav.search).not.toContain("expense=")
+	})
+
+	it("edits in a past month too", async () => {
+		open("period=2026-10", { budgetPeriodId: "2026-10" })
+		const user = setup()
+		await user.click(
+			await screen.findByRole("button", { name: "Actions for Hydro bill" })
+		)
+		await user.click(await screen.findByRole("menuitem", { name: "Edit" }))
+		expect(
+			await screen.findByRole("dialog", { name: "Edit expense" })
+		).toHaveTextContent("October 2026")
 	})
 
 	it("marks paid in a past month too", async () => {

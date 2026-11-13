@@ -1,12 +1,15 @@
 import { z } from "zod"
 import { translations } from "@/constants/translations"
 import { todayIso } from "@/lib/format-date"
-import { checkMoney, parseMoney } from "@/lib/money"
+import { checkMoney, formatMoneyInput, parseMoney } from "@/lib/money"
+import { rowType } from "@/lib/month-rows"
 import type {
 	CreateInstallmentExpenseInput,
 	CreateOneTimeExpenseInput,
 	CreateRecurringExpenseInput,
-	Id
+	Expense,
+	Id,
+	UpdateExpenseInput
 } from "@/types"
 
 const t = translations.month.form
@@ -67,10 +70,13 @@ export function afterAddAnother(values: ExpenseFormValues): ExpenseFormValues {
  * Validation for the one-time expense form. The bank is only required when the chosen
  * payment type has a statement, which the caller answers (the types come from the API).
  * The purchase date can't be after `today` ("YYYY-MM-DD", UTC like the API's).
+ * When `editing`, the row is one expense whatever its type: the plan fields don't apply
+ * and the purchase date rule covers installment rows too.
  */
 export function createExpenseFormSchema(
 	requiresBank: (paymentTypeId: string) => boolean,
-	today: string = todayIso()
+	today: string = todayIso(),
+	editing = false
 ) {
 	return z
 		.object({
@@ -101,14 +107,17 @@ export function createExpenseFormSchema(
 							: t.validation.amount
 				})
 			}
-			if (values.type === "one-time" && values.purchasedAt > today) {
+			const hasPurchaseDate = editing
+				? values.type !== "recurring"
+				: values.type === "one-time"
+			if (hasPurchaseDate && values.purchasedAt > today) {
 				ctx.addIssue({
 					code: "custom",
 					path: ["purchasedAt"],
 					message: translations.errors.futureDate
 				})
 			}
-			if (values.type === "installment") {
+			if (values.type === "installment" && !editing) {
 				const count = parseWhole(values.installmentCount)
 				if (count === null || count < 2) {
 					ctx.addIssue({
@@ -236,4 +245,63 @@ export function buildCreateExpenseInput(
 		...shared,
 		...(values.purchasedAt && { purchasedAt: values.purchasedAt })
 	}
+}
+
+const toDay = (iso: string | null) => (iso ? iso.slice(0, 10) : "")
+
+/** The form filled with an expense's own values, for editing it. The type follows the row and can't change. */
+export function expenseToFormValues(expense: Expense): ExpenseFormValues {
+	return {
+		...EMPTY_EXPENSE_FORM,
+		type: rowType(expense),
+		description: expense.description,
+		categoryId: expense.category.id,
+		paymentTypeId: expense.paymentType.id,
+		bankId: expense.bank?.id ?? "",
+		storeId: expense.store?.id ?? "",
+		amount: formatMoneyInput(String(Math.round(expense.amount * 100))),
+		purchasedAt: toDay(expense.purchasedAt),
+		dueAt: toDay(expense.dueAt),
+		paidAt: toDay(expense.paidAt)
+	}
+}
+
+/**
+ * The `PATCH /expenses/:id` body for an edited row: only the fields that changed
+ * (cleared optional fields go as `null`), or `null` when nothing changed, since the API
+ * rejects an empty body.
+ */
+export function buildUpdateExpenseInput(
+	values: ExpenseFormValues,
+	expense: Expense
+): UpdateExpenseInput | null {
+	const before = expenseToFormValues(expense)
+	const input: UpdateExpenseInput = {}
+	const description = values.description.trim()
+	if (description !== before.description) input.description = description
+	if (values.categoryId !== before.categoryId) {
+		input.categoryId = values.categoryId
+	}
+	if (values.paymentTypeId !== before.paymentTypeId) {
+		input.paymentTypeId = values.paymentTypeId
+	}
+	if (values.bankId !== before.bankId) input.bankId = values.bankId || null
+	if (values.storeId !== before.storeId) input.storeId = values.storeId || null
+	const amount = parseMoney(values.amount)
+	if (
+		amount !== null &&
+		Math.round(amount * 100) !== Math.round(expense.amount * 100)
+	) {
+		input.amount = amount
+	}
+	// A recurring row has no purchase date to edit
+	if (
+		values.type !== "recurring" &&
+		values.purchasedAt !== before.purchasedAt
+	) {
+		input.purchasedAt = values.purchasedAt || null
+	}
+	if (values.dueAt !== before.dueAt) input.dueAt = values.dueAt || null
+	if (values.paidAt !== before.paidAt) input.paidAt = values.paidAt || null
+	return Object.keys(input).length > 0 ? input : null
 }

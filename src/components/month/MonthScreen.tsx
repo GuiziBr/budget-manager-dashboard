@@ -39,6 +39,8 @@ export function MonthScreen() {
 	const isPhone = useMediaQuery(PHONE_QUERY)
 	const [incomeFor, setIncomeFor] = useState<string | null>(null)
 	const [formOpen, setFormOpen] = useState(false)
+	// The expense being edited; without one the form adds an expense
+	const [editing, setEditing] = useState<Expense | null>(null)
 	const queryClient = useQueryClient()
 	// What the details panel shows (one expense or one envelope) lives in the address, so it can be shared
 	const link = useLinkedSelection()
@@ -51,6 +53,7 @@ export function MonthScreen() {
 		setPanelMonth(monthKey)
 		setIncomeFor(null)
 		setFormOpen(false)
+		setEditing(null)
 	}
 	const updateExpense = useUpdateExpense({ optimistic: true })
 	// Ticking records today; unticking clears the date. The change shows at once and rolls back on failure
@@ -75,14 +78,16 @@ export function MonthScreen() {
 	const [fabMenuOpen, setFabMenuOpen] = useState(false)
 	const { page, setPage } = useMonthPage()
 	// One panel at a time: the form replaces whatever else is open
-	const openForm = (opener?: HTMLElement | null) => {
+	const openForm = (opener?: HTMLElement | null, expense?: Expense) => {
 		formOpener.current =
 			opener ?? (document.activeElement as HTMLElement | null)
 		setIncomeFor(null)
 		if (selection) link.close()
 		setFabMenuOpen(false)
+		setEditing(expense ?? null)
 		setFormOpen(true)
 	}
+	const openEdit = (expense: Expense) => openForm(undefined, expense)
 	// The row is cached under its own id, so the panel opens without asking the API for it
 	const selectExpense = (expense: Expense) => {
 		detailsOpener.current = document.activeElement as HTMLElement | null
@@ -147,6 +152,7 @@ export function MonthScreen() {
 						selectedId={selection?.kind === "expense" ? selection.id : null}
 						onSelectRow={(row) => selectExpense(row.expense)}
 						onTogglePaid={togglePaid}
+						onEdit={openEdit}
 						onAddExpense={() => openForm()}
 					/>
 					<ExpenseDetailsPanel
@@ -156,6 +162,7 @@ export function MonthScreen() {
 						expenseId={selection?.kind === "expense" ? selection.id : null}
 						canEdit={canEdit}
 						onTogglePaid={togglePaid}
+						onEdit={openEdit}
 						returnFocusRef={detailsOpener}
 					/>
 					<EnvelopeDetailsPanel
@@ -172,8 +179,10 @@ export function MonthScreen() {
 						onClose={() => setFormOpen(false)}
 						periodId={period.id}
 						month={month}
+						expense={editing}
 						onSaved={() => {
-							if (page > 1) setPage(1)
+							// A new expense is on the first page; an edited row stays where it is
+							if (!editing && page > 1) setPage(1)
 						}}
 						returnFocusRef={formOpener}
 					/>

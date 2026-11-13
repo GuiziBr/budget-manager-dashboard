@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest"
+import type { Expense } from "@/types"
 import {
 	afterAddAnother,
 	buildCreateExpenseInput,
+	buildUpdateExpenseInput,
 	createExpenseFormSchema,
 	EMPTY_EXPENSE_FORM,
-	type ExpenseFormValues
+	type ExpenseFormValues,
+	expenseToFormValues
 } from "./expense-form"
 
 const filled: ExpenseFormValues = {
@@ -389,5 +392,156 @@ describe("recurring form", () => {
 			amount: "",
 			description: ""
 		})
+	})
+})
+
+const saved: Expense = {
+	id: "e1",
+	budgetPeriodId: "p1",
+	recurringExpenseId: null,
+	description: "Hydro",
+	installmentNumber: null,
+	purchasedAt: "2026-11-02T00:00:00.000Z",
+	dueAt: "2026-11-12T00:00:00.000Z",
+	paidAt: null,
+	amount: 1250.5,
+	category: { id: "c1", name: "Bills" },
+	paymentType: { id: "card", name: "Credit Card" },
+	bank: { id: "b1", name: "CIBC" },
+	store: { id: "s1", name: "Store" },
+	installment: null,
+	monthsRunning: null,
+	createdAt: "2026-11-01T00:00:00.000Z",
+	updatedAt: "2026-11-01T00:00:00.000Z",
+	deletedAt: null
+}
+
+describe("expenseToFormValues", () => {
+	it("fills the form with the row's own values", () => {
+		expect(expenseToFormValues(saved)).toEqual({
+			...EMPTY_EXPENSE_FORM,
+			type: "one-time",
+			description: "Hydro",
+			categoryId: "c1",
+			paymentTypeId: "card",
+			bankId: "b1",
+			storeId: "s1",
+			amount: "1,250.50",
+			purchasedAt: "2026-11-02",
+			dueAt: "2026-11-12",
+			paidAt: ""
+		})
+	})
+
+	it("leaves a missing bank and store empty", () => {
+		const values = expenseToFormValues({ ...saved, bank: null, store: null })
+		expect(values.bankId).toBe("")
+		expect(values.storeId).toBe("")
+	})
+
+	it("takes the type from the row", () => {
+		expect(
+			expenseToFormValues({ ...saved, recurringExpenseId: "r1" }).type
+		).toBe("recurring")
+		expect(
+			expenseToFormValues({
+				...saved,
+				installment: {
+					id: "g1",
+					totalInstallments: 3,
+					paymentIntervalDays: 30,
+					firstPurchasedAt: "2026-10-01"
+				}
+			}).type
+		).toBe("installment")
+	})
+
+	it("round-trips an amount with floating point noise", () => {
+		expect(expenseToFormValues({ ...saved, amount: 0.07 }).amount).toBe("0.07")
+	})
+})
+
+describe("buildUpdateExpenseInput", () => {
+	const same = expenseToFormValues(saved)
+
+	it("sends nothing when nothing changed", () => {
+		expect(buildUpdateExpenseInput(same, saved)).toBeNull()
+	})
+
+	it("sends only the changed fields", () => {
+		expect(
+			buildUpdateExpenseInput(
+				{ ...same, description: " Electricity ", amount: "1,300.00" },
+				saved
+			)
+		).toEqual({ description: "Electricity", amount: 1300 })
+	})
+
+	it("sends cleared optional fields as null", () => {
+		expect(
+			buildUpdateExpenseInput(
+				{ ...same, bankId: "", storeId: "", purchasedAt: "", dueAt: "" },
+				saved
+			)
+		).toEqual({ bankId: null, storeId: null, purchasedAt: null, dueAt: null })
+	})
+
+	it("sends lookups and dates that changed", () => {
+		expect(
+			buildUpdateExpenseInput(
+				{
+					...same,
+					categoryId: "c2",
+					paymentTypeId: "cash",
+					bankId: "b2",
+					storeId: "s2",
+					paidAt: "2026-11-14"
+				},
+				saved
+			)
+		).toEqual({
+			categoryId: "c2",
+			paymentTypeId: "cash",
+			bankId: "b2",
+			storeId: "s2",
+			paidAt: "2026-11-14"
+		})
+	})
+
+	it("treats a trailing-zero amount as unchanged", () => {
+		expect(
+			buildUpdateExpenseInput({ ...same, amount: "1250.50" }, saved)
+		).toBeNull()
+	})
+
+	it("never sends a purchase date for a recurring row", () => {
+		const bill = { ...saved, recurringExpenseId: "r1", purchasedAt: null }
+		const values = { ...expenseToFormValues(bill), purchasedAt: "2026-11-01" }
+		expect(buildUpdateExpenseInput(values, bill)).toBeNull()
+	})
+})
+
+describe("createExpenseFormSchema when editing", () => {
+	const editSchema = createExpenseFormSchema(
+		(id) => id === "card",
+		"2026-11-15",
+		true
+	)
+
+	it("ignores the plan fields of an installment row", () => {
+		const values = {
+			...expenseToFormValues(saved),
+			type: "installment" as const
+		}
+		expect(editSchema.safeParse(values).success).toBe(true)
+	})
+
+	it("rejects a future purchase date on an installment row", () => {
+		const result = editSchema.safeParse({
+			...expenseToFormValues(saved),
+			type: "installment",
+			purchasedAt: "2026-11-16"
+		})
+		expect(result.success).toBe(false)
 	})
 })
