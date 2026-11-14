@@ -1182,17 +1182,22 @@ describe("MonthScreen delete", () => {
 		).not.toBeInTheDocument()
 	})
 
-	it("treats a 404 as already deleted", async () => {
+	it("treats a 404 as already deleted and refreshes the list", async () => {
 		open("", [row(ID, "Hydro bill")], new ApiError("gone", 404))
 		const user = setup()
 		const dialog = await askFromMenu(user)
+		const loads = vi.mocked(api.getPage).mock.calls.length
 		await user.click(within(dialog).getByRole("button", { name: "Delete" }))
 		await vi.waitFor(() =>
 			expect(
 				screen.queryByRole("dialog", { name: "Delete expense" })
 			).not.toBeInTheDocument()
 		)
+		await vi.waitFor(() =>
+			expect(vi.mocked(api.getPage).mock.calls.length).toBeGreaterThan(loads)
+		)
 		expect(toast.error).not.toHaveBeenCalled()
+		expect(toast.success).not.toHaveBeenCalled()
 	})
 	it("falls back to the previous page when the last row of the last page goes", async () => {
 		const rows = Array.from({ length: 11 }, (_, index) =>

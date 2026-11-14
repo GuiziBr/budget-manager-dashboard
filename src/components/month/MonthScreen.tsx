@@ -20,6 +20,7 @@ import { SummaryCards } from "@/components/month/SummaryCards"
 import { translations } from "@/constants/translations"
 import { envelopeQueryKey } from "@/hooks/use-budget-envelopes"
 import {
+	EXPENSES_QUERY_KEY,
 	expenseQueryKey,
 	useDeleteExpense,
 	useUpdateExpense
@@ -112,8 +113,12 @@ export function MonthScreen() {
 			},
 			onError: (error) => {
 				setDeleting(null)
-				// Already gone (deleted elsewhere): the list is refreshed, so treat it as done
-				if (error instanceof ApiError && error.status === 404) return
+				// Already gone (deleted elsewhere): a failed request doesn't refresh the list
+				// on its own, so do it here to drop the row and update the totals
+				if (error instanceof ApiError && error.status === 404) {
+					queryClient.invalidateQueries({ queryKey: EXPENSES_QUERY_KEY })
+					return
+				}
 				// Still there: bring the details back
 				setRemovingId(null)
 				if (wasOpen) link.show({ kind: "expense", id: expense.id })
