@@ -65,6 +65,9 @@ export function MonthScreen() {
 	useLinkedSelectionSync({ ...link, selection, month })
 	// Changing month clears the income panel, so coming back to a month doesn't reopen it
 	const monthKey = `${month.year}-${month.month}`
+	// Read by callbacks that outlive a render, such as a delete that fails after the month changed
+	const monthKeyRef = useRef(monthKey)
+	monthKeyRef.current = monthKey
 	const [panelMonth, setPanelMonth] = useState(monthKey)
 	if (panelMonth !== monthKey) {
 		setPanelMonth(monthKey)
@@ -94,6 +97,7 @@ export function MonthScreen() {
 	const confirmDelete = () => {
 		if (!deleting) return
 		const expense = deleting
+		const confirmedMonth = monthKey
 		// Close the open details first: once the row is gone the panel would read it by id and hit a 404
 		const wasOpen =
 			link.selection?.kind === "expense" && link.selection.id === expense.id
@@ -119,9 +123,12 @@ export function MonthScreen() {
 					queryClient.invalidateQueries({ queryKey: EXPENSES_QUERY_KEY })
 					return
 				}
-				// Still there: bring the details back
+				// Still there: bring the details back, unless the month changed meanwhile:
+				// the address captured here would send the screen back to the old month
 				setRemovingId(null)
-				if (wasOpen) link.show({ kind: "expense", id: expense.id })
+				if (wasOpen && monthKeyRef.current === confirmedMonth) {
+					link.show({ kind: "expense", id: expense.id })
+				}
 				toast.error(translations.month.delete.failed, { id: DELETE_TOAST_ID })
 			}
 		})

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen, within } from "@testing-library/react"
+import { act, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { ApiError, api } from "@/lib/api"
@@ -1246,5 +1246,26 @@ describe("MonthScreen delete", () => {
 		await user.click(within(dialog).getByRole("button", { name: "Delete" }))
 		await vi.waitFor(() => expect(toast.error).toHaveBeenCalled())
 		await vi.waitFor(() => expect(nav.search).toContain(`expense=${ID}`))
+	})
+	it("doesn't reopen the details on the old month when a delete fails after the month changed", async () => {
+		open(`expense=${ID}`, [row(ID, "Hydro bill")])
+		let fail: (error: ApiError) => void = () => {}
+		vi.mocked(api.delete).mockImplementation(
+			() => new Promise((_resolve, reject) => (fail = reject)) as never
+		)
+		const user = setup()
+		const panel = await screen.findByRole("dialog", { name: "Hydro bill" })
+		await user.click(within(panel).getByRole("button", { name: "Delete" }))
+		const dialog = await screen.findByRole("dialog", { name: "Delete expense" })
+		await user.click(within(dialog).getByRole("button", { name: "Delete" }))
+		await vi.waitFor(() => expect(api.delete).toHaveBeenCalled())
+		// Another month is shown while the request is still pending
+		act(() => {
+			nav.search = "period=2026-10"
+			notify()
+		})
+		await act(async () => fail(new ApiError("boom", 500)))
+		await vi.waitFor(() => expect(toast.error).toHaveBeenCalled())
+		expect(nav.search).toBe("period=2026-10")
 	})
 })
