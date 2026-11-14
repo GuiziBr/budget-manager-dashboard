@@ -30,6 +30,8 @@ interface MonthTableProps {
 	onSelectRow?: (row: MonthRow) => void
 	/** Ticks or unticks an expense's paid control. Ignored when `canEdit` is false. */
 	onTogglePaid?: (expense: Expense) => void
+	/** Opens an expense in the form. Without it the row menu is left out. Ignored when `canEdit` is false. */
+	onEdit?: (expense: Expense) => void
 }
 
 const t = translations.month.table
@@ -62,7 +64,8 @@ export function MonthTable({
 	onAddExpense,
 	selectedId = null,
 	onSelectRow,
-	onTogglePaid
+	onTogglePaid,
+	onEdit
 }: MonthTableProps) {
 	const isPhone = useMediaQuery(PHONE_QUERY)
 	const { page, setPage, replacePage } = useMonthPage()
@@ -135,6 +138,9 @@ export function MonthTable({
 
 	const toggleFor = (row: MonthRow) =>
 		canEdit && onTogglePaid ? () => onTogglePaid(row.expense) : undefined
+
+	const editFor = (row: MonthRow) =>
+		canEdit && onEdit ? () => onEdit(row.expense) : undefined
 
 	const pages = Array.from({ length: totalPages }, (_, index) => index + 1)
 	// The current page stays on screen, a little faded, while the next one loads
@@ -213,6 +219,7 @@ export function MonthTable({
 								selected={selectedId === row.expense.id}
 								onSelect={() => onSelectRow?.(row)}
 								onTogglePaid={toggleFor(row)}
+								onEdit={editFor(row)}
 							/>
 						))}
 					</tbody>

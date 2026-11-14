@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useQueryClient } from "@tanstack/react-query"
 import { Check, DollarSign, Plus } from "lucide-react"
+import Link from "next/link"
 import { type RefObject, useEffect, useMemo, useRef, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { toast } from "sonner"
@@ -17,7 +18,7 @@ import { translations } from "@/constants/translations"
 import { BANKS_QUERY_KEY, useBanks } from "@/hooks/use-banks"
 import { useBudgetPeriods } from "@/hooks/use-budget-periods"
 import { CATEGORIES_QUERY_KEY, useCategories } from "@/hooks/use-categories"
-import { useCreateExpense } from "@/hooks/use-expenses"
+import { useCreateExpense, useUpdateExpense } from "@/hooks/use-expenses"
 import {
 	PAYMENT_TYPES_QUERY_KEY,
 	usePaymentTypes
@@ -27,9 +28,11 @@ import { type ApiErrorField, describeApiError } from "@/lib/api-error-message"
 import {
 	afterAddAnother,
 	buildCreateExpenseInput,
+	buildUpdateExpenseInput,
 	createExpenseFormSchema,
 	EMPTY_EXPENSE_FORM,
 	type ExpenseFormValues,
+	expenseToFormValues,
 	type FormExpenseType,
 	parsePlan
 } from "@/lib/expense-form"
@@ -44,7 +47,8 @@ import {
 import { formatMoneyInput } from "@/lib/money"
 import type { Month } from "@/lib/month"
 import { monthLabel } from "@/lib/month"
-import type { Bank, Category, Id, PaymentType, Store } from "@/types"
+import { RECURRING_PATH } from "@/lib/navigation"
+import type { Bank, Category, Expense, Id, PaymentType, Store } from "@/types"
 
 const t = translations.month.form
 
@@ -56,7 +60,9 @@ interface ExpenseFormPanelProps {
 	onClose: () => void
 	periodId: Id
 	month: Month
-	/** An expense was saved: the table goes back to its first page. */
+	/** The expense to edit. Without it the panel adds an expense (M-14); with it, edits that row only (M-17). */
+	expense?: Expense | null
+	/** An expense was saved. Adding goes back to the first page; editing leaves the table where it is. */
 	onSaved?: () => void
 	returnFocusRef?: RefObject<HTMLElement | null>
 }
@@ -70,12 +76,16 @@ const FIELD_FOR_ERROR = {
 	purchasedAt: "purchasedAt"
 } as const satisfies Record<ApiErrorField, keyof ExpenseFormValues>
 
-/** The purchase date error belongs to the first purchase date on a plan. */
+/**
+ * The purchase date error belongs to the first purchase date when creating a plan.
+ * An installment row being edited is one payment and shows the Purchased field instead.
+ */
 function errorField(
 	field: ApiErrorField,
-	type: FormExpenseType
+	type: FormExpenseType,
+	editing: boolean
 ): keyof ExpenseFormValues {
-	return field === "purchasedAt" && type === "installment"
+	return field === "purchasedAt" && type === "installment" && !editing
 		? "firstPurchasedAt"
 		: FIELD_FOR_ERROR[field]
 }
@@ -111,10 +121,12 @@ export function ExpenseFormPanel({
 	onClose,
 	periodId,
 	month,
+	expense,
 	onSaved,
 	returnFocusRef
 }: ExpenseFormPanelProps) {
 	const label = monthLabel(month)
+	const editing = !!expense
 	// While a save is in flight, the panel stays: closing it would leave the request
 	// running with nothing on screen to say whether it worked
 	const [saving, setSaving] = useState(false)
@@ -125,18 +137,22 @@ export function ExpenseFormPanel({
 			onOpenChange={(next) => {
 				if (!next && !saving) onClose()
 			}}
-			title={t.title}
+			title={editing ? t.editTitle : t.title}
 			titleAside={
 				<span className="text-muted-foreground text-sm">{label}</span>
 			}
 			separated
 			titleClassName="text-xl"
-			description={t.description.replace("{month}", label)}
+			description={(editing ? t.editDescription : t.description).replace(
+				"{month}",
+				label
+			)}
 			returnFocusRef={returnFocusRef}
 			fullHeight
 			initialFocus="#expense-description"
 		>
 			<ExpenseFormBody
+				expense={expense ?? undefined}
 				periodId={periodId}
 				month={month}
 				monthName={label}
@@ -149,6 +165,7 @@ export function ExpenseFormPanel({
 }
 
 function ExpenseFormBody({
+	expense,
 	periodId,
 	month,
 	monthName,
@@ -156,6 +173,7 @@ function ExpenseFormBody({
 	onSaved,
 	onSavingChange
 }: {
+	expense?: Expense
 	periodId: Id
 	month: Month
 	monthName: string
@@ -213,6 +231,7 @@ function ExpenseFormBody({
 				banks: banks.data,
 				stores: stores.data
 			}}
+			expense={expense}
 			periodId={periodId}
 			month={month}
 			monthName={monthName}
@@ -225,8 +244,37 @@ function ExpenseFormBody({
 
 type Submit = "close" | "another"
 
+/**
+ * The options of a lookup field. A lookup deleted since the expense was saved stays
+ * selected with its name and "(deleted)", but only while it is still the chosen value:
+ * once something else is picked it is gone from the list and can't be chosen again.
+ */
+function withDeleted<T extends { id: string }>(
+	options: T[],
+	original: { id: string; name: string } | null | undefined,
+	value: string
+): {
+	id: string
+	name?: string
+	description?: string
+	has_statement?: boolean
+}[] {
+	if (
+		!original ||
+		value !== original.id ||
+		options.some((option) => option.id === original.id)
+	) {
+		return options
+	}
+	return [
+		{ id: original.id, name: `${original.name} ${t.deleted}` },
+		...options
+	]
+}
+
 function ExpenseForm({
 	lookups,
+	expense,
 	periodId,
 	month,
 	monthName,
@@ -235,6 +283,7 @@ function ExpenseForm({
 	onSavingChange
 }: {
 	lookups: Lookups
+	expense?: Expense
 	periodId: Id
 	month: Month
 	monthName: string
@@ -244,6 +293,8 @@ function ExpenseForm({
 }) {
 	const queryClient = useQueryClient()
 	const createExpense = useCreateExpense()
+	const updateExpense = useUpdateExpense()
+	const editing = !!expense
 	const periods = useBudgetPeriods()
 
 	// The latest purchase date allowed, fixed while the form is open
@@ -254,9 +305,10 @@ function ExpenseForm({
 				(id) =>
 					lookups.paymentTypes.find((type) => type.id === id)?.hasStatement ??
 					false,
-				today
+				today,
+				editing
 			),
-		[lookups.paymentTypes, today]
+		[lookups.paymentTypes, today, editing]
 	)
 	const {
 		register,
@@ -270,7 +322,7 @@ function ExpenseForm({
 		formState: { errors, isSubmitted, isSubmitting }
 	} = useForm<ExpenseFormValues>({
 		resolver: zodResolver(schema),
-		defaultValues: EMPTY_EXPENSE_FORM
+		defaultValues: expense ? expenseToFormValues(expense) : EMPTY_EXPENSE_FORM
 	})
 
 	// The fields appear after the lists load, which can be after the panel took the focus
@@ -279,9 +331,13 @@ function ExpenseForm({
 	}, [setFocus])
 
 	const type = watch("type")
-	const isPlan = type === "installment"
+	// An installment row being edited is one payment: no plan fields
+	const isPlan = type === "installment" && !editing
 	const isRecurring = type === "recurring"
 	const paymentTypeId = watch("paymentTypeId")
+	const categoryId = watch("categoryId")
+	const bankId = watch("bankId")
+	const storeId = watch("storeId")
 	const planValues = watch([
 		"amount",
 		"installmentCount",
@@ -308,8 +364,45 @@ function ExpenseForm({
 		lookups.paymentTypes.find((type) => type.id === paymentTypeId)
 			?.hasStatement ?? false
 
+	// Shows what the server refused: marks the field it points at and says why in a toast
+	const reportSaveError = (error: unknown, formType: FormExpenseType) => {
+		const problem = describeApiError(error, { action: "saveExpense" })
+		if (problem.kind === "noPeriodForInstallments") {
+			setError("firstPurchasedAt", { message: problem.message })
+		} else if (problem.field) {
+			setError(errorField(problem.field, formType, editing), {
+				message: problem.message
+			})
+			// A lookup that is gone: refresh the lists so the choice disappears
+			const key = LOOKUP_KEYS[problem.field]
+			if (problem.kind === "lookupGone" && key) {
+				queryClient.invalidateQueries({ queryKey: key })
+			}
+		}
+		// A field only gets a red border, so say what went wrong
+		toast.error(problem.message, { id: SAVE_FAILED_TOAST_ID })
+	}
+
 	const save = (then: Submit) =>
 		handleSubmit(async (values) => {
+			if (expense) {
+				const input = buildUpdateExpenseInput(values, expense)
+				// Nothing changed: the API rejects an empty body, so there is nothing to send
+				if (input) {
+					try {
+						await updateExpense.mutateAsync({ id: expense.id, input })
+					} catch (error) {
+						reportSaveError(error, values.type)
+						return
+					}
+					toast.success(
+						t.savedEdit.replace("{item}", values.description.trim())
+					)
+					onSaved?.()
+				}
+				onClose()
+				return
+			}
 			// Where the payments go, from the opened months we know about
 			const plan = values.type === "installment" ? parsePlan(values) : null
 			const dueDates = plan
@@ -338,24 +431,7 @@ function ExpenseForm({
 					buildCreateExpenseInput(values, periodId)
 				)
 			} catch (error) {
-				const problem = describeApiError(error, { action: "saveExpense" })
-				if (problem.kind === "noPeriodForInstallments") {
-					setError("firstPurchasedAt", { message: problem.message })
-					toast.error(problem.message, { id: SAVE_FAILED_TOAST_ID })
-				} else if (problem.field) {
-					setError(errorField(problem.field, values.type), {
-						message: problem.message
-					})
-					// A lookup that is gone: refresh the lists so the choice disappears
-					const key = LOOKUP_KEYS[problem.field]
-					if (problem.kind === "lookupGone" && key) {
-						queryClient.invalidateQueries({ queryKey: key })
-					}
-					// The field only gets a red border, so say what went wrong
-					toast.error(problem.message, { id: SAVE_FAILED_TOAST_ID })
-				} else {
-					toast.error(problem.message, { id: SAVE_FAILED_TOAST_ID })
-				}
+				reportSaveError(error, values.type)
 				return
 			}
 			const item = values.description.trim()
@@ -391,25 +467,29 @@ function ExpenseForm({
 			className="flex min-h-0 flex-1 flex-col"
 		>
 			<div className="flex flex-1 flex-col gap-4 overflow-y-auto px-5 pb-4">
-				<Controller
-					control={control}
-					name="type"
-					render={({ field }) => (
-						<Tabs
-							value={field.value}
-							onValueChange={field.onChange}
-							className="gap-0"
-						>
-							<TabsList aria-label={t.typeLabel}>
-								<TabsTrigger value="one-time">{t.types.oneTime}</TabsTrigger>
-								<TabsTrigger value="installment">
-									{t.types.installment}
-								</TabsTrigger>
-								<TabsTrigger value="recurring">{t.types.recurring}</TabsTrigger>
-							</TabsList>
-						</Tabs>
-					)}
-				/>
+				{!editing && (
+					<Controller
+						control={control}
+						name="type"
+						render={({ field }) => (
+							<Tabs
+								value={field.value}
+								onValueChange={field.onChange}
+								className="gap-0"
+							>
+								<TabsList aria-label={t.typeLabel}>
+									<TabsTrigger value="one-time">{t.types.oneTime}</TabsTrigger>
+									<TabsTrigger value="installment">
+										{t.types.installment}
+									</TabsTrigger>
+									<TabsTrigger value="recurring">
+										{t.types.recurring}
+									</TabsTrigger>
+								</TabsList>
+							</Tabs>
+						)}
+					/>
+				)}
 				<FormField
 					id="expense-description"
 					label={t.fields.description}
@@ -450,7 +530,11 @@ function ExpenseForm({
 									id="expense-category"
 									ref={field.ref}
 									name={field.name}
-									options={lookups.categories}
+									options={withDeleted(
+										lookups.categories,
+										expense?.category,
+										categoryId
+									)}
 									value={field.value}
 									onValueChange={field.onChange}
 									onBlur={field.onBlur}
@@ -478,7 +562,11 @@ function ExpenseForm({
 									id="expense-payment-type"
 									ref={field.ref}
 									name={field.name}
-									options={lookups.paymentTypes}
+									options={withDeleted(
+										lookups.paymentTypes,
+										expense?.paymentType,
+										paymentTypeId
+									)}
 									value={field.value}
 									onValueChange={(value) => {
 										field.onChange(value)
@@ -513,7 +601,7 @@ function ExpenseForm({
 									id="expense-bank"
 									ref={field.ref}
 									name={field.name}
-									options={lookups.banks}
+									options={withDeleted(lookups.banks, expense?.bank, bankId)}
 									value={field.value}
 									onValueChange={field.onChange}
 									onBlur={field.onBlur}
@@ -541,7 +629,7 @@ function ExpenseForm({
 									id="expense-store"
 									ref={field.ref}
 									name={field.name}
-									options={lookups.stores}
+									options={withDeleted(lookups.stores, expense?.store, storeId)}
 									value={field.value}
 									onValueChange={field.onChange}
 									onBlur={field.onBlur}
@@ -753,7 +841,29 @@ function ExpenseForm({
 						)}
 					</>
 				)}
-				{isRecurring && (
+				{editing && type === "installment" && (
+					<p
+						data-testid="installment-edit-note"
+						className="text-muted-foreground text-sm"
+					>
+						{t.editNotes.installment}
+					</p>
+				)}
+				{editing && isRecurring && (
+					<p
+						data-testid="recurring-edit-note"
+						className="text-muted-foreground text-sm"
+					>
+						{t.editNotes.recurring}{" "}
+						<Link
+							href={RECURRING_PATH}
+							className="font-medium text-foreground underline underline-offset-2"
+						>
+							{t.editNotes.recurringLink}
+						</Link>
+					</p>
+				)}
+				{!editing && isRecurring && (
 					<p
 						data-testid="recurring-note"
 						className="text-muted-foreground text-sm"
@@ -766,17 +876,19 @@ function ExpenseForm({
 			<div className="flex shrink-0 flex-col gap-2 border-border border-t px-5 py-5">
 				<Button type="submit" disabled={busy}>
 					<Check className="size-4" aria-hidden="true" />
-					{t.finishClose}
+					{editing ? t.save : t.finishClose}
 				</Button>
-				<Button
-					type="button"
-					variant="outline"
-					disabled={busy}
-					onClick={save("another")}
-				>
-					<Plus className="size-4" aria-hidden="true" />
-					{t.finishAddAnother}
-				</Button>
+				{!editing && (
+					<Button
+						type="button"
+						variant="outline"
+						disabled={busy}
+						onClick={save("another")}
+					>
+						<Plus className="size-4" aria-hidden="true" />
+						{t.finishAddAnother}
+					</Button>
+				)}
 				<Button
 					type="button"
 					variant="outline"

@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { ApiError, api } from "@/lib/api"
 import { todayIso } from "@/lib/format-date"
 import { createQueryWrapper } from "@/test/query-wrapper"
+import type { Expense } from "@/types"
 import { ExpenseFormPanel } from "./ExpenseFormPanel"
 
 const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }))
@@ -56,7 +57,7 @@ afterEach(() => {
 	vi.restoreAllMocks()
 })
 
-const setup = (props: { onSaved?: () => void } = {}) => {
+const setup = (props: { onSaved?: () => void; expense?: Expense } = {}) => {
 	const onClose = vi.fn()
 	const { wrapper, queryClient } = createQueryWrapper()
 	render(
@@ -945,5 +946,204 @@ describe("ExpenseFormPanel", () => {
 			)
 			expect(post).not.toHaveBeenCalled()
 		})
+	})
+})
+
+const saved: Expense = {
+	id: "e1",
+	budgetPeriodId: "p1",
+	recurringExpenseId: null,
+	description: "Hydro",
+	installmentNumber: null,
+	purchasedAt: "2026-11-02T00:00:00.000Z",
+	dueAt: "2026-11-12T00:00:00.000Z",
+	paidAt: null,
+	amount: 105,
+	category: { id: "c2", name: "Utilities" },
+	paymentType: { id: "card", name: "Credit Card" },
+	bank: { id: "b1", name: "CIBC" },
+	store: { id: "s1", name: "Costco" },
+	installment: null,
+	monthsRunning: null,
+	createdAt: "2026-11-01T00:00:00.000Z",
+	updatedAt: "2026-11-01T00:00:00.000Z",
+	deletedAt: null
+}
+
+describe("editing an expense (M-17)", () => {
+	it("opens prefilled, without type tabs or Finish & add another", async () => {
+		setup({ expense: saved })
+		await ready()
+		expect(
+			screen.getByRole("dialog", { name: "Edit expense" })
+		).toHaveTextContent("November 2026")
+		expect(screen.getByLabelText("Description")).toHaveValue("Hydro")
+		expect(screen.getByLabelText("Amount")).toHaveValue("105.00")
+		expect(screen.getByLabelText("Purchased")).toHaveValue("2026-11-02")
+		expect(screen.getByLabelText("Due")).toHaveValue("2026-11-12")
+		expect(
+			screen.getByRole("combobox", { name: "Category" })
+		).toHaveTextContent("Utilities")
+		expect(screen.getByRole("combobox", { name: "Bank" })).toHaveTextContent(
+			"CIBC"
+		)
+		expect(screen.queryByRole("tab")).not.toBeInTheDocument()
+		expect(
+			screen.queryByRole("button", { name: "Finish & add another" })
+		).not.toBeInTheDocument()
+		expect(screen.getByRole("button", { name: "Save" })).toBeVisible()
+	})
+
+	it("sends only the changed fields and keeps the page", async () => {
+		const patch = vi.spyOn(api, "patch").mockResolvedValue(saved as never)
+		const onSaved = vi.fn()
+		const { user, onClose } = setup({ expense: saved, onSaved })
+		await ready()
+		const amount = screen.getByLabelText("Amount")
+		await user.clear(amount)
+		await user.type(amount, "11240")
+
+		await user.click(screen.getByRole("button", { name: "Save" }))
+
+		await vi.waitFor(() => expect(onClose).toHaveBeenCalled())
+		expect(patch).toHaveBeenCalledWith("expenses/e1", { amount: 112.4 })
+		expect(onSaved).toHaveBeenCalledOnce()
+		expect(toast.success).toHaveBeenCalledWith("Hydro updated.")
+	})
+
+	it("clears the store and sends null", async () => {
+		const patch = vi.spyOn(api, "patch").mockResolvedValue(saved as never)
+		const { user, onClose } = setup({ expense: saved })
+		await ready()
+		await choose(user, "Store", "None")
+		await user.click(screen.getByRole("button", { name: "Save" }))
+		await vi.waitFor(() => expect(onClose).toHaveBeenCalled())
+		expect(patch).toHaveBeenCalledWith("expenses/e1", { storeId: null })
+	})
+
+	it("closes without a request when nothing changed", async () => {
+		const patch = vi.spyOn(api, "patch").mockResolvedValue(saved as never)
+		const onSaved = vi.fn()
+		const { user, onClose } = setup({ expense: saved, onSaved })
+		await ready()
+		await user.click(screen.getByRole("button", { name: "Save" }))
+		await vi.waitFor(() => expect(onClose).toHaveBeenCalled())
+		expect(patch).not.toHaveBeenCalled()
+		expect(onSaved).not.toHaveBeenCalled()
+	})
+
+	it("keeps a deleted lookup selected with its mark, and drops it once changed", async () => {
+		const { user } = setup({
+			expense: { ...saved, category: { id: "gone", name: "Old category" } }
+		})
+		await ready()
+		const category = screen.getByRole("combobox", { name: "Category" })
+		expect(category).toHaveTextContent("Old category (deleted)")
+
+		await choose(user, "Category", "Groceries")
+		await user.click(category)
+		expect(
+			screen.queryByRole("option", { name: /Old category/ })
+		).not.toBeInTheDocument()
+	})
+
+	it("requires a bank when the payment type changes to one with a statement", async () => {
+		const patch = vi.spyOn(api, "patch").mockResolvedValue(saved as never)
+		const { user } = setup({
+			expense: {
+				...saved,
+				paymentType: { id: "cash", name: "Cash" },
+				bank: null
+			}
+		})
+		await ready()
+		await choose(user, "Payment type", "Credit Card")
+		await user.click(screen.getByRole("button", { name: "Save" }))
+		expect(
+			await screen.findByRole("combobox", { name: "Bank" })
+		).toHaveAttribute("aria-invalid", "true")
+		expect(patch).not.toHaveBeenCalled()
+	})
+
+	it("shows the server's reason, keeps the panel and what was typed", async () => {
+		vi.spyOn(api, "patch").mockRejectedValue(new ApiError("boom", 500))
+		const { user, onClose } = setup({ expense: saved })
+		await ready()
+		const description = screen.getByLabelText("Description")
+		await user.type(description, " bill")
+		await user.click(screen.getByRole("button", { name: "Save" }))
+		await vi.waitFor(() => expect(toast.error).toHaveBeenCalled())
+		expect(onClose).not.toHaveBeenCalled()
+		expect(description).toHaveValue("Hydro bill")
+	})
+
+	it("notes that an installment row changes alone, with no plan fields", async () => {
+		setup({
+			expense: {
+				...saved,
+				installmentNumber: 2,
+				installment: {
+					id: "g1",
+					totalInstallments: 6,
+					paymentIntervalDays: 30,
+					firstPurchasedAt: "2026-10-01"
+				}
+			}
+		})
+		await ready()
+		expect(screen.getByTestId("installment-edit-note")).toHaveTextContent(
+			"To change all remaining payments, edit the plan"
+		)
+		expect(
+			screen.queryByLabelText("Number of payments")
+		).not.toBeInTheDocument()
+		expect(screen.getByLabelText("Amount")).toBeVisible()
+		expect(screen.getByLabelText("Purchased")).toBeVisible()
+	})
+
+	it("marks the visible Purchased field when the server rejects the date of an installment row", async () => {
+		vi.spyOn(api, "patch").mockRejectedValue(
+			new ApiError(
+				JSON.stringify([
+					{
+						code: "custom",
+						path: ["purchasedAt"],
+						message: "Date cannot be in the future"
+					}
+				]),
+				400
+			)
+		)
+		const { user, onClose } = setup({
+			expense: {
+				...saved,
+				installmentNumber: 2,
+				installment: {
+					id: "g1",
+					totalInstallments: 6,
+					paymentIntervalDays: 30,
+					firstPurchasedAt: "2026-10-01"
+				}
+			}
+		})
+		await ready()
+		await user.type(screen.getByLabelText("Description"), " x")
+		await user.click(screen.getByRole("button", { name: "Save" }))
+		await vi.waitFor(() => expect(toast.error).toHaveBeenCalled())
+		expect(screen.getByLabelText("Purchased")).toHaveAttribute(
+			"aria-invalid",
+			"true"
+		)
+		expect(onClose).not.toHaveBeenCalled()
+	})
+
+	it("links a recurring row to the Recurring screen and has no Purchased date", async () => {
+		setup({
+			expense: { ...saved, recurringExpenseId: "r1", purchasedAt: null }
+		})
+		await ready()
+		const note = screen.getByTestId("recurring-edit-note")
+		expect(within(note).getByRole("link")).toHaveAttribute("href", "/recurring")
+		expect(screen.queryByLabelText("Purchased")).not.toBeInTheDocument()
 	})
 })
