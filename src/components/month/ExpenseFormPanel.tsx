@@ -76,12 +76,16 @@ const FIELD_FOR_ERROR = {
 	purchasedAt: "purchasedAt"
 } as const satisfies Record<ApiErrorField, keyof ExpenseFormValues>
 
-/** The purchase date error belongs to the first purchase date on a plan. */
+/**
+ * The purchase date error belongs to the first purchase date when creating a plan.
+ * An installment row being edited is one payment and shows the Purchased field instead.
+ */
 function errorField(
 	field: ApiErrorField,
-	type: FormExpenseType
+	type: FormExpenseType,
+	editing: boolean
 ): keyof ExpenseFormValues {
-	return field === "purchasedAt" && type === "installment"
+	return field === "purchasedAt" && type === "installment" && !editing
 		? "firstPurchasedAt"
 		: FIELD_FOR_ERROR[field]
 }
@@ -366,7 +370,7 @@ function ExpenseForm({
 		if (problem.kind === "noPeriodForInstallments") {
 			setError("firstPurchasedAt", { message: problem.message })
 		} else if (problem.field) {
-			setError(errorField(problem.field, formType), {
+			setError(errorField(problem.field, formType, editing), {
 				message: problem.message
 			})
 			// A lookup that is gone: refresh the lists so the choice disappears

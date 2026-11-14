@@ -647,6 +647,49 @@ describe("MonthScreen details panel", () => {
 		expect(screen.getByRole("dialog")).toHaveTextContent("Water bill")
 	})
 
+	it("keeps the page when Edit replaces the details of an expense on another page", async () => {
+		open(
+			"",
+			hydro,
+			[expenseIn("x2", "2026-11", "Water bill")],
+			[expenseIn("x3", "2026-11", "Gas bill")]
+		)
+		const patch = vi.spyOn(api, "patch").mockResolvedValue({} as never)
+		const user = setup()
+		await user.click(await screen.findByRole("button", { name: "Hydro bill" }))
+		await screen.findByRole("dialog")
+		const params = () => new URLSearchParams(nav.search)
+		await user.click(screen.getByRole("button", { name: "Next expense" }))
+		await vi.waitFor(() => expect(params().get("expense")).toBe("x2"))
+		const next = screen.getByRole("button", { name: "Next expense" })
+		await vi.waitFor(() => expect(next).toBeEnabled())
+		await user.click(next)
+		await vi.waitFor(() => expect(params().get("expense")).toBe("x3"))
+		expect(params().get("page")).toBe("2")
+
+		await user.click(screen.getByRole("button", { name: "Edit" }))
+
+		const form = await screen.findByRole("dialog", { name: "Edit expense" })
+		// The details close without going back in history, which would land on page 1
+		expect(params().get("expense")).toBeNull()
+		expect(params().get("page")).toBe("2")
+		const description = within(form).getByLabelText("Description")
+		expect(description).toHaveValue("Gas bill")
+		await user.type(description, " 2")
+		await user.click(within(form).getByRole("button", { name: "Save" }))
+		await vi.waitFor(() =>
+			expect(patch).toHaveBeenCalledWith("expenses/x3", {
+				description: "Gas bill 2"
+			})
+		)
+		await vi.waitFor(() =>
+			expect(
+				screen.queryByRole("dialog", { name: "Edit expense" })
+			).not.toBeInTheDocument()
+		)
+		expect(params().get("page")).toBe("2")
+	})
+
 	it("opens the expense named in a pasted link and removes the param on close", async () => {
 		open(`period=2026-11&expense=${HYDRO_ID}`)
 		const user = setup()

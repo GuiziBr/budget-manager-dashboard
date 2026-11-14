@@ -82,7 +82,9 @@ export function MonthScreen() {
 		formOpener.current =
 			opener ?? (document.activeElement as HTMLElement | null)
 		setIncomeFor(null)
-		if (selection) link.close()
+		// Clear in place: going back would land on the entry the details were opened from,
+		// which can be another page than the one the details had stepped to
+		if (selection) link.clear()
 		setFabMenuOpen(false)
 		setEditing(expense ?? null)
 		setFormOpen(true)

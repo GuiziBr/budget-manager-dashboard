@@ -1101,6 +1101,42 @@ describe("editing an expense (M-17)", () => {
 		expect(screen.getByLabelText("Purchased")).toBeVisible()
 	})
 
+	it("marks the visible Purchased field when the server rejects the date of an installment row", async () => {
+		vi.spyOn(api, "patch").mockRejectedValue(
+			new ApiError(
+				JSON.stringify([
+					{
+						code: "custom",
+						path: ["purchasedAt"],
+						message: "Date cannot be in the future"
+					}
+				]),
+				400
+			)
+		)
+		const { user, onClose } = setup({
+			expense: {
+				...saved,
+				installmentNumber: 2,
+				installment: {
+					id: "g1",
+					totalInstallments: 6,
+					paymentIntervalDays: 30,
+					firstPurchasedAt: "2026-10-01"
+				}
+			}
+		})
+		await ready()
+		await user.type(screen.getByLabelText("Description"), " x")
+		await user.click(screen.getByRole("button", { name: "Save" }))
+		await vi.waitFor(() => expect(toast.error).toHaveBeenCalled())
+		expect(screen.getByLabelText("Purchased")).toHaveAttribute(
+			"aria-invalid",
+			"true"
+		)
+		expect(onClose).not.toHaveBeenCalled()
+	})
+
 	it("links a recurring row to the Recurring screen and has no Purchased date", async () => {
 		setup({
 			expense: { ...saved, recurringExpenseId: "r1", purchasedAt: null }
