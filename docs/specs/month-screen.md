@@ -503,10 +503,7 @@ The expense is created in the month being viewed (except installments, see M-15)
 
 **How it works**
 1. **Delete** opens a confirmation naming the row.
-2. The message depends on the type:
-   - one-time: "Delete {item}?";
-   - installment: "Delete payment {n} of {N} of {item}? The other payments stay.";
-   - recurring: "Delete {item} from {month}? The bill keeps repeating in future months. To stop it, cancel it on the Recurring screen."
+2. The message names the type and the item: "Are you sure you want to delete the {expense type} {item}?". The type reads "one-time expense", "installment" or "recurring expense".
 3. Confirming removes the row and updates the totals.
 
 **Rules**

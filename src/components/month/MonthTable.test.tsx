@@ -65,6 +65,7 @@ function setup(
 		selectedId?: string | null
 		onSelectRow?: (row: MonthRow) => void
 		onEdit?: (expense: Expense) => void
+		onDelete?: (expense: Expense) => void
 	} = {}
 ) {
 	const { wrapper } = createQueryWrapper()
@@ -348,6 +349,21 @@ describe("MonthTable rows", () => {
 		await user.click(screen.getByRole("menuitem", { name: "Edit" }))
 		expect(onEdit).toHaveBeenCalledOnce()
 		expect(onEdit.mock.calls[0][0].id).toBe("2")
+		expect(onSelectRow).not.toHaveBeenCalled()
+	})
+
+	it("asks to delete a row from its menu without selecting it", async () => {
+		mockPages(all.slice(0, 2))
+		const onSelectRow = vi.fn()
+		const onDelete = vi.fn()
+		const user = setup({ onSelectRow, onDelete })
+		await user.click(
+			await screen.findByRole("button", { name: "Actions for Expense 2" })
+		)
+		expect(screen.queryByRole("menuitem", { name: "Edit" })).toBeNull()
+		await user.click(screen.getByRole("menuitem", { name: "Delete" }))
+		expect(onDelete).toHaveBeenCalledOnce()
+		expect(onDelete.mock.calls[0][0].id).toBe("2")
 		expect(onSelectRow).not.toHaveBeenCalled()
 	})
 

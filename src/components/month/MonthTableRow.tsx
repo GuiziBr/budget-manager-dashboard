@@ -24,6 +24,8 @@ interface MonthRowProps {
 	onTogglePaid?: () => void
 	/** Opens the expense in the form. Without it the row has no menu. */
 	onEdit?: () => void
+	/** Asks to delete the expense. Without it (and without onEdit) the row has no menu. */
+	onDelete?: () => void
 }
 
 const t = translations.month.table
@@ -60,7 +62,8 @@ export function MonthTableRow({
 	selected,
 	onSelect,
 	onTogglePaid,
-	onEdit
+	onEdit,
+	onDelete
 }: MonthRowProps) {
 	const { expense } = row
 	const due = formatDayMonth(expense.dueAt)
@@ -129,7 +132,7 @@ export function MonthTableRow({
 				{formatCad(expense.amount, { compact: true })}
 			</td>
 			<td className={cn(cell, dim)}>
-				{onEdit && (
+				{(onEdit || onDelete) && (
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<button
@@ -148,7 +151,14 @@ export function MonthTableRow({
 							onClick={(event) => event.stopPropagation()}
 							onKeyDown={(event) => event.stopPropagation()}
 						>
-							<DropdownMenuItem onSelect={onEdit}>{t.edit}</DropdownMenuItem>
+							{onEdit && (
+								<DropdownMenuItem onSelect={onEdit}>{t.edit}</DropdownMenuItem>
+							)}
+							{onDelete && (
+								<DropdownMenuItem variant="destructive" onSelect={onDelete}>
+									{t.delete}
+								</DropdownMenuItem>
+							)}
 						</DropdownMenuContent>
 					</DropdownMenu>
 				)}

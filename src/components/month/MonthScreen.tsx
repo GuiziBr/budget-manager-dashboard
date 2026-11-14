@@ -3,6 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query"
 import { useRef, useState } from "react"
 import { toast } from "sonner"
+import { ConfirmDeleteModal } from "@/components/ConfirmDeleteModal"
 import { AddFabMenu } from "@/components/month/AddMenu"
 import { EnvelopeDetailsPanel } from "@/components/month/EnvelopeDetailsPanel"
 import { EnvelopesCard } from "@/components/month/EnvelopesCard"
@@ -18,12 +19,19 @@ import { MonthTable } from "@/components/month/MonthTable"
 import { SummaryCards } from "@/components/month/SummaryCards"
 import { translations } from "@/constants/translations"
 import { envelopeQueryKey } from "@/hooks/use-budget-envelopes"
-import { expenseQueryKey, useUpdateExpense } from "@/hooks/use-expenses"
+import {
+	EXPENSES_QUERY_KEY,
+	expenseQueryKey,
+	useDeleteExpense,
+	useUpdateExpense
+} from "@/hooks/use-expenses"
 import { useLinkedSelection } from "@/hooks/use-linked-selection"
 import { useLinkedSelectionSync } from "@/hooks/use-linked-selection-sync"
 import { PHONE_QUERY, useMediaQuery } from "@/hooks/use-media-query"
 import { useMonthAccess } from "@/hooks/use-month-access"
 import { useMonthPage } from "@/hooks/use-month-page"
+import { ApiError } from "@/lib/api"
+import { deleteMessage } from "@/lib/expense-delete"
 import { todayIso } from "@/lib/format-date"
 import { monthLabel } from "@/lib/month"
 import { isUnpaid } from "@/lib/month-rows"
@@ -31,6 +39,7 @@ import type { BudgetEnvelope, Expense } from "@/types"
 
 // A fixed id keeps repeated failures from stacking toasts
 const PAID_TOAST_ID = "paid-update-failed"
+const DELETE_TOAST_ID = "expense-delete-failed"
 
 export function MonthScreen() {
 	const { month, period, state, canEdit, canEditEnvelopes, error, refetch } =
@@ -41,19 +50,31 @@ export function MonthScreen() {
 	const [formOpen, setFormOpen] = useState(false)
 	// The expense being edited; without one the form adds an expense
 	const [editing, setEditing] = useState<Expense | null>(null)
+	// The expense waiting for the delete confirmation
+	const [deleting, setDeleting] = useState<Expense | null>(null)
 	const queryClient = useQueryClient()
 	// What the details panel shows (one expense or one envelope) lives in the address, so it can be shared
 	const link = useLinkedSelection()
-	const { selection } = link
-	useLinkedSelectionSync({ ...link, month })
+	// An expense being deleted is hidden at once: the address updates a moment later,
+	// and until then the panel would read the gone row by id and report a 404
+	const [removingId, setRemovingId] = useState<string | null>(null)
+	const selection =
+		link.selection?.kind === "expense" && link.selection.id === removingId
+			? null
+			: link.selection
+	useLinkedSelectionSync({ ...link, selection, month })
 	// Changing month clears the income panel, so coming back to a month doesn't reopen it
 	const monthKey = `${month.year}-${month.month}`
+	// Read by callbacks that outlive a render, such as a delete that fails after the month changed
+	const monthKeyRef = useRef(monthKey)
+	monthKeyRef.current = monthKey
 	const [panelMonth, setPanelMonth] = useState(monthKey)
 	if (panelMonth !== monthKey) {
 		setPanelMonth(monthKey)
 		setIncomeFor(null)
 		setFormOpen(false)
 		setEditing(null)
+		setDeleting(null)
 	}
 	const updateExpense = useUpdateExpense({ optimistic: true })
 	// Ticking records today; unticking clears the date. The change shows at once and rolls back on failure
@@ -71,6 +92,46 @@ export function MonthScreen() {
 					})
 			}
 		)
+	}
+	const deleteExpense = useDeleteExpense()
+	const confirmDelete = () => {
+		if (!deleting) return
+		const expense = deleting
+		const confirmedMonth = monthKey
+		// Close the open details first: once the row is gone the panel would read it by id and hit a 404
+		const wasOpen =
+			link.selection?.kind === "expense" && link.selection.id === expense.id
+		if (wasOpen) {
+			setRemovingId(expense.id)
+			link.clear()
+		}
+		deleteExpense.mutate(expense.id, {
+			onSuccess: () => {
+				setDeleting(null)
+				toast.success(
+					translations.month.delete.deleted.replace(
+						"{item}",
+						expense.description
+					)
+				)
+			},
+			onError: (error) => {
+				setDeleting(null)
+				// Already gone (deleted elsewhere): a failed request doesn't refresh the list
+				// on its own, so do it here to drop the row and update the totals
+				if (error instanceof ApiError && error.status === 404) {
+					queryClient.invalidateQueries({ queryKey: EXPENSES_QUERY_KEY })
+					return
+				}
+				// Still there: bring the details back, unless the month changed meanwhile:
+				// the address captured here would send the screen back to the old month
+				setRemovingId(null)
+				if (wasOpen && monthKeyRef.current === confirmedMonth) {
+					link.show({ kind: "expense", id: expense.id })
+				}
+				toast.error(translations.month.delete.failed, { id: DELETE_TOAST_ID })
+			}
+		})
 	}
 	const incomeOpener = useRef<HTMLElement | null>(null)
 	const detailsOpener = useRef<HTMLElement | null>(null)
@@ -155,6 +216,7 @@ export function MonthScreen() {
 						onSelectRow={(row) => selectExpense(row.expense)}
 						onTogglePaid={togglePaid}
 						onEdit={openEdit}
+						onDelete={setDeleting}
 						onAddExpense={() => openForm()}
 					/>
 					<ExpenseDetailsPanel
@@ -165,6 +227,7 @@ export function MonthScreen() {
 						canEdit={canEdit}
 						onTogglePaid={togglePaid}
 						onEdit={openEdit}
+						onDelete={setDeleting}
 						returnFocusRef={detailsOpener}
 					/>
 					<EnvelopeDetailsPanel
@@ -187,6 +250,14 @@ export function MonthScreen() {
 							if (!editing && page > 1) setPage(1)
 						}}
 						returnFocusRef={formOpener}
+					/>
+					<ConfirmDeleteModal
+						isOpen={deleting !== null && canEdit}
+						onClose={() => setDeleting(null)}
+						onConfirm={confirmDelete}
+						title={translations.month.delete.title}
+						description={deleting ? deleteMessage(deleting) : ""}
+						isPending={deleteExpense.isPending}
 					/>
 					{isPhone && canEdit && (
 						<AddFabMenu

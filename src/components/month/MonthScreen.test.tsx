@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen, within } from "@testing-library/react"
+import { act, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { ApiError, api } from "@/lib/api"
@@ -67,6 +67,7 @@ beforeEach(() => {
 	nav.search = ""
 	nav.history = []
 	toast.error.mockClear()
+	toast.success.mockClear()
 })
 
 afterEach(() => {
@@ -1011,5 +1012,260 @@ describe("MonthScreen mark paid", () => {
 		expect(patch).toHaveBeenCalledWith(`expenses/${ID}`, {
 			paidAt: "2026-11-02"
 		})
+	})
+})
+
+describe("MonthScreen delete", () => {
+	const ID = "11111111-1111-4111-8111-111111111111"
+	const OTHER = "22222222-2222-4222-8222-222222222222"
+	const row = (id: string, description: string, patch = {}) => ({
+		id,
+		budgetPeriodId: "2026-11",
+		recurringExpenseId: null,
+		description,
+		installmentNumber: null,
+		purchasedAt: null,
+		dueAt: "2026-11-28",
+		paidAt: null,
+		amount: 120,
+		category: { id: "c1", name: "Utilities" },
+		paymentType: { id: "t1", name: "Debit" },
+		bank: null,
+		store: null,
+		installment: null,
+		monthsRunning: null,
+		createdAt: "",
+		updatedAt: "",
+		deletedAt: null,
+		...patch
+	})
+
+	// The server drops the row on DELETE, so the refetch returns what is left
+	const open = (
+		search: string,
+		rows: ReturnType<typeof row>[],
+		failure?: ApiError
+	) => {
+		nav.search = search
+		let left = rows
+		vi.spyOn(api, "getPage").mockImplementation((async () => ({
+			data: left,
+			total: left.length,
+			totalAmount: 120,
+			page: 1,
+			limit: 10
+		})) as never)
+		vi.spyOn(api, "get").mockImplementation(((endpoint: string) => {
+			const found = left.find((r) => endpoint === `expenses/${r.id}`)
+			if (found) return Promise.resolve(found)
+			return Promise.resolve(
+				endpoint.includes("budget-periods")
+					? [make(2026, 11), make(2026, 10)]
+					: []
+			)
+		}) as never)
+		return vi.spyOn(api, "delete").mockImplementation((async (
+			endpoint: string
+		) => {
+			if (failure) throw failure
+			left = left.filter((r) => endpoint !== `expenses/${r.id}`)
+		}) as never)
+	}
+
+	const askFromMenu = async (
+		user: ReturnType<typeof setup>,
+		name = "Hydro bill"
+	) => {
+		await user.click(
+			await screen.findByRole("button", { name: `Actions for ${name}` })
+		)
+		await user.click(await screen.findByRole("menuitem", { name: "Delete" }))
+		return screen.findByRole("dialog", { name: "Delete expense" })
+	}
+
+	it("confirms from the row menu, then deletes only that row", async () => {
+		const del = open("", [row(ID, "Hydro bill"), row(OTHER, "Rent")])
+		const user = setup()
+		const dialog = await askFromMenu(user)
+		expect(dialog).toHaveTextContent(
+			"Are you sure you want to delete the one-time expense Hydro bill?"
+		)
+		expect(del).not.toHaveBeenCalled()
+		await user.click(within(dialog).getByRole("button", { name: "Delete" }))
+		await vi.waitFor(() => expect(del).toHaveBeenCalledWith(`expenses/${ID}`))
+		await vi.waitFor(() =>
+			expect(screen.queryByText("Hydro bill")).not.toBeInTheDocument()
+		)
+		expect(screen.getByText("Rent")).toBeInTheDocument()
+		expect(toast.success).toHaveBeenCalledWith("Hydro bill deleted")
+		expect(
+			screen.queryByRole("dialog", { name: "Delete expense" })
+		).not.toBeInTheDocument()
+	})
+
+	it("sends nothing when cancelled", async () => {
+		const del = open("", [row(ID, "Hydro bill")])
+		const user = setup()
+		const dialog = await askFromMenu(user)
+		await user.click(within(dialog).getByRole("button", { name: "Cancel" }))
+		expect(del).not.toHaveBeenCalled()
+		expect(screen.getByText("Hydro bill")).toBeInTheDocument()
+	})
+
+	it("deletes from the details panel and clears the address", async () => {
+		const del = open(`expense=${ID}`, [row(ID, "Hydro bill")])
+		const user = setup()
+		const panel = await screen.findByRole("dialog", { name: "Hydro bill" })
+		await user.click(within(panel).getByRole("button", { name: "Delete" }))
+		const dialog = await screen.findByRole("dialog", { name: "Delete expense" })
+		await user.click(within(dialog).getByRole("button", { name: "Delete" }))
+		await vi.waitFor(() => expect(del).toHaveBeenCalledWith(`expenses/${ID}`))
+		await vi.waitFor(() => expect(nav.search).not.toContain("expense="))
+		expect(toast.error).not.toHaveBeenCalled()
+	})
+
+	it("names an installment in the confirmation", async () => {
+		open("", [
+			row(ID, "Car finance", {
+				installmentNumber: 2,
+				installment: {
+					id: "g1",
+					totalInstallments: 4,
+					paymentIntervalDays: 30,
+					firstPurchasedAt: "2026-10-01"
+				}
+			})
+		])
+		const user = setup()
+		const dialog = await askFromMenu(user, "Car finance")
+		expect(dialog).toHaveTextContent(
+			"Are you sure you want to delete the installment Car finance?"
+		)
+	})
+
+	it("names a recurring expense in the confirmation", async () => {
+		open("", [
+			row(ID, "Hydro bill", { recurringExpenseId: "r1", monthsRunning: 3 })
+		])
+		const user = setup()
+		const dialog = await askFromMenu(user)
+		expect(dialog).toHaveTextContent(
+			"Are you sure you want to delete the recurring expense Hydro bill?"
+		)
+	})
+
+	it("deletes in a past month too", async () => {
+		const del = open("period=2026-10", [
+			row(ID, "Hydro bill", { budgetPeriodId: "2026-10" })
+		])
+		const user = setup()
+		const dialog = await askFromMenu(user)
+		await user.click(within(dialog).getByRole("button", { name: "Delete" }))
+		await vi.waitFor(() => expect(del).toHaveBeenCalledWith(`expenses/${ID}`))
+	})
+
+	it("keeps the row and shows a toast when the delete fails", async () => {
+		open("", [row(ID, "Hydro bill")], new ApiError("boom", 500))
+		const user = setup()
+		const dialog = await askFromMenu(user)
+		await user.click(within(dialog).getByRole("button", { name: "Delete" }))
+		await vi.waitFor(() =>
+			expect(toast.error).toHaveBeenCalledWith(
+				"Couldn't delete the expense. Try again.",
+				expect.anything()
+			)
+		)
+		expect(toast.success).not.toHaveBeenCalled()
+		expect(screen.getByText("Hydro bill")).toBeInTheDocument()
+		expect(
+			screen.queryByRole("dialog", { name: "Delete expense" })
+		).not.toBeInTheDocument()
+	})
+
+	it("treats a 404 as already deleted and refreshes the list", async () => {
+		open("", [row(ID, "Hydro bill")], new ApiError("gone", 404))
+		const user = setup()
+		const dialog = await askFromMenu(user)
+		const loads = vi.mocked(api.getPage).mock.calls.length
+		await user.click(within(dialog).getByRole("button", { name: "Delete" }))
+		await vi.waitFor(() =>
+			expect(
+				screen.queryByRole("dialog", { name: "Delete expense" })
+			).not.toBeInTheDocument()
+		)
+		await vi.waitFor(() =>
+			expect(vi.mocked(api.getPage).mock.calls.length).toBeGreaterThan(loads)
+		)
+		expect(toast.error).not.toHaveBeenCalled()
+		expect(toast.success).not.toHaveBeenCalled()
+	})
+	it("falls back to the previous page when the last row of the last page goes", async () => {
+		const rows = Array.from({ length: 11 }, (_, index) =>
+			row(`3333333${index}-3333-4333-8333-333333333333`, `Bill ${index + 1}`)
+		)
+		let left = rows
+		nav.search = "page=2"
+		vi.spyOn(api, "getPage").mockImplementation((async (
+			_endpoint: string,
+			params?: { page?: number }
+		) => {
+			const page = Number(params?.page ?? 1)
+			return {
+				data: left.slice((page - 1) * 10, page * 10),
+				total: left.length,
+				totalAmount: 120,
+				page,
+				limit: 10
+			}
+		}) as never)
+		vi.spyOn(api, "get").mockImplementation(((endpoint: string) =>
+			Promise.resolve(
+				endpoint.includes("budget-periods")
+					? [make(2026, 11), make(2026, 10)]
+					: []
+			)) as never)
+		const del = vi.spyOn(api, "delete").mockImplementation((async (
+			endpoint: string
+		) => {
+			left = left.filter((r) => endpoint !== `expenses/${r.id}`)
+		}) as never)
+		const user = setup()
+		const dialog = await askFromMenu(user, "Bill 11")
+		await user.click(within(dialog).getByRole("button", { name: "Delete" }))
+		await vi.waitFor(() => expect(del).toHaveBeenCalledOnce())
+		expect(await screen.findByText("Bill 1")).toBeInTheDocument()
+		expect(screen.queryByText("Bill 11")).not.toBeInTheDocument()
+		expect(nav.search).not.toContain("page=2")
+	})
+	it("brings the details back when deleting from them fails", async () => {
+		open(`expense=${ID}`, [row(ID, "Hydro bill")], new ApiError("boom", 500))
+		const user = setup()
+		const panel = await screen.findByRole("dialog", { name: "Hydro bill" })
+		await user.click(within(panel).getByRole("button", { name: "Delete" }))
+		const dialog = await screen.findByRole("dialog", { name: "Delete expense" })
+		await user.click(within(dialog).getByRole("button", { name: "Delete" }))
+		await vi.waitFor(() => expect(toast.error).toHaveBeenCalled())
+		await vi.waitFor(() => expect(nav.search).toContain(`expense=${ID}`))
+	})
+	it("doesn't reopen the details on the old month when a delete fails after the month changed", async () => {
+		open(`expense=${ID}`, [row(ID, "Hydro bill")])
+		let fail: (error: ApiError) => void = () => {}
+		vi.mocked(api.delete).mockImplementation(
+			() => new Promise((_resolve, reject) => (fail = reject)) as never
+		)
+		const user = setup()
+		const panel = await screen.findByRole("dialog", { name: "Hydro bill" })
+		await user.click(within(panel).getByRole("button", { name: "Delete" }))
+		const dialog = await screen.findByRole("dialog", { name: "Delete expense" })
+		await user.click(within(dialog).getByRole("button", { name: "Delete" }))
+		await vi.waitFor(() => expect(api.delete).toHaveBeenCalled())
+		// Another month is shown while the request is still pending
+		act(() => {
+			nav.search = "period=2026-10"
+			notify()
+		})
+		await act(async () => fail(new ApiError("boom", 500)))
+		await vi.waitFor(() => expect(toast.error).toHaveBeenCalled())
+		expect(nav.search).toBe("period=2026-10")
 	})
 })

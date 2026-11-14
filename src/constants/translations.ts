@@ -110,7 +110,19 @@ export const translations = {
 			unpaidState: "Not paid: {item}",
 			paidFailed: "Couldn't update the paid status. Try again.",
 			rowActions: "Actions for {item}",
-			edit: "Edit"
+			edit: "Edit",
+			delete: "Delete"
+		},
+		delete: {
+			title: "Delete expense",
+			confirm: "Are you sure you want to delete the {type} {item}?",
+			types: {
+				"one-time": "one-time expense",
+				installment: "installment",
+				recurring: "recurring expense"
+			},
+			deleted: "{item} deleted",
+			failed: "Couldn't delete the expense. Try again."
 		},
 		addMenu: {
 			trigger: "Add",

@@ -32,6 +32,8 @@ interface MonthTableProps {
 	onTogglePaid?: (expense: Expense) => void
 	/** Opens an expense in the form. Without it the row menu is left out. Ignored when `canEdit` is false. */
 	onEdit?: (expense: Expense) => void
+	/** Asks to delete an expense. Ignored when `canEdit` is false. */
+	onDelete?: (expense: Expense) => void
 }
 
 const t = translations.month.table
@@ -65,7 +67,8 @@ export function MonthTable({
 	selectedId = null,
 	onSelectRow,
 	onTogglePaid,
-	onEdit
+	onEdit,
+	onDelete
 }: MonthTableProps) {
 	const isPhone = useMediaQuery(PHONE_QUERY)
 	const { page, setPage, replacePage } = useMonthPage()
@@ -141,6 +144,9 @@ export function MonthTable({
 
 	const editFor = (row: MonthRow) =>
 		canEdit && onEdit ? () => onEdit(row.expense) : undefined
+
+	const deleteFor = (row: MonthRow) =>
+		canEdit && onDelete ? () => onDelete(row.expense) : undefined
 
 	const pages = Array.from({ length: totalPages }, (_, index) => index + 1)
 	// The current page stays on screen, a little faded, while the next one loads
@@ -220,6 +226,7 @@ export function MonthTable({
 								onSelect={() => onSelectRow?.(row)}
 								onTogglePaid={toggleFor(row)}
 								onEdit={editFor(row)}
+								onDelete={deleteFor(row)}
 							/>
 						))}
 					</tbody>
