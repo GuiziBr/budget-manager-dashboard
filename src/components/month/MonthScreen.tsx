@@ -218,6 +218,8 @@ export function MonthScreen() {
 		setIncomeFormOpen(true)
 	}
 	const closeIncomeForm = () => {
+		// A save can finish after the month changed; it must not close a form opened for another month
+		if (monthKeyRef.current !== monthKey) return
 		setIncomeFormOpen(false)
 		if (returnToIncomes && period) setIncomeFor(period.id)
 		setReturnToIncomes(false)

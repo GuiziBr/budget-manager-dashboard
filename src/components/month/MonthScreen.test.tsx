@@ -573,6 +573,42 @@ describe("MonthScreen income panel", () => {
 		)
 	})
 
+	it("ignores a save that finishes after the month changed", async () => {
+		open()
+		let finishSave: (value: unknown) => void = () => {}
+		vi.spyOn(api, "post").mockReturnValue(
+			new Promise((resolve) => {
+				finishSave = resolve
+			}) as never
+		)
+		const { wrapper } = createQueryWrapper()
+		const { rerender } = render(<MonthScreen />, { wrapper })
+		const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+		const addIncome = async () => {
+			await user.click(await screen.findByRole("button", { name: "Add" }))
+			await user.click(await screen.findByRole("menuitem", { name: /Income/ }))
+			return screen.findByRole("dialog", { name: "Add income" })
+		}
+
+		// A save starts in November and is still waiting for the server
+		const first = await addIncome()
+		await user.type(within(first).getByLabelText("Description"), "Gift")
+		await user.type(within(first).getByLabelText("Amount"), "5000")
+		await user.click(within(first).getByRole("button", { name: "Save" }))
+
+		// The user moves on to October and starts another income there
+		nav.search = "period=2026-10"
+		rerender(<MonthScreen />)
+		await vi.waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+		const second = await addIncome()
+		await user.type(within(second).getByLabelText("Description"), "Keep me")
+
+		// November's save finishes: it must not close October's form
+		await act(async () => finishSave({ id: "i2" }))
+		expect(screen.getByRole("dialog", { name: "Add income" })).toBeVisible()
+		expect(screen.getByLabelText("Description")).toHaveValue("Keep me")
+	})
+
 	it("has edit controls in a past month", async () => {
 		open("period=2026-10")
 		const user = setup()
