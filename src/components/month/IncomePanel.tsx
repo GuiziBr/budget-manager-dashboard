@@ -36,11 +36,11 @@ interface IncomePanelProps {
 	onOpenChange: (open: boolean) => void
 	periodId: Id
 	month: Month
-	/** Past months are read-only: no Add and no row menu. */
+	/** Opened months can be changed (M-25): without it there is no Add and no row menu. */
 	canEdit: boolean
 	/** The control that opened the panel; it gets the focus back on close. */
 	returnFocusRef?: RefObject<HTMLElement | null>
-	/** Wired in T-32. Until then the buttons do nothing. */
+	/** Add, edit and delete (T-32). */
 	onAdd?: () => void
 	onEdit?: (income: Income) => void
 	onDelete?: (income: Income) => void

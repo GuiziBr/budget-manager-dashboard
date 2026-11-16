@@ -9,6 +9,7 @@ import { EnvelopeDetailsPanel } from "@/components/month/EnvelopeDetailsPanel"
 import { EnvelopesCard } from "@/components/month/EnvelopesCard"
 import { ExpenseDetailsPanel } from "@/components/month/ExpenseDetailsPanel"
 import { ExpenseFormPanel } from "@/components/month/ExpenseFormPanel"
+import { IncomeFormPanel } from "@/components/month/IncomeFormPanel"
 import { IncomePanel } from "@/components/month/IncomePanel"
 import { InstallmentPlanDialog } from "@/components/month/InstallmentPlanDialog"
 import { MonthError } from "@/components/month/MonthError"
@@ -26,6 +27,7 @@ import {
 	useDeleteExpense,
 	useUpdateExpense
 } from "@/hooks/use-expenses"
+import { INCOMES_QUERY_KEY, useDeleteIncome } from "@/hooks/use-incomes"
 import { useLinkedPlan } from "@/hooks/use-linked-plan"
 import { useLinkedSelection } from "@/hooks/use-linked-selection"
 import { useLinkedSelectionSync } from "@/hooks/use-linked-selection-sync"
@@ -35,13 +37,15 @@ import { useMonthPage } from "@/hooks/use-month-page"
 import { ApiError } from "@/lib/api"
 import { deleteMessage } from "@/lib/expense-delete"
 import { todayIso } from "@/lib/format-date"
+import { incomeDeleteMessage } from "@/lib/income-form"
 import { monthLabel } from "@/lib/month"
 import { isUnpaid } from "@/lib/month-rows"
-import type { BudgetEnvelope, Expense } from "@/types"
+import type { BudgetEnvelope, Expense, Income } from "@/types"
 
 // A fixed id keeps repeated failures from stacking toasts
 const PAID_TOAST_ID = "paid-update-failed"
 const DELETE_TOAST_ID = "expense-delete-failed"
+const INCOME_DELETE_TOAST_ID = "income-delete-failed"
 
 export function MonthScreen() {
 	const { month, period, state, canEdit, canEditEnvelopes, error, refetch } =
@@ -54,6 +58,13 @@ export function MonthScreen() {
 	const [editing, setEditing] = useState<Expense | null>(null)
 	// The expense waiting for the delete confirmation
 	const [deleting, setDeleting] = useState<Expense | null>(null)
+	const [incomeFormOpen, setIncomeFormOpen] = useState(false)
+	// The income being edited; without one the form adds an income
+	const [editingIncome, setEditingIncome] = useState<Income | null>(null)
+	// The income waiting for the delete confirmation
+	const [deletingIncome, setDeletingIncome] = useState<Income | null>(null)
+	// The income form opened from the income panel gives the panel back when it closes
+	const [returnToIncomes, setReturnToIncomes] = useState(false)
 	const queryClient = useQueryClient()
 	// What the details panel shows (one expense or one envelope) lives in the address, so it can be shared
 	const link = useLinkedSelection()
@@ -79,6 +90,10 @@ export function MonthScreen() {
 		setFormOpen(false)
 		setEditing(null)
 		setDeleting(null)
+		setIncomeFormOpen(false)
+		setEditingIncome(null)
+		setDeletingIncome(null)
+		setReturnToIncomes(false)
 	}
 	const updateExpense = useUpdateExpense({ optimistic: true })
 	// Ticking records today; unticking clears the date. The change shows at once and rolls back on failure
@@ -137,6 +152,33 @@ export function MonthScreen() {
 			}
 		})
 	}
+	const deleteIncome = useDeleteIncome()
+	const confirmDeleteIncome = () => {
+		if (!deletingIncome) return
+		const income = deletingIncome
+		deleteIncome.mutate(income.id, {
+			onSuccess: () => {
+				setDeletingIncome(null)
+				toast.success(
+					translations.month.income.deleted.replace(
+						"{item}",
+						income.description
+					)
+				)
+			},
+			onError: (error) => {
+				setDeletingIncome(null)
+				// Already gone (deleted elsewhere): refresh to drop it and update the totals
+				if (error instanceof ApiError && error.status === 404) {
+					queryClient.invalidateQueries({ queryKey: INCOMES_QUERY_KEY })
+					return
+				}
+				toast.error(translations.month.income.deleteFailed, {
+					id: INCOME_DELETE_TOAST_ID
+				})
+			}
+		})
+	}
 	const incomeOpener = useRef<HTMLElement | null>(null)
 	const detailsOpener = useRef<HTMLElement | null>(null)
 	const formOpener = useRef<HTMLElement | null>(null)
@@ -147,6 +189,8 @@ export function MonthScreen() {
 		formOpener.current =
 			opener ?? (document.activeElement as HTMLElement | null)
 		setIncomeFor(null)
+		setIncomeFormOpen(false)
+		setReturnToIncomes(false)
 		// Clear in place: going back would land on the entry the details were opened from,
 		// which can be another page than the one the details had stepped to
 		if (selection) link.clear()
@@ -155,6 +199,29 @@ export function MonthScreen() {
 		setFormOpen(true)
 	}
 	const openEdit = (expense: Expense) => openForm(undefined, expense)
+	// One panel at a time: the income form replaces whatever else is open. From the income
+	// panel, the panel comes back once the form closes, so the change shows in the list
+	const openIncomeForm = (
+		opener?: HTMLElement | null,
+		income?: Income,
+		fromPanel = false
+	) => {
+		formOpener.current = fromPanel
+			? incomeOpener.current
+			: (opener ?? (document.activeElement as HTMLElement | null))
+		setIncomeFor(null)
+		setFormOpen(false)
+		if (selection) link.clear()
+		setFabMenuOpen(false)
+		setEditingIncome(income ?? null)
+		setReturnToIncomes(fromPanel)
+		setIncomeFormOpen(true)
+	}
+	const closeIncomeForm = () => {
+		setIncomeFormOpen(false)
+		if (returnToIncomes && period) setIncomeFor(period.id)
+		setReturnToIncomes(false)
+	}
 	// The row is cached under its own id, so the panel opens without asking the API for it
 	const selectExpense = (expense: Expense) => {
 		detailsOpener.current = document.activeElement as HTMLElement | null
@@ -181,7 +248,10 @@ export function MonthScreen() {
 		<main className="mx-auto flex max-w-[1120px] flex-col gap-3 px-4 pt-4 lg:h-full lg:px-5 lg:pt-6">
 			<h1 className="sr-only">{translations.navigation.items.month}</h1>
 			{/* The phone has the floating button instead */}
-			<MonthHeader onAddExpense={isPhone ? undefined : openForm} />
+			<MonthHeader
+				onAddExpense={isPhone ? undefined : openForm}
+				onAddIncome={isPhone ? undefined : (opener) => openIncomeForm(opener)}
+			/>
 			{state === "loading" && <MonthSkeleton />}
 			{state === "error" && (
 				<MonthError error={error} onRetry={() => refetch()} />
@@ -205,6 +275,17 @@ export function MonthScreen() {
 						month={month}
 						canEdit={canEdit}
 						returnFocusRef={incomeOpener}
+						onAdd={() => openIncomeForm(undefined, undefined, true)}
+						onEdit={(income) => openIncomeForm(undefined, income, true)}
+						onDelete={setDeletingIncome}
+					/>
+					<IncomeFormPanel
+						open={incomeFormOpen && canEdit}
+						onClose={closeIncomeForm}
+						periodId={period.id}
+						month={month}
+						income={editingIncome}
+						returnFocusRef={formOpener}
 					/>
 					<EnvelopesCard
 						periodId={period.id}
@@ -273,11 +354,22 @@ export function MonthScreen() {
 						description={deleting ? deleteMessage(deleting) : ""}
 						isPending={deleteExpense.isPending}
 					/>
+					<ConfirmDeleteModal
+						isOpen={deletingIncome !== null && canEdit}
+						onClose={() => setDeletingIncome(null)}
+						onConfirm={confirmDeleteIncome}
+						title={translations.month.income.deleteTitle}
+						description={
+							deletingIncome ? incomeDeleteMessage(deletingIncome) : ""
+						}
+						isPending={deleteIncome.isPending}
+					/>
 					{isPhone && canEdit && (
 						<AddFabMenu
 							open={fabMenuOpen}
 							onOpenChange={setFabMenuOpen}
 							onAddExpense={openForm}
+							onAddIncome={(opener) => openIncomeForm(opener)}
 						/>
 					)}
 				</>

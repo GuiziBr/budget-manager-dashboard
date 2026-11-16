@@ -65,6 +65,36 @@ export const translations = {
 			edit: "Edit",
 			delete: "Delete",
 			add: "Add income",
+			deleteTitle: "Delete income",
+			deleteConfirm: "Are you sure you want to delete the income {item}?",
+			deleted: "{item} deleted",
+			deleteFailed: "Couldn't delete the income. Try again.",
+			form: {
+				title: "Add income",
+				description: "Add an income to {month}",
+				editTitle: "Edit income",
+				editDescription: "Edit an income of {month}",
+				fields: {
+					description: "Description",
+					amount: "Amount",
+					salary: "Salary",
+					received: "Received"
+				},
+				salaryHint: "Counts towards your salary base",
+				placeholders: {
+					description: "Where did it come from?",
+					amount: "0.00"
+				},
+				validation: {
+					description: "Enter a description.",
+					amount: "Enter an amount above 0, up to 2 decimals.",
+					amountTooLarge: "The amount can't be more than 99,999,999.99."
+				},
+				save: "Save",
+				cancel: "Cancel",
+				saved: "{item} added to {month}.",
+				savedEdit: "{item} updated."
+			},
 			close: "Close"
 		},
 		envelopes: {

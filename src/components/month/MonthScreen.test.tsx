@@ -468,6 +468,111 @@ describe("MonthScreen income panel", () => {
 		expect(screen.queryByRole("dialog")).toBeNull()
 	})
 
+	it("adds an income from the panel and brings the panel back (M-20)", async () => {
+		open()
+		const post = vi.spyOn(api, "post").mockResolvedValue({ id: "i2" } as never)
+		const user = setup()
+		await user.click(await screen.findByRole("button", { name: /View all/ }))
+		await user.click(await screen.findByRole("button", { name: "Add income" }))
+
+		const form = await screen.findByRole("dialog", { name: "Add income" })
+		expect(screen.queryByText("Pay day")).toBeNull()
+		await user.type(within(form).getByLabelText("Description"), "Gift")
+		await user.type(within(form).getByLabelText("Amount"), "5000")
+		await user.click(within(form).getByRole("button", { name: "Save" }))
+
+		await vi.waitFor(() =>
+			expect(post).toHaveBeenCalledWith(
+				"incomes",
+				expect.objectContaining({
+					budgetPeriodId: "2026-11",
+					description: "Gift",
+					amount: 50
+				})
+			)
+		)
+		expect(await screen.findByRole("dialog", { name: "Income" })).toBeVisible()
+	})
+
+	it("adds an income from the + Add menu without opening the panel", async () => {
+		open()
+		const user = setup()
+		await screen.findByRole("region", { name: "Month summary" })
+
+		await user.click(screen.getByRole("button", { name: "Add" }))
+		await user.click(await screen.findByRole("menuitem", { name: /Income/ }))
+
+		expect(
+			await screen.findByRole("dialog", { name: "Add income" })
+		).toBeVisible()
+		await user.click(screen.getByRole("button", { name: "Cancel" }))
+		await vi.waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+	})
+
+	it("edits an income from its menu with the form prefilled (M-21)", async () => {
+		open()
+		const patch = vi.spyOn(api, "patch").mockResolvedValue({} as never)
+		const user = setup()
+		await user.click(await screen.findByRole("button", { name: /View all/ }))
+		await user.click(
+			await screen.findByRole("button", { name: "Actions for Pay day" })
+		)
+		await user.click(await screen.findByRole("menuitem", { name: "Edit" }))
+
+		const form = await screen.findByRole("dialog", { name: "Edit income" })
+		expect(within(form).getByLabelText("Description")).toHaveValue("Pay day")
+		await user.clear(within(form).getByLabelText("Description"))
+		await user.type(within(form).getByLabelText("Description"), "Pay")
+		await user.click(within(form).getByRole("button", { name: "Save" }))
+
+		await vi.waitFor(() =>
+			expect(patch).toHaveBeenCalledWith("incomes/i1", { description: "Pay" })
+		)
+	})
+
+	it("asks before deleting an income, naming it (M-21)", async () => {
+		open()
+		const del = vi.spyOn(api, "delete").mockResolvedValue(undefined as never)
+		const user = setup()
+		await user.click(await screen.findByRole("button", { name: /View all/ }))
+		await user.click(
+			await screen.findByRole("button", { name: "Actions for Pay day" })
+		)
+		await user.click(await screen.findByRole("menuitem", { name: "Delete" }))
+
+		expect(
+			await screen.findByText(
+				"Are you sure you want to delete the income Pay day?"
+			)
+		).toBeVisible()
+		expect(del).not.toHaveBeenCalled()
+		await user.click(screen.getByRole("button", { name: "Delete" }))
+
+		await vi.waitFor(() => expect(del).toHaveBeenCalledWith("incomes/i1"))
+		await vi.waitFor(() =>
+			expect(toast.success).toHaveBeenCalledWith("Pay day deleted")
+		)
+	})
+
+	it("toasts when deleting an income fails", async () => {
+		open()
+		vi.spyOn(api, "delete").mockRejectedValue(new ApiError("boom", 500))
+		const user = setup()
+		await user.click(await screen.findByRole("button", { name: /View all/ }))
+		await user.click(
+			await screen.findByRole("button", { name: "Actions for Pay day" })
+		)
+		await user.click(await screen.findByRole("menuitem", { name: "Delete" }))
+		await user.click(await screen.findByRole("button", { name: "Delete" }))
+
+		await vi.waitFor(() =>
+			expect(toast.error).toHaveBeenCalledWith(
+				"Couldn't delete the income. Try again.",
+				expect.anything()
+			)
+		)
+	})
+
 	it("has edit controls in a past month", async () => {
 		open("period=2026-10")
 		const user = setup()

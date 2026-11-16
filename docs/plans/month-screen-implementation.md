@@ -1,6 +1,6 @@
 # Month Screen — Implementation Plan
 
-Status: draft 6 (T-31 done) · Last updated: 2026-11-16
+Status: draft 7 (T-32 done) · Last updated: 2026-11-16
 
 Breaks the [Month screen spec](../specs/month-screen.md) and the wireframes in `design.pen` into small tasks. Each task is one pull request to `development`, sized to be reviewed in one sitting.
 
@@ -215,7 +215,7 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 #### T-23 Income panel, read (M-07)
 - **Includes:** a side sheet on desktop and a bottom sheet on the phone, opened from the Income card or the phone's Income figure; total and "of this is salary"; the list with Salary badges and received dates; "No salary this month"; closes on X, Escape or the dimmed page. Add, edit and delete buttons are present but wired in T-32.
 - **Done when:** the M-07 acceptance criteria pass.
-- **Status: done (2026-11-09).** `IncomePanel` is opened from the Income card and the phone's Income figure; it is a 440px right sheet on desktop and a bottom sheet on the phone. Incomes are sorted salary first, then by received date (undated last) in `lib/month-incomes.ts`. The panel reads the summary's cached incomes, so opening it adds no request. Focus lands on the panel and returns to the opener on close. Add, Edit and Delete take optional handlers and do nothing until T-32; they show in every opened month, past ones included (since 2026-11-10).
+- **Status: done (2026-11-09).** `IncomePanel` is opened from the Income card and the phone's Income figure; it is a 440px right sheet on desktop and a bottom sheet on the phone. Incomes are sorted salary first, then by received date (undated last) in `lib/month-incomes.ts`. The panel reads the summary's cached incomes, so opening it adds no request. Focus lands on the panel and returns to the opener on close. Add, Edit and Delete take optional handlers (wired in T-32); they show in every opened month, past ones included (since 2026-11-10).
 
 #### T-24 Row details panel, read (M-08)
 - **Includes:** the panel for expenses and envelopes:
@@ -285,6 +285,8 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 #### T-32 Add, edit, delete income (M-20, M-21)
 - **Includes:** the income form (Description, Amount, Salary switch, Received date) from **+ Add** and the income panel; edit and delete from each income's menu.
 - **Done when:** the M-20 and M-21 acceptance criteria pass.
+- **Backend:** none. `POST`, `PATCH` and `DELETE /incomes` are enough (checked against the real API); incomes have no future-date rule and no 422, so past months need no special handling. BE-1 (salary with the month) belongs to T-35 and T-37.
+- **Status: done (2026-11-16).** `IncomeFormPanel` (same shell as the expense form: `DetailsSheet`, 14px labels, red borders with no visible message, **Save** and **Cancel**; no "Finish & add another", which the spec only asks for on expenses), a new `Switch` primitive (`components/ui/switch.tsx`) for Salary, and `lib/income-form.ts` (schema, create and update builders, `incomeDeleteMessage`). Edit sends only the changed fields (a cleared date goes as `null`); saving with no change closes without a request. `MonthScreen` wires `+ Add → Income` (header menu and phone button), the panel's Add button and each income's Edit and Delete (`ConfirmDeleteModal` naming the income; a 404 counts as already deleted). Opened from the income panel, the form gives the panel back when it closes so the change shows in the list; opened from `+ Add`, nothing reopens. One panel at a time, and the form closes when the month changes. Checked in the browser against the real API (create with Salary on and a received date: 201 and the expected body, Income card and balance up by the amount; edit: `PATCH` with `{"amount":6200}` only; delete: 204 and the row gone; desktop, 390px with no horizontal scroll, dark and light, no console errors); the test income was removed. Not run in the browser: a past month and a failing request (covered by the component tests). `design.pen` has no income form frame yet; the form was compared with the expense form frames.
 
 #### T-33 Add and delete envelopes (M-23, M-24)
 - **Includes:** **+ Add → Envelope**, offering only envelope categories without an envelope this month; delete from the envelope's details.
