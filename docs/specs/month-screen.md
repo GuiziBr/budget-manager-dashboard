@@ -401,7 +401,7 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 
 All expense forms open from **+ Add → Expense**, as a side panel on desktop (like the expense details) and a full-height sheet on the phone. The form starts with a **type** choice (One-time, Installments, Recurring); the shared fields stay when the type changes. Required fields are marked with a red asterisk. A field that fails validation gets a red border and no message text (screen readers still hear the reason). Problems only the server can detect (a deleted lookup, the bank rule, a future purchase date it rejects) also show as a toast.
 
-The panel ends with **Finish & close**, **Finish & add another** (saves, keeps the panel open and clears the form, keeping the category, payment type and bank) and **Cancel**.
+The panel ends with **Save**, **Finish & add another** (saves, keeps the panel open and clears the form, keeping the category, payment type and bank) and **Cancel**.
 
 **Fields shared by all types**
 
@@ -427,7 +427,7 @@ The expense is created in the month being viewed (except installments, see M-15)
 - Purchased date: not after today (UTC, as the API checks). The date picker stops at today, and a later date gets the red border. Due and Paid dates are not limited.
 
 **Acceptance criteria**
-- *Given* I fill Description, Category, Payment type Credit Card, Bank CIBC and Amount 25.00, *when* I choose Finish & close, *then* the panel closes, the table goes back to page 1 with the new row, and the totals update.
+- *Given* I fill Description, Category, Payment type Credit Card, Bank CIBC and Amount 25.00, *when* I choose Save, *then* the panel closes, the table goes back to page 1 with the new row, and the totals update.
 - *Given* the same values, *when* I choose Finish & add another, *then* the expense is saved, the panel stays open with Description and Amount empty, and Category, Payment type and Bank unchanged.
 - *Given* a payment type with a statement and no bank, *when* I save, *then* the Bank field gets a red border and nothing is saved.
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronDown, ChevronUp, WalletCards } from "lucide-react"
+import { ChevronDown, WalletCards } from "lucide-react"
 import { useMemo } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -195,14 +195,44 @@ function CollapseHeader({
 							{t.show}
 						</span>
 					</span>
-					{collapsed ? (
-						<ChevronDown aria-hidden="true" className="size-4" />
-					) : (
-						<ChevronUp aria-hidden="true" className="size-4" />
-					)}
+					<ChevronDown
+						aria-hidden="true"
+						className={cn(
+							"size-4 transition-transform duration-300 ease-in-out motion-reduce:transition-none",
+							!collapsed && "rotate-180"
+						)}
+					/>
 				</span>
 			</button>
 		</h2>
+	)
+}
+
+/**
+ * The collapsible part. It stays mounted so the height and opacity can animate
+ * (0fr to 1fr rows); while collapsed it is out of the tab order and the accessibility tree.
+ */
+function CollapsibleBody({
+	id,
+	collapsed,
+	children
+}: {
+	id: string
+	collapsed: boolean
+	children: React.ReactNode
+}) {
+	return (
+		<div
+			id={id}
+			aria-hidden={collapsed}
+			inert={collapsed}
+			className={cn(
+				"grid transition-[grid-template-rows,opacity] duration-300 ease-in-out motion-reduce:transition-none",
+				collapsed ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100"
+			)}
+		>
+			<div className="min-h-0 overflow-hidden">{children}</div>
+		</div>
 	)
 }
 
@@ -269,7 +299,7 @@ export function EnvelopesCard({
 
 	if (isPhone) {
 		return (
-			<section aria-label={t.label} className="flex flex-col gap-2.5">
+			<section aria-label={t.label} className="flex flex-col">
 				<CollapseHeader
 					collapsed={collapsed}
 					controls={bodyId}
@@ -284,8 +314,8 @@ export function EnvelopesCard({
 						</Badge>
 					)}
 				</CollapseHeader>
-				{!collapsed && (
-					<ul id={bodyId} className="flex gap-2.5 overflow-x-auto">
+				<CollapsibleBody id={bodyId} collapsed={collapsed}>
+					<ul className="mt-2.5 flex gap-2.5 overflow-x-auto">
 						{statuses.map((status) => (
 							<PhoneEnvelopeTile
 								key={status.envelope.id}
@@ -295,7 +325,7 @@ export function EnvelopesCard({
 							/>
 						))}
 					</ul>
-				)}
+				</CollapsibleBody>
 			</section>
 		)
 	}
@@ -322,11 +352,8 @@ export function EnvelopesCard({
 						</Badge>
 					)}
 				</CollapseHeader>
-				{!collapsed && (
-					<ul
-						id={bodyId}
-						className="grid grid-cols-4 gap-x-7 gap-y-4 px-5 pt-0.5 pb-3.5"
-					>
+				<CollapsibleBody id={bodyId} collapsed={collapsed}>
+					<ul className="grid grid-cols-4 gap-x-7 gap-y-4 px-5 pt-0.5 pb-3.5">
 						{statuses.map((status) => (
 							<EnvelopeTile
 								key={status.envelope.id}
@@ -336,7 +363,7 @@ export function EnvelopesCard({
 							/>
 						))}
 					</ul>
-				)}
+				</CollapsibleBody>
 			</Card>
 		</section>
 	)
