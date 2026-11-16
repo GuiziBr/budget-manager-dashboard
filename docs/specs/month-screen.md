@@ -520,7 +520,7 @@ The expense is created in the month being viewed (except installments, see M-15)
 **How it works**
 1. **View plan**, in the Installment plan tab of the row details, opens the plan dialog with the amount per payment. The plan is in the address (`?plan=<id>`), so the link can be shared and Back closes it.
 2. **Change amount** lets me enter a new amount per payment.
-3. The confirmation says: "Payments in {current month} and later will change to CAD {amount}. Earlier payments keep their amount." The current month is today's calendar month, not the month on screen.
+3. The confirmation says: "Payments in {current month} and later will change to CAD {amount}. Earlier payments keep their amount." The current month is today's calendar month, not the month on screen. *Pending BE-6 ([todo.md](todo.md)): a payment already paid should keep its amount, so when the current month's payment is paid the change starts next month. The backend doesn't do this yet; the wording above is today's behaviour.*
 
 **Rules**
 - Only the amount per payment can change. Number of payments, interval and first purchase date are fixed.
