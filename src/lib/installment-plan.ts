@@ -155,3 +155,8 @@ export function planChangeMessage(
 		.replace("{month}", monthLabel(currentMonth(now)))
 		.replace("{amount}", formatCad(amount))
 }
+
+/** Whether two moments fall in the same UTC month, the one the backend counts "current" in. */
+export function sameUtcMonth(a: Date, b: Date): boolean {
+	return a.toISOString().slice(0, 7) === b.toISOString().slice(0, 7)
+}

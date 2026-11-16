@@ -24,7 +24,11 @@ import {
 import { ApiError } from "@/lib/api"
 import { getApiErrorMessage } from "@/lib/api-error-message"
 import { formatFullDate } from "@/lib/format-date"
-import { planChangeApplies, planChangeMessage } from "@/lib/installment-plan"
+import {
+	planChangeApplies,
+	planChangeMessage,
+	sameUtcMonth
+} from "@/lib/installment-plan"
 import {
 	checkMoney,
 	formatCad,
@@ -66,6 +70,8 @@ export function InstallmentPlanDialog({
 	const group = useInstallmentGroup(planId)
 	const update = useUpdateInstallmentGroup()
 	const [step, setStep] = useState<Step>("view")
+	// When the confirmation was shown: the month it names must still be the current one on Save
+	const [reviewedAt, setReviewedAt] = useState(() => new Date())
 	const [text, setText] = useState("")
 	const [touched, setTouched] = useState(false)
 
@@ -99,10 +105,20 @@ export function InstallmentPlanDialog({
 	}
 	const review = () => {
 		setTouched(true)
-		if (amount !== null) setStep("confirm")
+		if (amount === null) return
+		setReviewedAt(new Date())
+		setStep("confirm")
 	}
 	const save = () => {
 		if (amount === null) return
+		// The month rolled over (UTC) while the confirmation was open: the backend would
+		// now change fewer payments than the text says, so show the new text and ask again
+		const now = new Date()
+		if (!sameUtcMonth(reviewedAt, now)) {
+			setReviewedAt(now)
+			if (endDate && !planChangeApplies(endDate, now)) setStep("view")
+			return
+		}
 		update.mutate(
 			{ id: planId, amountPerInstallment: amount },
 			{
@@ -249,7 +265,7 @@ export function InstallmentPlanDialog({
 				{step === "confirm" && amount !== null && (
 					<>
 						<p className="text-foreground text-sm">
-							{planChangeMessage(amount)}
+							{planChangeMessage(amount, reviewedAt)}
 						</p>
 						<DialogFooter>
 							<Button

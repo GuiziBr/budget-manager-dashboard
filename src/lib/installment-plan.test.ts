@@ -5,7 +5,8 @@ import {
 	planDueDates,
 	planPlacement,
 	planSummary,
-	planToast
+	planToast,
+	sameUtcMonth
 } from "./installment-plan"
 import { installmentEndDate } from "./month-rows"
 
@@ -194,5 +195,28 @@ describe("planChangeMessage", () => {
 		expect(planChangeMessage(120.5, new Date("2026-11-15T12:00:00Z"))).toBe(
 			"Payments in November 2026 and later will change to CAD 120.50. Earlier payments keep their amount."
 		)
+	})
+})
+
+describe("sameUtcMonth", () => {
+	it("compares the UTC month, not the local one", () => {
+		expect(
+			sameUtcMonth(
+				new Date("2026-11-01T00:00:00Z"),
+				new Date("2026-11-30T23:59:59Z")
+			)
+		).toBe(true)
+		expect(
+			sameUtcMonth(
+				new Date("2026-11-30T23:59:59Z"),
+				new Date("2026-12-01T00:00:00Z")
+			)
+		).toBe(false)
+		expect(
+			sameUtcMonth(
+				new Date("2026-11-15T12:00:00Z"),
+				new Date("2027-11-15T12:00:00Z")
+			)
+		).toBe(false)
 	})
 })

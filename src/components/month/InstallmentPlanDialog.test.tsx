@@ -143,6 +143,49 @@ describe("InstallmentPlanDialog", () => {
 		expect(toast.success).toHaveBeenCalledWith("Car finance plan updated")
 	})
 
+	it("asks again, naming the new month, when the month rolls over before Save", async () => {
+		vi.setSystemTime(new Date("2026-11-30T23:59:00Z"))
+		const { patch, user } = setup({}, { firstPurchasedAt: "2026-10-01" })
+		await user.click(
+			await screen.findByRole("button", { name: "Change amount" })
+		)
+		await type(user, "12050")
+		await user.click(screen.getByRole("button", { name: "Review" }))
+		expect(
+			screen.getByText(/Payments in November 2026 and later/)
+		).toBeInTheDocument()
+
+		vi.setSystemTime(new Date("2026-12-01T00:01:00Z"))
+		await user.click(screen.getByRole("button", { name: "Save" }))
+		expect(patch).not.toHaveBeenCalled()
+		expect(
+			screen.getByText(/Payments in December 2026 and later/)
+		).toBeInTheDocument()
+
+		await user.click(screen.getByRole("button", { name: "Save" }))
+		await vi.waitFor(() =>
+			expect(patch).toHaveBeenCalledWith(
+				"installment-groups/2654e28f-64e3-461f-9388-c9773f36fb17",
+				{ amountPerInstallment: 120.5 }
+			)
+		)
+	})
+
+	it("goes back to the plan when the month rolled over and nothing is left to change", async () => {
+		// Last payment 24 Nov: it counts on 30 Nov but not from 1 Dec
+		vi.setSystemTime(new Date("2026-11-30T23:59:00Z"))
+		const { patch, user } = setup({}, { firstPurchasedAt: "2026-06-27" })
+		await user.click(
+			await screen.findByRole("button", { name: "Change amount" })
+		)
+		await type(user, "5000")
+		await user.click(screen.getByRole("button", { name: "Review" }))
+		vi.setSystemTime(new Date("2026-12-01T00:01:00Z"))
+		await user.click(screen.getByRole("button", { name: "Save" }))
+		expect(patch).not.toHaveBeenCalled()
+		expect(screen.getByText(/none can change/)).toBeInTheDocument()
+	})
+
 	it("blocks an empty amount without sending anything", async () => {
 		const { patch, user } = setup()
 		await user.click(
