@@ -163,6 +163,38 @@ describe("IncomeFormPanel", () => {
 		expect(post).not.toHaveBeenCalled()
 	})
 
+	it("starts from the new income's values when the income changes while mounted", () => {
+		// The sheet stays mounted during its exit animation, so reopening for another
+		// income (or Add) can reuse the same panel
+		const { wrapper } = createQueryWrapper()
+		const props = {
+			open: true,
+			onClose: vi.fn(),
+			periodId: "p1",
+			month: { year: 2026, month: 11 }
+		}
+		const { rerender } = render(
+			<IncomeFormPanel {...props} income={income} />,
+			{
+				wrapper
+			}
+		)
+		expect(screen.getByLabelText("Description")).toHaveValue("Salary")
+
+		rerender(
+			<IncomeFormPanel
+				{...props}
+				income={{ ...income, id: "i2", description: "Gift", amount: 50 }}
+			/>
+		)
+		expect(screen.getByLabelText("Description")).toHaveValue("Gift")
+		expect(screen.getByLabelText("Amount")).toHaveValue("50.00")
+
+		rerender(<IncomeFormPanel {...props} income={null} />)
+		expect(screen.getByLabelText("Description")).toHaveValue("")
+		expect(screen.getByLabelText("Amount")).toHaveValue("")
+	})
+
 	describe("editing", () => {
 		it("prefills the income", () => {
 			setup({ income })

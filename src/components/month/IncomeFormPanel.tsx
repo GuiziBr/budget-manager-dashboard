@@ -81,6 +81,9 @@ export function IncomeFormPanel({
 			initialFocus="#income-description"
 		>
 			<IncomeForm
+				// The sheet stays mounted while it closes, and the form reads its defaults only on
+				// mount: a new key gives each income (or Add) a fresh form
+				key={income?.id ?? "new"}
 				income={income ?? undefined}
 				periodId={periodId}
 				monthName={label}
