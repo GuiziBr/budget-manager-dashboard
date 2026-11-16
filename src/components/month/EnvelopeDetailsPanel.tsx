@@ -39,10 +39,10 @@ interface EnvelopeDetailsPanelProps {
 	onClose: () => void
 	/** Shows the previous or next envelope. Without it the arrows are left out. */
 	onNavigate?: (envelope: BudgetEnvelope) => void
-	/** Past months are read-only: no Delete. */
+	/** Past months can't be changed (M-25): no Edit budget or Delete. */
 	canEdit: boolean
 	returnFocusRef?: RefObject<HTMLElement | null>
-	/** Wired in T-33. Until then the button does nothing. */
+	onEdit?: (envelope: BudgetEnvelope) => void
 	onDelete?: (envelope: BudgetEnvelope) => void
 }
 
@@ -55,10 +55,12 @@ const money = (value: number) =>
 function PanelBody({
 	status,
 	canEdit,
+	onEdit,
 	onDelete
 }: {
 	status: EnvelopeStatus
 	canEdit: boolean
+	onEdit?: (envelope: BudgetEnvelope) => void
 	onDelete?: (envelope: BudgetEnvelope) => void
 }) {
 	const { envelope, allocated, spent, ratio, overBudget } = status
@@ -125,7 +127,14 @@ function PanelBody({
 			</div>
 
 			{canEdit && (
-				<div className="mt-auto px-5 pb-5">
+				<div className="mt-auto flex flex-col gap-2 px-5 pb-5">
+					<Button
+						variant="outline"
+						className="w-full"
+						onClick={() => onEdit?.(envelope)}
+					>
+						{t.editBudget}
+					</Button>
 					<Button
 						variant="destructive"
 						className="w-full"
@@ -140,8 +149,8 @@ function PanelBody({
 }
 
 /**
- * One envelope: spent, budget and what is left (M-11). The budget itself is
- * read-only (M-22). The envelope comes from the list the card already loaded,
+ * One envelope: spent, budget and what is left (M-11), with Edit budget (M-22) and
+ * Delete (M-24). The envelope comes from the list the card already loaded,
  * so it follows refetches; one that isn't in it (a shared link) is read by id.
  */
 export function EnvelopeDetailsPanel({
@@ -152,6 +161,7 @@ export function EnvelopeDetailsPanel({
 	onNavigate,
 	canEdit,
 	returnFocusRef,
+	onEdit,
 	onDelete
 }: EnvelopeDetailsPanelProps) {
 	const envelopes = useMonthEnvelopes(periodId)
@@ -170,15 +180,14 @@ export function EnvelopeDetailsPanel({
 		return envelopeStatus(found, names)
 	}, [onList, detail.data, categories.data])
 
-	// Neighbours in the order of the card (over budget first). An envelope that
+	// Neighbours in the order of the card (over budget first, then alphabetical). An envelope that
 	// isn't on the list (a shared link) has none.
-	const ordered = useMemo(
-		() =>
-			sortEnvelopes(
-				(envelopes.data ?? []).map((e) => envelopeStatus(e, new Map()))
-			).map((s) => s.envelope),
-		[envelopes.data]
-	)
+	const ordered = useMemo(() => {
+		const names = new Map((categories.data ?? []).map((c) => [c.id, c.name]))
+		return sortEnvelopes(
+			(envelopes.data ?? []).map((e) => envelopeStatus(e, names))
+		).map((s) => s.envelope)
+	}, [envelopes.data, categories.data])
 	const position = ordered.findIndex((e) => e.id === envelopeId)
 	const stepTo = (target: BudgetEnvelope | undefined) =>
 		target && onNavigate ? () => onNavigate(target) : undefined
@@ -233,7 +242,12 @@ export function EnvelopeDetailsPanel({
 			description={t.envelopeDescription.replace("{month}", monthLabel(month))}
 			returnFocusRef={returnFocusRef}
 		>
-			<PanelBody status={shown} canEdit={canEdit} onDelete={onDelete} />
+			<PanelBody
+				status={shown}
+				canEdit={canEdit}
+				onEdit={onEdit}
+				onDelete={onDelete}
+			/>
 		</DetailsSheet>
 	)
 }

@@ -1,6 +1,6 @@
 # Month Screen — Functional Specification
 
-Status: draft 5 (backend delivered: envelope spend, plan size, lookup names, months running) · Last updated: 2026-11-03
+Status: draft 6 (envelope budgets can be edited, U-2 closed) · Last updated: 2026-11-16
 
 The Month screen is the app's home and replaces one tab of the budget spreadsheet. This document describes every feature of the screen from the user's side: what you can do, how it works, which rules apply, what you see when something goes wrong, and how to check that it works.
 
@@ -44,7 +44,7 @@ Status: **Ready** = the backend supports it today. **Placeholder** = shown, wait
 | M-20 | Add an income | Must | Ready |
 | M-21 | Edit or delete an income | Must | Ready |
 | **Envelopes** | | | |
-| M-22 | Envelope budgets are read-only | Must | Ready |
+| M-22 | Edit an envelope's budget | Must | Ready |
 | M-23 | Add an envelope | Should | Ready |
 | M-24 | Delete an envelope | Should | Ready |
 | **Rules across the screen** | | | |
@@ -111,7 +111,7 @@ These terms and calculations are used throughout the document.
 3. A **review** opens with four sections:
    - **Recurring bills:** each with its amount, editable (to correct estimates such as Hydro).
    - **Installments:** each with `n of N`; the last payment of a plan is tagged "Last payment".
-   - **Envelopes:** each with its budget, read-only (M-22).
+   - **Envelopes:** each with its budget (set by the backend; editable afterwards, M-22).
    - **Income:** a choice between
      - **Copy last month's salary:** last month's **salary** incomes are listed with editable amounts and a checkbox each (all ticked). Other incomes are not offered.
      - **Enter salary:** a single **Salary** amount field.
@@ -352,7 +352,7 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 **How it works**
 - Spend is shown only in the Envelopes card (desktop grid and phone strip), not in the table. Each envelope shows the amount spent against its budget, with a progress bar. Over budget: amount and bar in the danger colour.
 - Spend is `spentAmount` on each envelope. The backend takes it from an external spend API and applies the billing-cycle rule: a purchase made after a card's due date counts in the next month, so future months can already have spend. The user never enters it.
-- The envelope panel has previous / next arrows (and the Up / Down keys) with a count such as `(2/6)`, in the order of the Categories card (over budget first). The address updates without adding history.
+- The envelope panel has previous / next arrows (and the Up / Down keys) with a count such as `(2/6)`, in the order of the Categories card (over budget first, then alphabetical by category). The address updates without adding history.
 - Envelope **spend** counts in the Expenses total and the balance; envelope budgets don't (section 2).
 
 **When something goes wrong**
@@ -561,24 +561,28 @@ The expense is created in the month being viewed (except installments, see M-15)
 
 ### Envelopes
 
-#### M-22 Envelope budgets are read-only
+#### M-22 Edit an envelope's budget
 
-*As the budget owner, I want envelope budgets to come from the system, so they stay consistent month to month.*
+*As the budget owner, I want to change an envelope's budget (allocated amount) when a month's plan changes.*
 
 **How it works**
-- An envelope's budget (allocated amount) is set by the backend when the month is opened and **can't be edited** in the app: there is no Edit budget action, on the row, the Envelopes card, the row details or the open-month review.
-- The backend's `PATCH /budget-envelopes/:id` is not used by the frontend.
+- An envelope's budget is set by the backend when the month is opened, and can be changed afterwards. Only the **budget** changes: the category is fixed (to move money to another category, delete the envelope and add another).
+- **Edit budget** in the envelope's details panel opens a form on the same panel (a full-height sheet on the phone) with the category shown as text, the **Budget** prefilled, and the amount spent so far as a hint (left out when the spend is unavailable). **Save** and **Cancel**.
+- Saving with the same budget closes the form without a request. After a change the details come back with the new budget, remaining amount and bar.
+- Uses `PATCH /budget-envelopes/:id` with `allocatedAmount` only. The response has no spend, so the screen reloads the month's envelopes afterwards.
+- Not available in past months (the backend answers 422; M-25).
 
 **Acceptance criteria**
-- *Given* any envelope, *then* no control lets me change its budget.
+- *Given* the Grocery envelope of 150.00 with 276.82 spent, *when* I change the budget to 300.00, *then* the card and the details show 300.00, the spent figure is unchanged and the envelope is no longer over budget.
+- *Given* a past month, *then* the details have no Edit budget button.
 
 #### M-23 Add an envelope
 
 *As the budget owner, I want to add an envelope that wasn't created with the month, for a category that uses envelopes.*
 
 **How it works**
-1. **+ Add → Envelope** opens a form: Category (only categories that use envelopes and don't have one this month) and Budget. This is the one exception to M-22: `POST /budget-envelopes` requires an `allocatedAmount`, so the budget is entered once on creation and can't be changed afterwards. **Pending decision:** whether adding and deleting envelopes stay at all (see [todo.md](todo.md), U-2).
-2. If every such category already has an envelope, the option is disabled: "Every envelope category already has an envelope this month."
+1. **+ Add → Category** opens a form: Category (only categories that use envelopes and don't have one this month) and Budget (required, above 0, at most 2 decimals). The budget can be changed later (M-22).
+2. If every such category already has an envelope, the option is disabled and says: "Every category already has a budget this month."
 3. Not available in past months (the backend answers 422; M-25).
 
 **Acceptance criteria**
@@ -604,7 +608,7 @@ The expense is created in the month being viewed (except installments, see M-15)
 **How it works**
 - A small "Past month" pill beside the month name. Its note says: "You can edit this month. Envelopes of past months can't be changed."
 - In an opened past month, paid controls, Edit, Delete and **+ Add** for expenses and incomes work as in the current month.
-- Envelopes are the exception: the backend answers 422 when an envelope of a past period is created or deleted, so **+ Add → Envelope** and the envelope's Delete are hidden.
+- Envelopes are the exception: the backend answers 422 when an envelope of a past period is created or deleted, so **+ Add → Category** and the envelope's Delete are hidden.
 
 **Rules**
 - A month is past when it's before the current month (UTC).
@@ -646,7 +650,7 @@ The expense is created in the month being viewed (except installments, see M-15)
 | Expenses | `GET /expenses?budgetPeriodId=&page=&limit=10&sortBy=&sortOrder=`, one page at a time; its `totalAmount` feeds the Expenses card. `POST`, `PATCH`, `DELETE /expenses`. `GET /expenses/:id` only for a link to an expense that isn't on the page on screen (rows opened on screen are cached, so no request) |
 | Installment plans | `n of N`, interval, first purchase date and end date come with each expense (`installment`). `GET`, `PATCH /installment-groups/:id` only for changing the amount (M-19) |
 | Incomes | `GET /incomes?budgetPeriodId=`, `POST`, `PATCH`, `DELETE /incomes` |
-| Envelopes | `GET /budget-envelopes?budgetPeriodId=` (with `spentAmount`), `GET /budget-envelopes/:id` only for a link to an envelope that isn't in the month on screen, `POST`, `DELETE /budget-envelopes` (no `PATCH`: budgets are read-only) |
+| Envelopes | `GET /budget-envelopes?budgetPeriodId=` (with `spentAmount`), `GET /budget-envelopes/:id` only for a link to an envelope that isn't in the month on screen, `POST`, `PATCH` (only `allocatedAmount`) and `DELETE /budget-envelopes` |
 | Lookups | `GET /categories`, `/payment-types`, `/banks`, `/stores` |
 
 ---
@@ -678,7 +682,8 @@ G-2, G-3, G-5 and G-6 were delivered by the backend on 2026-11-03 (plan size, lo
 | Design tweaks (2026-10-30) | No "Current month" badge. Summary order: Income, Expenses, Balance (M-04). Category gets its own column and Item is narrower; the Spent column returns, right of Amount; expense amounts use the regular text colour instead of red (M-05, M-11). All table cells are left-aligned; the spend bar sits above the spent amount. No total row: the Expenses card holds the total (M-05). Every column is sortable (M-06). An Envelopes card under the summary shows all envelopes' spent vs allocated at once, instead of one card per envelope or a carousel (M-04) |
 | Server-side pagination (2026-11-02) | The table is paginated on the server, 10 rows per page, newest first (M-05). Envelope rows and the Spent column leave the table; envelopes live in the Envelopes card (resolves U-3). The API sorts across pages (`sortBy`, `sortOrder`), so every header except # is sortable; Category and Payment use the names BE-4 delivered (M-06). The Expenses card uses `totalAmount` from the expenses response, with no extra request (M-04) |
 | Backend delivered (2026-11-03) | Envelope spend, installment plan size, lookup names and months running come from the API (M-08 to M-11). Spend can be `null` when the external service is down; the screen shows "—" and keeps the note on the Expenses card |
-| Envelope budgets and totals (2026-10-30) | Envelope budgets can't be edited (M-22). Total expenses and balance count envelope **spend**, not envelope budgets (section 2, M-11). Spend will come from a backend API |
+| Envelope budgets and totals (2026-10-30) | Envelope budgets couldn't be edited at first (reversed on 2026-11-16, see below). Total expenses and balance count envelope **spend**, not envelope budgets (section 2, M-11). Spend will come from a backend API |
+| Envelopes can be edited (2026-11-16) | U-2 closed: adding and deleting envelopes stay, and the budget can be edited from the envelope's details (M-22, M-23). Only the allocated amount changes; the category is fixed |
 | Design review of the wireframes (2026-10-28) | Summary keeps Balance, Income and Expenses only, with no sub-labels (M-04). No Unpaid or Envelopes cards; overdue is shown on rows only (M-13). No table title bar or sort dropdown; sorting by column headers on desktop only (M-05, M-06). % of salary removed for now (todo.md). Expense amounts shown without a minus sign |
 
 Out-of-scope items, unresolved questions and backend gaps for the whole app are tracked in [todo.md](todo.md).

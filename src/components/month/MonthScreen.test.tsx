@@ -1410,3 +1410,260 @@ describe("MonthScreen delete", () => {
 		expect(nav.search).toBe("period=2026-10")
 	})
 })
+
+describe("MonthScreen envelopes", () => {
+	const GROCERY_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+	const FUEL_ID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+	const categories = [
+		{ id: "c-grocery", name: "Grocery", hasBudgetEnvelope: true },
+		{ id: "c-fuel", name: "Fuel", hasBudgetEnvelope: true },
+		{ id: "c-parking", name: "Parking", hasBudgetEnvelope: true },
+		{ id: "c-rent", name: "Rent", hasBudgetEnvelope: false }
+	]
+	const envelope = (
+		id: string,
+		categoryId: string,
+		allocatedAmount: number,
+		periodId = "2026-11"
+	) => ({
+		id,
+		budgetPeriodId: periodId,
+		categoryId,
+		allocatedAmount,
+		spentAmount: 100,
+		spendUpdatedAt: "2026-11-02T10:00:00.000Z",
+		createdAt: "",
+		updatedAt: "",
+		deletedAt: null
+	})
+
+	// A small server: the lists change when the app POSTs, PATCHes or DELETEs
+	const open = (
+		search: string,
+		initial = [
+			envelope(GROCERY_ID, "c-grocery", 600),
+			envelope(FUEL_ID, "c-fuel", 200)
+		]
+	) => {
+		nav.search = search
+		let list = initial
+		vi.spyOn(api, "getPage").mockResolvedValue({
+			data: [],
+			total: 0,
+			totalAmount: 0,
+			page: 1,
+			limit: 10
+		} as never)
+		vi.spyOn(api, "get").mockImplementation(((endpoint: string) => {
+			if (endpoint.includes("budget-periods"))
+				return Promise.resolve([make(2026, 11), make(2026, 10)])
+			if (endpoint.startsWith("categories")) return Promise.resolve(categories)
+			if (endpoint.startsWith("budget-envelopes?")) {
+				const period = new URLSearchParams(endpoint.split("?")[1]).get(
+					"budgetPeriodId"
+				)
+				return Promise.resolve(list.filter((e) => e.budgetPeriodId === period))
+			}
+			return Promise.resolve([])
+		}) as never)
+		return {
+			post: vi.spyOn(api, "post").mockImplementation((async (
+				_endpoint: string,
+				body: { categoryId: string; allocatedAmount: number }
+			) => {
+				const created = envelope(
+					"cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+					body.categoryId,
+					body.allocatedAmount
+				)
+				list = [...list, created]
+				return created
+			}) as never),
+			patch: vi.spyOn(api, "patch").mockImplementation((async (
+				endpoint: string,
+				body: { allocatedAmount: number }
+			) => {
+				list = list.map((e) =>
+					endpoint === `budget-envelopes/${e.id}` ? { ...e, ...body } : e
+				)
+				return {}
+			}) as never),
+			del: vi.spyOn(api, "delete").mockImplementation((async (
+				endpoint: string
+			) => {
+				list = list.filter((e) => endpoint !== `budget-envelopes/${e.id}`)
+			}) as never)
+		}
+	}
+
+	it("adds an envelope from + Add, offering only categories without one (M-23)", async () => {
+		const { post } = open("")
+		const user = setup()
+		await screen.findByRole("region", { name: "Month summary" })
+
+		await user.click(screen.getByRole("button", { name: "Add" }))
+		await user.click(await screen.findByRole("menuitem", { name: /Category/ }))
+		const form = await screen.findByRole("dialog", { name: "Add envelope" })
+		await user.click(within(form).getByRole("combobox", { name: "Category" }))
+		expect(
+			(await screen.findAllByRole("option")).map((o) => o.textContent)
+		).toEqual(["Parking"])
+		await user.click(screen.getByRole("option", { name: "Parking" }))
+		await user.type(within(form).getByLabelText("Budget"), "2000")
+		await user.click(within(form).getByRole("button", { name: "Save" }))
+
+		await vi.waitFor(() =>
+			expect(post).toHaveBeenCalledWith("budget-envelopes", {
+				budgetPeriodId: "2026-11",
+				categoryId: "c-parking",
+				allocatedAmount: 20
+			})
+		)
+		expect(await screen.findByText("Parking")).toBeInTheDocument()
+		expect(toast.success).toHaveBeenCalledWith(
+			"Parking envelope added to November 2026."
+		)
+	})
+
+	it("disables the Envelope entry when every envelope category has one", async () => {
+		open("", [
+			envelope(GROCERY_ID, "c-grocery", 600),
+			envelope(FUEL_ID, "c-fuel", 200),
+			envelope("dddddddd-dddd-4ddd-8ddd-dddddddddddd", "c-parking", 20)
+		])
+		const user = setup()
+		await screen.findByText("Parking")
+
+		await user.click(screen.getByRole("button", { name: "Add" }))
+		const entry = await screen.findByRole("menuitem", { name: /Category/ })
+		await vi.waitFor(() =>
+			expect(entry).toHaveAttribute("aria-disabled", "true")
+		)
+		expect(entry).toHaveTextContent(
+			"Every category already has a budget this month."
+		)
+	})
+
+	it("offers the Envelope entry only in months where envelopes can change (M-25)", async () => {
+		open("period=2026-10")
+		const user = setup()
+		await screen.findByRole("region", { name: "Month summary" })
+
+		await user.click(screen.getByRole("button", { name: "Add" }))
+		expect(
+			await screen.findByRole("menuitem", { name: /Expense/ })
+		).toBeInTheDocument()
+		expect(screen.queryByRole("menuitem", { name: /Category/ })).toBeNull()
+	})
+
+	it("edits only the budget from the details and shows the details again (M-22)", async () => {
+		const { patch } = open(`envelope=${GROCERY_ID}`)
+		const user = setup()
+		const details = await screen.findByRole("dialog", { name: "Grocery" })
+		await user.click(
+			within(details).getByRole("button", { name: "Edit budget" })
+		)
+
+		const form = await screen.findByRole("dialog", { name: "Edit budget" })
+		expect(new URLSearchParams(nav.search).get("envelope")).toBeNull()
+		const budget = within(form).getByLabelText("Budget")
+		expect(budget).toHaveValue("600.00")
+		await user.clear(budget)
+		await user.type(budget, "70000")
+		await user.click(within(form).getByRole("button", { name: "Save" }))
+
+		await vi.waitFor(() =>
+			expect(patch).toHaveBeenCalledWith(`budget-envelopes/${GROCERY_ID}`, {
+				allocatedAmount: 700
+			})
+		)
+		const back = await screen.findByRole("dialog", { name: "Grocery" })
+		expect(new URLSearchParams(nav.search).get("envelope")).toBe(GROCERY_ID)
+		await vi.waitFor(() => expect(back).toHaveTextContent("$700.00"))
+	})
+
+	it("confirms, then deletes the envelope and clears the address (M-24)", async () => {
+		const { del } = open(`envelope=${GROCERY_ID}`)
+		const user = setup()
+		const details = await screen.findByRole("dialog", { name: "Grocery" })
+		await user.click(within(details).getByRole("button", { name: "Delete" }))
+
+		const confirm = await screen.findByRole("dialog", {
+			name: "Delete envelope"
+		})
+		expect(confirm).toHaveTextContent(
+			"Are you sure you want to delete the Grocery envelope?"
+		)
+		expect(del).not.toHaveBeenCalled()
+		await user.click(within(confirm).getByRole("button", { name: "Delete" }))
+
+		await vi.waitFor(() =>
+			expect(del).toHaveBeenCalledWith(`budget-envelopes/${GROCERY_ID}`)
+		)
+		expect(toast.success).toHaveBeenCalledWith("Grocery envelope deleted")
+		await vi.waitFor(() =>
+			expect(new URLSearchParams(nav.search).get("envelope")).toBeNull()
+		)
+		await vi.waitFor(() => expect(screen.queryByText("Grocery")).toBeNull())
+		expect(screen.getByText("Fuel")).toBeInTheDocument()
+	})
+
+	it("sends nothing when the delete is cancelled", async () => {
+		const { del } = open(`envelope=${GROCERY_ID}`)
+		const user = setup()
+		const details = await screen.findByRole("dialog", { name: "Grocery" })
+		await user.click(within(details).getByRole("button", { name: "Delete" }))
+		const confirm = await screen.findByRole("dialog", {
+			name: "Delete envelope"
+		})
+		await user.click(within(confirm).getByRole("button", { name: "Cancel" }))
+		expect(del).not.toHaveBeenCalled()
+	})
+
+	it("brings the details back and toasts when the delete fails", async () => {
+		const { del } = open(`envelope=${GROCERY_ID}`)
+		del.mockRejectedValue(new ApiError("boom", 500))
+		const user = setup()
+		const details = await screen.findByRole("dialog", { name: "Grocery" })
+		await user.click(within(details).getByRole("button", { name: "Delete" }))
+		const confirm = await screen.findByRole("dialog", {
+			name: "Delete envelope"
+		})
+		await user.click(within(confirm).getByRole("button", { name: "Delete" }))
+
+		await vi.waitFor(() =>
+			expect(toast.error).toHaveBeenCalledWith(
+				"Couldn't delete the envelope. Try again.",
+				expect.anything()
+			)
+		)
+		await vi.waitFor(() =>
+			expect(new URLSearchParams(nav.search).get("envelope")).toBe(GROCERY_ID)
+		)
+	})
+
+	it("treats a 404 on delete as already deleted", async () => {
+		const { del } = open(`envelope=${GROCERY_ID}`)
+		del.mockRejectedValue(new ApiError("gone", 404))
+		const user = setup()
+		const details = await screen.findByRole("dialog", { name: "Grocery" })
+		await user.click(within(details).getByRole("button", { name: "Delete" }))
+		const confirm = await screen.findByRole("dialog", {
+			name: "Delete envelope"
+		})
+		await user.click(within(confirm).getByRole("button", { name: "Delete" }))
+
+		await vi.waitFor(() => expect(del).toHaveBeenCalled())
+		expect(toast.error).not.toHaveBeenCalled()
+		expect(toast.success).not.toHaveBeenCalled()
+	})
+
+	it("hides Edit budget in a past month", async () => {
+		open(`period=2026-10&envelope=${GROCERY_ID}`, [
+			envelope(GROCERY_ID, "c-grocery", 600, "2026-10")
+		])
+		setup()
+		expect(await screen.findByRole("dialog", { name: "Grocery" })).toBeVisible()
+		expect(screen.queryByRole("button", { name: "Edit budget" })).toBeNull()
+	})
+})

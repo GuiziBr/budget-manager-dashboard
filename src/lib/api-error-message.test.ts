@@ -73,6 +73,21 @@ describe("describeApiError", () => {
 		})
 	})
 
+	it("404 when changing or deleting an envelope says it is gone", () => {
+		for (const action of ["updateEnvelope", "deleteEnvelope"] as const) {
+			expect(describeApiError(new ApiError("nope", 404), { action })).toEqual({
+				kind: "envelopeGone",
+				message: "This envelope no longer exists."
+			})
+			expect(describeApiError(new ApiError("boom", 500), { action }).kind).toBe(
+				"generic"
+			)
+			expect(describeApiError(new ApiError("past", 422), { action }).kind).toBe(
+				"monthClosed"
+			)
+		}
+	})
+
 	it("400 bank required points at the Bank field", () => {
 		expect(
 			describeApiError(

@@ -321,11 +321,17 @@ describe("envelopeRemaining", () => {
 })
 
 describe("sortEnvelopes", () => {
-	const names = new Map<string, string>()
+	const names = new Map([
+		["ca", "Parking"],
+		["cb", "Baby"],
+		["cc", "Fuel"],
+		["cd", "Grocery"],
+		["ce", "Shopping"]
+	])
 	const status = (id: string, spentAmount: number | null) =>
-		envelopeStatus(envelope({ id, spentAmount }), names)
+		envelopeStatus(envelope({ id, categoryId: `c${id}`, spentAmount }), names)
 
-	it("puts over-budget envelopes first, keeping the order inside each group", () => {
+	it("puts over-budget envelopes first, each group alphabetical by category", () => {
 		const input = [
 			status("a", 10),
 			status("b", 150),
@@ -333,13 +339,25 @@ describe("sortEnvelopes", () => {
 			status("d", 200),
 			status("e", null)
 		]
-		expect(sortEnvelopes(input).map((s) => s.envelope.id)).toEqual([
-			"b",
-			"d",
-			"a",
-			"c",
-			"e"
+		expect(sortEnvelopes(input).map((s) => s.categoryName)).toEqual([
+			"Baby",
+			"Grocery",
+			"Fuel",
+			"Parking",
+			"Shopping"
 		])
+	})
+
+	it("puts a category that is gone last in its group", () => {
+		const gone = envelopeStatus(
+			envelope({ id: "z", categoryId: "missing", spentAmount: 10 }),
+			names
+		)
+		expect(
+			sortEnvelopes([gone, status("a", 10), status("c", 20)]).map(
+				(s) => s.envelope.id
+			)
+		).toEqual(["c", "a", "z"])
 	})
 
 	it("does not mutate its input", () => {

@@ -9,7 +9,8 @@ import {
 	useBudgetEnvelope,
 	useCreateEnvelope,
 	useDeleteEnvelope,
-	useMonthEnvelopes
+	useMonthEnvelopes,
+	useUpdateEnvelope
 } from "./use-budget-envelopes"
 
 afterEach(() => {
@@ -123,6 +124,52 @@ describe("useCreateEnvelope", () => {
 					categoryId: "c1",
 					allocatedAmount: 1
 				})
+				.catch(() => {})
+		})
+
+		expect(invalidate).not.toHaveBeenCalled()
+	})
+})
+
+describe("useUpdateEnvelope", () => {
+	it("sends only the budget and refreshes every envelope query", async () => {
+		const patch = vi
+			.spyOn(api, "patch")
+			.mockResolvedValue({ ...envelope, allocatedAmount: 350 })
+		const { wrapper, queryClient } = createQueryWrapper()
+		queryClient.setQueryData(["budget-envelopes", "month", "p1"], [envelope])
+		const invalidate = vi.spyOn(queryClient, "invalidateQueries")
+
+		const { result } = renderHook(() => useUpdateEnvelope(), { wrapper })
+		await act(() =>
+			result.current.mutateAsync({ id: "e1", allocatedAmount: 350 })
+		)
+
+		expect(patch).toHaveBeenCalledWith("budget-envelopes/e1", {
+			allocatedAmount: 350
+		})
+		expect(invalidate).toHaveBeenCalledWith({
+			queryKey: BUDGET_ENVELOPES_QUERY_KEY
+		})
+		// The response has no spend, so the cached envelope is left alone until the refetch
+		expect(
+			queryClient.getQueryData<(typeof envelope)[]>([
+				"budget-envelopes",
+				"month",
+				"p1"
+			])?.[0].spentAmount
+		).toBe(245.18)
+	})
+
+	it("does not refresh when the request fails", async () => {
+		vi.spyOn(api, "patch").mockRejectedValue(new Error("422"))
+		const { wrapper, queryClient } = createQueryWrapper()
+		const invalidate = vi.spyOn(queryClient, "invalidateQueries")
+
+		const { result } = renderHook(() => useUpdateEnvelope(), { wrapper })
+		await act(async () => {
+			await result.current
+				.mutateAsync({ id: "e1", allocatedAmount: 1 })
 				.catch(() => {})
 		})
 

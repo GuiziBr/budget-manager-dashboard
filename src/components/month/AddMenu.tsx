@@ -21,6 +21,8 @@ export interface AddMenuActions {
 	onAddExpense?: (opener: HTMLElement | null) => void
 	onAddIncome?: (opener: HTMLElement | null) => void
 	onAddEnvelope?: (opener: HTMLElement | null) => void
+	/** Set when no envelope can be added (every envelope category has one): the entry shows this and does nothing. */
+	envelopeDisabledReason?: string
 }
 
 interface Entry {
@@ -29,12 +31,15 @@ interface Entry {
 	label: string
 	hint: string
 	run: (opener: HTMLElement | null) => void
+	/** Why the entry can't be used; it then replaces the hint. */
+	disabledReason?: string
 }
 
 function entriesFor({
 	onAddExpense,
 	onAddIncome,
-	onAddEnvelope
+	onAddEnvelope,
+	envelopeDisabledReason
 }: AddMenuActions): Entry[] {
 	const entries: (Entry | null)[] = [
 		onAddExpense
@@ -44,7 +49,14 @@ function entriesFor({
 			? { key: "income", icon: Banknote, ...t.income, run: onAddIncome }
 			: null,
 		onAddEnvelope
-			? { key: "envelope", icon: Wallet, ...t.envelope, run: onAddEnvelope }
+			? {
+					key: "envelope",
+					icon: Wallet,
+					label: t.envelope.label,
+					hint: t.envelope.hint,
+					run: onAddEnvelope,
+					disabledReason: envelopeDisabledReason
+				}
 			: null
 	]
 	return entries.filter((entry): entry is Entry => entry !== null)
@@ -60,7 +72,7 @@ function EntryBody({ entry }: { entry: Entry }) {
 					{entry.label}
 				</span>
 				<span className="font-normal text-muted-foreground text-xs">
-					{entry.hint}
+					{entry.disabledReason ?? entry.hint}
 				</span>
 			</span>
 		</>
@@ -91,6 +103,7 @@ export function AddMenu(actions: AddMenuActions) {
 				{entries.map((entry) => (
 					<DropdownMenuItem
 						key={entry.key}
+						disabled={!!entry.disabledReason}
 						className="items-center gap-3 rounded-lg px-2.5 py-2.5"
 						// The form takes the focus itself; give it back to the button afterwards
 						onSelect={() => entry.run(trigger.current)}
@@ -159,7 +172,8 @@ export function AddFabMenu(
 							key={entry.key}
 							type="button"
 							role="menuitem"
-							className="flex cursor-pointer items-center gap-3 rounded-lg px-2.5 py-2.5 text-left text-muted-foreground outline-none hover:bg-accent focus-visible:bg-accent"
+							disabled={!!entry.disabledReason}
+							className="flex cursor-pointer items-center gap-3 rounded-lg px-2.5 py-2.5 text-left text-muted-foreground outline-none hover:bg-accent focus-visible:bg-accent disabled:pointer-events-none disabled:opacity-50"
 							onClick={() => {
 								handedOff.current = true
 								onOpenChange(false)

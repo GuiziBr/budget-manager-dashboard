@@ -1,6 +1,6 @@
 # Month Screen — Implementation Plan
 
-Status: draft 7 (T-32 done) · Last updated: 2026-11-16
+Status: draft 8 (T-33 done) · Last updated: 2026-11-16
 
 Breaks the [Month screen spec](../specs/month-screen.md) and the wireframes in `design.pen` into small tasks. Each task is one pull request to `development`, sized to be reviewed in one sitting.
 
@@ -55,7 +55,7 @@ Related: [Month spec](../specs/month-screen.md) · [Backlog](../specs/todo.md) �
 | T-30 | Delete expense | 4 | M-18 | T-12, T-24 | S | — |
 | T-31 | Change an installment plan's amount | 4 | M-19 | T-15, T-24 | S | — |
 | T-32 | Add, edit, delete income | 4 | M-20, M-21 | T-13, T-23 | M | — |
-| T-33 | Add and delete envelopes | 4 | M-23, M-24 | T-14, T-19 | S | — |
+| T-33 | Add, edit and delete envelopes | 4 | M-22, M-23, M-24 | T-14, T-19 | M | — |
 | T-34 | Past-month envelope guard (422 → message) | 4 | M-25 | T-07, T-17 | S | — |
 | T-35 | Open a month | 5 Month lifecycle | M-02 | T-11, T-17 | S | BE-1 |
 | T-36 | Open-month review: bills, installments, envelopes | 5 | M-02 | T-35 | M | — |
@@ -98,7 +98,7 @@ Size: **S** ≈ half a day, **M** ≈ a day, **L** ≈ two days.
   - `buildRows(pageExpenses, now)` for **one page**, keeping the API's order (newest first, or the server sort). Names, plan size and months running come with each expense, so it needs no lookups.
   - `isUnpaid`, `isOverdue(expense, now)` (unpaid and due before today, any month).
   - `totals({ expenseTotal, envelopes, incomes })` → income, expenses (**`totalAmount` + envelope `spentAmount`**, a `null` spend counts as 0), balance, salary base, and whether every envelope's spend was available.
-  - `envelopeStatus` (spent, allocated, ratio, over budget) and `sortEnvelopes` (over budget first).
+  - `envelopeStatus` (spent, allocated, ratio, over budget) and `sortEnvelopes` (over budget first, then alphabetical by category; each group alphabetical).
   - `installmentEndDate(plan)` = first purchase + (N − 1) × interval days.
 - **Done when:** tests reproduce the spec examples (Expenses 6,530.48 and Balance 845.19, Hydro overdue on 2026-11-15, Car finance 78 and 79 in one month).
 - **Backend:** Q-3 pending (see [t-05-backend-requirements.md](../specs/t-05-backend-requirements.md)): if the external spend already includes expenses recorded in envelope categories, the same money is counted in both `totalAmount` and the envelope spend. Until it is answered, `totals` follows spec §2 (expense total + envelope spend); if the answer is yes, `totals` must exclude the overlap. `totals` takes the month's expense total from `totalAmount` (T-02), not from the page on screen.
@@ -150,7 +150,7 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 - **Status: done (2026-11-04).** Exports `INCOMES_QUERY_KEY`; a month's list is keyed `["incomes", "month", periodId]` and waits until the period id is known. All three mutations invalidate every income query. `useUpdateIncome` takes `{ id, ...fields }` and sends only the fields given (`receivedAt: null` clears the date).
 
 #### T-14 Envelope hooks
-- `use-budget-envelopes.ts`: `useMonthEnvelopes(periodId)`, `useCreateEnvelope`, `useDeleteEnvelope`. No update hook (M-22).
+- `use-budget-envelopes.ts`: `useMonthEnvelopes(periodId)`, `useCreateEnvelope`, `useDeleteEnvelope` (and `useUpdateEnvelope`, added with T-33).
 - Spend comes with each envelope (`spentAmount`, `null` when the spend service is down), so no extra hook. `GET` is cached for 60 s in the backend for the current and future months; the hook refetches on window focus and invalidates after create and delete.
 - **Status: done (2026-11-04).** Exports `BUDGET_ENVELOPES_QUERY_KEY`; a month's list is keyed `["budget-envelopes", "month", periodId]` and waits until the period id is known. `spentAmount` is passed through untouched, `null` included. Create and delete invalidate every envelope query.
 
@@ -175,7 +175,7 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 - **Status: done (2026-11-05).** `useMonthSummary(periodId)` combines page 1 of the expenses (`totalAmount`), the incomes and the envelopes into `totals`; `SummaryCards` renders for open and closed months. The Income card shows no `+` sign. The phone layout (Balance holding Income and Expenses) is T-22.
 
 #### T-19 Envelopes card (M-04, M-11)
-- **Includes:** a 4-column grid with name, spent / allocated and a bar; over-budget first and in the danger colour; the "{n} over budget" pill; Hide / Show remembered in `localStorage` (wrapped in try/catch); spend placeholder "—" until the API exists; clicking an envelope opens its details (wired in T-24).
+- **Includes:** a 4-column grid with name, spent / allocated and a bar; over-budget first and in the danger colour, then alphabetical by category; the "{n} over budget" pill; Hide / Show remembered in `localStorage` (wrapped in try/catch); spend placeholder "—" until the API exists; clicking an envelope opens its details (wired in T-24).
 - **Done when:** it matches the expanded and collapsed `design.pen` frames, and the over-budget pill stays visible when collapsed.
 - **Backend:** G-12 (envelopes carry no category name). Names come from the categories lookup (T-10); a category deleted after the envelope's month shows "(deleted)" until the backend returns `category: { id, name }`.
 - An envelope with unavailable spend shows "—" and no bar, and can't count as over budget.
@@ -288,10 +288,13 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 - **Backend:** none. `POST`, `PATCH` and `DELETE /incomes` are enough (checked against the real API); incomes have no future-date rule and no 422, so past months need no special handling. BE-1 (salary with the month) belongs to T-35 and T-37.
 - **Status: done (2026-11-16).** `IncomeFormPanel` (same shell as the expense form: `DetailsSheet`, 14px labels, red borders with no visible message, **Save** and **Cancel**; no "Finish & add another", which the spec only asks for on expenses), a new `Switch` primitive (`components/ui/switch.tsx`) for Salary, and `lib/income-form.ts` (schema, create and update builders, `incomeDeleteMessage`). Edit sends only the changed fields (a cleared date goes as `null`); saving with no change closes without a request. `MonthScreen` wires `+ Add → Income` (header menu and phone button), the panel's Add button and each income's Edit and Delete (`ConfirmDeleteModal` naming the income; a 404 counts as already deleted). Opened from the income panel, the form gives the panel back when it closes so the change shows in the list; opened from `+ Add`, nothing reopens. One panel at a time, and the form closes when the month changes. Checked in the browser against the real API (create with Salary on and a received date: 201 and the expected body, Income card and balance up by the amount; edit: `PATCH` with `{"amount":6200}` only; delete: 204 and the row gone; desktop, 390px with no horizontal scroll, dark and light, no console errors); the test income was removed. Not run in the browser: a past month and a failing request (covered by the component tests). `design.pen` has no income form frame yet; the form was compared with the expense form frames.
 
-#### T-33 Add and delete envelopes (M-23, M-24)
-- **Includes:** **+ Add → Envelope**, offering only envelope categories without an envelope this month; delete from the envelope's details.
-- **Blocked by a decision:** U-2 in [todo.md](../specs/todo.md). Adding an envelope means entering its budget once (the one exception to M-22). Confirm that M-23 and M-24 stay before starting.
-- **Past months:** + Add → Envelope and the envelope's Delete are hidden in past months (`canEditEnvelopes`, M-25).
+#### T-33 Add, edit and delete envelopes (M-22, M-23, M-24)
+- **Includes:** **+ Add → Category** (only categories that use envelopes and have none this month; the entry is disabled with a reason when none are left); **Edit budget** in the envelope's details, changing only the allocated amount (the category is read-only in the form); **Delete** from the details, behind a confirmation naming the category. Detailed plan: [t-33-envelopes.md](t-33-envelopes.md).
+- **Done when:** the M-22, M-23 and M-24 acceptance criteria pass.
+- **Decision (2026-11-16):** U-2 closed. Adding and deleting stay, and the budget can be edited (this reverses the old "budgets are read-only" rule).
+- **Past months:** + Add → Category, Edit budget and Delete are hidden in past months (`canEditEnvelopes`, M-25).
+- **Backend:** none. `POST`, `PATCH` (only `allocatedAmount`) and `DELETE /budget-envelopes` are enough. The `PATCH` response has no `spentAmount`, so the screen refetches the envelopes instead of writing the response to the cache.
+- **Status: done (2026-11-16).** `EnvelopeFormPanel` (same shell as the income form; category select in add mode, read-only text in edit mode, the spend as a hint), `lib/envelope-form.ts`, `useUpdateEnvelope`, `AddMenu` entries that can be disabled with a reason, the Edit budget button in `EnvelopeDetailsPanel`, and the delete confirmation in `MonthScreen` (the details hide at once and come back if it fails; a 404 counts as already deleted). Saving a changed budget brings the details back; saving with the same budget closes with no request. `describeApiError` gained `updateEnvelope` and `deleteEnvelope` (404 gives "This envelope no longer exists."). Checked in the browser against the real API: Add menu with the Envelope entry disabled (all categories used) and enabled after a delete; one `DELETE` (204), then `POST` with the expected body (201); `PATCH` with `{"allocatedAmount":…}` only (200), spend intact and over-budget status updated; unchanged save sends nothing; past month has no Envelope entry, Edit budget or Delete; dark and light on desktop, 390px with no horizontal scroll. Not confirmed in the browser: a failing request (Chrome's offline mode didn't stop the request; covered by the component tests). The Parking envelope used for the test was recreated with the same budget (new id); Grocery's budget was restored. `design.pen` has no envelope form frames yet; the form was compared with the income form.
 
 #### T-34 Past-month envelope guard (M-25)
 - **Includes:** a 422 on creating or deleting an envelope shows "Envelopes of past months can't be changed" (`errors.monthClosed`, `isMonthClosedError`) and refreshes the envelopes. It only happens when a month ends while the screen is open, since the screen already hides those actions in past months.
@@ -349,6 +352,4 @@ Delivered on 2026-11-03 and no longer waited on: envelope spend (G-5), plan size
 
 ## 5. Open questions
 
-| Question | Blocks |
-|---|---|
-| U-2: Do adding and deleting envelopes (M-23, M-24) stay, given budgets are read-only? | T-33 |
+None at the moment (U-2 was resolved on 2026-11-16).
