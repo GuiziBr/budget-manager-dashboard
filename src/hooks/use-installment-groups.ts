@@ -1,7 +1,8 @@
 "use client"
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { api } from "@/lib/api"
+import { ApiError, api } from "@/lib/api"
+import { isUuid } from "@/lib/id"
 import type { Id, InstallmentGroup, UpdateInstallmentGroupInput } from "@/types"
 
 export const INSTALLMENT_GROUPS_QUERY_KEY = ["installment-groups"] as const
@@ -11,6 +12,15 @@ export const INSTALLMENT_GROUPS_QUERY_KEY = ["installment-groups"] as const
  * their own module; keep it equal to `EXPENSES_QUERY_KEY` there.
  */
 const EXPENSES_QUERY_KEY = ["expenses"] as const
+
+/**
+ * The endpoint of one plan. An id that isn't a UUID (a tampered `?plan=` such as
+ * `../budget-periods`) never reaches the URL: it fails like the API's own 400.
+ */
+function planEndpoint(id: Id): string {
+	if (!isUuid(id)) throw new ApiError("Invalid id", 400)
+	return `installment-groups/${encodeURIComponent(id)}`
+}
 
 export function installmentGroupQueryKey(id: Id | undefined) {
 	return [...INSTALLMENT_GROUPS_QUERY_KEY, id] as const
@@ -23,7 +33,7 @@ export function installmentGroupQueryKey(id: Id | undefined) {
 export function useInstallmentGroup(id: Id | undefined) {
 	return useQuery({
 		queryKey: installmentGroupQueryKey(id),
-		queryFn: () => api.get<InstallmentGroup>(`installment-groups/${id}`),
+		queryFn: async () => api.get<InstallmentGroup>(planEndpoint(id as Id)),
 		enabled: id !== undefined,
 		// A link to a plan that isn't there answers 404 or 400 for good: report it at once
 		retry: false
@@ -39,8 +49,11 @@ export function useUpdateInstallmentGroup() {
 	const queryClient = useQueryClient()
 
 	return useMutation({
-		mutationFn: ({ id, ...input }: UpdateInstallmentGroupInput & { id: Id }) =>
-			api.patch<InstallmentGroup>(`installment-groups/${id}`, input),
+		mutationFn: async ({
+			id,
+			...input
+		}: UpdateInstallmentGroupInput & { id: Id }) =>
+			api.patch<InstallmentGroup>(planEndpoint(id), input),
 		onSuccess: () =>
 			Promise.all([
 				queryClient.invalidateQueries({

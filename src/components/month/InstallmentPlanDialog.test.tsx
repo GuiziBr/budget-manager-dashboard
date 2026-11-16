@@ -10,7 +10,7 @@ import { InstallmentPlanDialog } from "./InstallmentPlanDialog"
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 const group = {
-	id: "g1",
+	id: "2654e28f-64e3-461f-9388-c9773f36fb17",
 	description: "Car finance",
 	amountPerInstallment: 450,
 	totalInstallments: 6,
@@ -45,7 +45,7 @@ function setup(
 	const { wrapper } = createQueryWrapper()
 	render(
 		<InstallmentPlanDialog
-			planId="g1"
+			planId="2654e28f-64e3-461f-9388-c9773f36fb17"
 			onClose={onClose}
 			onMissing={onMissing}
 			canEdit
@@ -63,7 +63,9 @@ describe("InstallmentPlanDialog", () => {
 	it("shows the plan with the amount per payment read from the group", async () => {
 		const { get } = setup()
 		expect(await screen.findByText("CAD 450.00")).toBeInTheDocument()
-		expect(get).toHaveBeenCalledWith("installment-groups/g1")
+		expect(get).toHaveBeenCalledWith(
+			"installment-groups/2654e28f-64e3-461f-9388-c9773f36fb17"
+		)
 		expect(screen.getByText("Car finance")).toBeInTheDocument()
 		expect(screen.getByText("6")).toBeInTheDocument()
 		expect(screen.getByText("Every 30 days")).toBeInTheDocument()
@@ -130,9 +132,12 @@ describe("InstallmentPlanDialog", () => {
 		expect(patch).not.toHaveBeenCalled()
 		await user.click(screen.getByRole("button", { name: "Save" }))
 		await vi.waitFor(() =>
-			expect(patch).toHaveBeenCalledWith("installment-groups/g1", {
-				amountPerInstallment: 120.5
-			})
+			expect(patch).toHaveBeenCalledWith(
+				"installment-groups/2654e28f-64e3-461f-9388-c9773f36fb17",
+				{
+					amountPerInstallment: 120.5
+				}
+			)
 		)
 		await vi.waitFor(() => expect(onClose).toHaveBeenCalled())
 		expect(toast.success).toHaveBeenCalledWith("Car finance plan updated")
@@ -217,7 +222,7 @@ describe("InstallmentPlanDialog", () => {
 			.mockResolvedValue(group as never)
 		render(
 			<InstallmentPlanDialog
-				planId="g1"
+				planId="2654e28f-64e3-461f-9388-c9773f36fb17"
 				onClose={vi.fn()}
 				onMissing={vi.fn()}
 				canEdit

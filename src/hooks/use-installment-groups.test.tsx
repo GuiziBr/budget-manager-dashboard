@@ -14,7 +14,7 @@ afterEach(() => {
 })
 
 const group = {
-	id: "g1",
+	id: "2654e28f-64e3-461f-9388-c9773f36fb17",
 	description: "Car finance",
 	amountPerInstallment: 450,
 	totalInstallments: 80,
@@ -30,11 +30,16 @@ describe("useInstallmentGroup", () => {
 		const get = vi.spyOn(api, "get").mockResolvedValue(group)
 		const { wrapper } = createQueryWrapper()
 
-		const { result } = renderHook(() => useInstallmentGroup("g1"), { wrapper })
+		const { result } = renderHook(
+			() => useInstallmentGroup("2654e28f-64e3-461f-9388-c9773f36fb17"),
+			{ wrapper }
+		)
 
 		await waitFor(() => expect(result.current.isSuccess).toBe(true))
 		expect(result.current.data).toEqual(group)
-		expect(get).toHaveBeenCalledWith("installment-groups/g1")
+		expect(get).toHaveBeenCalledWith(
+			"installment-groups/2654e28f-64e3-461f-9388-c9773f36fb17"
+		)
 	})
 
 	it("does not request anything while no plan is open", () => {
@@ -53,16 +58,36 @@ describe("useInstallmentGroup", () => {
 		vi.spyOn(api, "get").mockRejectedValue(new Error("404"))
 		const { wrapper } = createQueryWrapper()
 
-		const { result } = renderHook(() => useInstallmentGroup("g1"), { wrapper })
+		const { result } = renderHook(
+			() => useInstallmentGroup("2654e28f-64e3-461f-9388-c9773f36fb17"),
+			{ wrapper }
+		)
 
 		await waitFor(() => expect(result.current.isError).toBe(true))
+	})
+
+	it("never sends an id that isn't a UUID, so a tampered link can't reach another endpoint", async () => {
+		const get = vi.spyOn(api, "get").mockResolvedValue(group)
+		const { wrapper } = createQueryWrapper()
+
+		const { result } = renderHook(
+			() => useInstallmentGroup("../budget-periods"),
+			{ wrapper }
+		)
+
+		await waitFor(() => expect(result.current.isError).toBe(true))
+		expect(get).not.toHaveBeenCalled()
+		expect(result.current.error).toMatchObject({ status: 400 })
 	})
 
 	it("doesn't retry a failed read, so a link to a missing plan reports at once", async () => {
 		const get = vi.spyOn(api, "get").mockRejectedValue(new Error("404"))
 		const { wrapper } = createQueryWrapper()
 
-		const { result } = renderHook(() => useInstallmentGroup("g1"), { wrapper })
+		const { result } = renderHook(
+			() => useInstallmentGroup("2654e28f-64e3-461f-9388-c9773f36fb17"),
+			{ wrapper }
+		)
 
 		await waitFor(() => expect(result.current.isError).toBe(true))
 		expect(get).toHaveBeenCalledTimes(1)
@@ -80,12 +105,18 @@ describe("useUpdateInstallmentGroup", () => {
 			wrapper
 		})
 		await act(() =>
-			result.current.mutateAsync({ id: "g1", amountPerInstallment: 480 })
+			result.current.mutateAsync({
+				id: "2654e28f-64e3-461f-9388-c9773f36fb17",
+				amountPerInstallment: 480
+			})
 		)
 
-		expect(patch).toHaveBeenCalledWith("installment-groups/g1", {
-			amountPerInstallment: 480
-		})
+		expect(patch).toHaveBeenCalledWith(
+			"installment-groups/2654e28f-64e3-461f-9388-c9773f36fb17",
+			{
+				amountPerInstallment: 480
+			}
+		)
 	})
 
 	it("refreshes the plan and every expense query", async () => {
@@ -97,7 +128,10 @@ describe("useUpdateInstallmentGroup", () => {
 			wrapper
 		})
 		await act(() =>
-			result.current.mutateAsync({ id: "g1", amountPerInstallment: 480 })
+			result.current.mutateAsync({
+				id: "2654e28f-64e3-461f-9388-c9773f36fb17",
+				amountPerInstallment: 480
+			})
 		)
 
 		expect(invalidate).toHaveBeenCalledWith({
@@ -120,7 +154,10 @@ describe("useUpdateInstallmentGroup", () => {
 			wrapper
 		})
 		await act(() =>
-			result.current.mutateAsync({ id: "g1", amountPerInstallment: 480 })
+			result.current.mutateAsync({
+				id: "2654e28f-64e3-461f-9388-c9773f36fb17",
+				amountPerInstallment: 480
+			})
 		)
 
 		for (const periodId of ["p1", "p2"]) {
@@ -141,10 +178,29 @@ describe("useUpdateInstallmentGroup", () => {
 		})
 		await act(async () => {
 			await result.current
-				.mutateAsync({ id: "g1", amountPerInstallment: 1 })
+				.mutateAsync({
+					id: "2654e28f-64e3-461f-9388-c9773f36fb17",
+					amountPerInstallment: 1
+				})
 				.catch(() => {})
 		})
 
 		expect(invalidate).not.toHaveBeenCalled()
+	})
+
+	it("refuses to update a plan whose id isn't a UUID", async () => {
+		const patch = vi.spyOn(api, "patch").mockResolvedValue(group)
+		const { wrapper } = createQueryWrapper()
+		const { result } = renderHook(() => useUpdateInstallmentGroup(), {
+			wrapper
+		})
+
+		await expect(
+			result.current.mutateAsync({
+				id: "../budget-periods",
+				amountPerInstallment: 1
+			})
+		).rejects.toMatchObject({ status: 400 })
+		expect(patch).not.toHaveBeenCalled()
 	})
 })
