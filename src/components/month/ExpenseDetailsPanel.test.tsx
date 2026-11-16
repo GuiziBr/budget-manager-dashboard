@@ -212,6 +212,34 @@ describe("ExpenseDetailsPanel", () => {
 		expect(panel.getByText("Every 14 days")).toBeInTheDocument()
 		expect(panel.getByText("10 Nov 2023")).toBeInTheDocument()
 		expect(panel.getByText("22 Oct 2027")).toBeInTheDocument()
+		expect(panel.getByRole("button", { name: "View plan" })).toBeInTheDocument()
+	})
+
+	it("asks to open the plan by its id from View plan", async () => {
+		const onViewPlan = vi.fn()
+		const { user } = setup(
+			[
+				expense(1, {
+					installmentNumber: 2,
+					installment: {
+						id: "g1",
+						totalInstallments: 6,
+						paymentIntervalDays: 30,
+						firstPurchasedAt: "2026-09-10T00:00:00.000Z"
+					}
+				})
+			],
+			{ onViewPlan }
+		)
+		const panel = await dialog()
+		await openTab(panel, "Installment plan")
+		await user.click(panel.getByRole("button", { name: "View plan" }))
+		expect(onViewPlan).toHaveBeenCalledWith("g1")
+	})
+
+	it("has no View plan button on one-time and recurring expenses", async () => {
+		setup([expense(1)])
+		const panel = await dialog()
 		expect(panel.queryByRole("button", { name: "View plan" })).toBeNull()
 	})
 

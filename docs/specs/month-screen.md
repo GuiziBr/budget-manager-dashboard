@@ -304,7 +304,7 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 **How it works**
 1. Clicking or tapping a row opens the details: a side panel from the right on desktop, a bottom sheet on the phone. The selected row is highlighted behind it.
 2. Below the amount and status, the details are in **tabs**, one per group: **Payment** (the default), **Dates**, **Installment plan** and **Recurring bill**. Payment and Dates are always there; the other two appear only for an installment or a recurring expense. The chosen tab is kept while stepping to another expense, and falls back to Payment if that expense doesn't have it. Details show the item (no type chip under the title: the number of an installment or the month of a recurring bill is in its tab), category (to the right of the amount) and amount; the status (paid, unpaid, overdue) is the first row of the Payment tab, a **Mark as paid today** button when unpaid, and every field not shown in the table: payment type, **bank, store**, **purchased**, due and paid dates.
-3. For installments they add the plan: `n of N`, interval, first purchase date and **end date**. There is no View plan button: these fields are all the row details need, and they come with the expense. The plan's amount per payment is not shown here, because the row's own amount can differ after a single-row edit (M-17).
+3. For installments they add the plan: `n of N`, interval, first purchase date and **end date**. A **View plan** button below the plan opens the plan dialog (M-19). The plan's amount per payment is shown only there, because the row's own amount can differ after a single-row edit (M-17).
 4. For recurring rows they add the bill's start month, "Month 11" (M-10) and a link to the bill on the Recurring screen.
 5. Actions: Mark paid / unpaid, Edit, Delete (an envelope's Delete is hidden in past months).
 6. **Shareable link.** The open expense or envelope is in the address: `?expense=<id>` or `?envelope=<id>`, next to `?period=` and `?page=`. Opening a row adds a history entry, so the back button closes the panel; closing it goes back to that entry, or just removes the param when the panel came from a pasted link. A link opens the details wherever the row is (any page, any sort, any month): if the address names another month than the one shown, the screen switches to the row's month (replacing the address, so back doesn't land on the wrong month). A link to something that doesn't exist, or whose month isn't opened, shows "This expense no longer exists." (or "This envelope…") and drops the param. An id that isn't shaped like one the API issues (a tampered address) is treated the same way, without a request: the id is never put into a request path unchecked. Changing month drops the selection.
@@ -518,9 +518,9 @@ The expense is created in the month being viewed (except installments, see M-15)
 *As the budget owner, I want to change the amount of all remaining payments of a plan at once.*
 
 **How it works**
-1. *Entry point to be decided.* The row details have no View plan button (dropped 2026-11-09), so this flow needs another way in, such as an action in the installment section of the details.
+1. **View plan**, in the Installment plan tab of the row details, opens the plan dialog with the amount per payment. The plan is in the address (`?plan=<id>`), so the link can be shared and Back closes it.
 2. **Change amount** lets me enter a new amount per payment.
-3. The confirmation says: "Payments in {current month} and later will change to CAD {amount}. Earlier payments keep their amount."
+3. The confirmation says: "Payments in {current month} and later will change to CAD {amount}. Earlier payments keep their amount." The current month is today's calendar month, not the month on screen. *Pending BE-6 ([todo.md](todo.md)): a payment already paid should keep its amount, so when the current month's payment is paid the change starts next month. The backend doesn't do this yet; the wording above is today's behaviour.*
 
 **Rules**
 - Only the amount per payment can change. Number of payments, interval and first purchase date are fixed.

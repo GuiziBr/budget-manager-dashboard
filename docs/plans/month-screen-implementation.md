@@ -1,6 +1,6 @@
 # Month Screen — Implementation Plan
 
-Status: draft 6 (T-26 done) · Last updated: 2026-11-10
+Status: draft 6 (T-31 done) · Last updated: 2026-11-16
 
 Breaks the [Month screen spec](../specs/month-screen.md) and the wireframes in `design.pen` into small tasks. Each task is one pull request to `development`, sized to be reviewed in one sitting.
 
@@ -155,7 +155,7 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 - **Status: done (2026-11-04).** Exports `BUDGET_ENVELOPES_QUERY_KEY`; a month's list is keyed `["budget-envelopes", "month", periodId]` and waits until the period id is known. `spentAmount` is passed through untouched, `null` included. Create and delete invalidate every envelope query.
 
 #### T-15 Installment group hooks
-- `use-installment-groups.ts`: `useInstallmentGroup(id)` (for the amount per payment, which `expense.installment` doesn't carry; unused since View plan was dropped from T-24, kept for T-31) and `useUpdateInstallmentGroup` (invalidates the expenses of every month it touches). `n of N`, interval and first purchase date come with each expense, so there are no per-plan reads.
+- `use-installment-groups.ts`: `useInstallmentGroup(id)` (for the amount per payment, which `expense.installment` doesn't carry; read by the plan dialog of T-31) and `useUpdateInstallmentGroup` (invalidates the expenses of every month it touches). `n of N`, interval and first purchase date come with each expense, so there are no per-plan reads.
 - **Status: done (2026-11-04).** `useInstallmentGroup(id)` stays idle while `id` is `undefined`, so a caller can pass the id only when it needs the plan. `useUpdateInstallmentGroup` takes `{ id, amountPerInstallment }` and invalidates the plan and the root `["expenses"]` key, which covers every month and page. The key is a local copy until the expense hooks are merged; switch it to `EXPENSES_QUERY_KEY` then.
 
 ### Phase 2 — Read-only Month screen
@@ -221,7 +221,7 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 - **Includes:** the panel for expenses and envelopes:
   - type chip, title, category, amount and status pill;
   - Payment, Dates and Recurring bill sections;
-  - for installments, the plan section (`n of N`, interval, first purchase, end date); no View plan button (dropped 2026-11-09, the section has all the details needed); the plan's amount per payment is not on the expense and is not shown;
+  - for installments, the plan section (`n of N`, interval, first purchase, end date); a **View plan** button below the plan tab (dropped 2026-11-09, brought back 2026-11-16 as the entry point of T-31) opens the plan dialog; the plan's amount per payment is not on the expense, so only that dialog reads it;
   - the selected row highlighted;
   - actions hidden in past months only for envelopes (`canEditEnvelopes`); expense actions work in every opened month.
   Action buttons are wired in T-25, T-29 and T-30.
@@ -268,7 +268,7 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 - **Done when:** the M-17 acceptance criteria pass.
 - Prefill reads the ids from `expense.category.id`, `expense.paymentType.id`, `expense.bank?.id` and `expense.store?.id`; the request body still sends flat ids.
 - **Backend:** none. `PATCH /expenses/:id` already changes one row only (installment and recurring rows included), clears bank, store and dates with `null`, and answers 400 for the bank rule and a future purchase date, 404 for a gone lookup. A deleted payment type's `hasStatement` is unknown to the client, so the server has the last word on the bank rule.
-- **Status: done (2026-11-13).** `ExpenseFormPanel` takes an `expense` prop (edit mode): same panel and design as the add form, titled "Edit expense" with the month beside it, no type tabs, **Save** and **Cancel** only. `expenseToFormValues` and `buildUpdateExpenseInput` in `lib/expense-form.ts` prefill and send only the changed fields (cleared ones as `null`); saving with no change closes without a request. An installment row edits as one payment (no plan fields; Purchased stays editable) with a note that the other payments don't change; a recurring row has no Purchased date and a note linking to the Recurring screen. A deleted lookup stays selected as "Name (deleted)" only while it is still the chosen value. Edit opens from the details panel and from the row menu (desktop table; `MonthTable` takes `onEdit`, and the menu only exists when it is given and the month is editable); the form replaces the details panel, and saving keeps the table on its page. The installment note has no link until T-31 settles where Change amount lives (U-3). The phone list has no row menu: Edit is reached through the details panel.
+- **Status: done (2026-11-13).** `ExpenseFormPanel` takes an `expense` prop (edit mode): same panel and design as the add form, titled "Edit expense" with the month beside it, no type tabs, **Save** and **Cancel** only. `expenseToFormValues` and `buildUpdateExpenseInput` in `lib/expense-form.ts` prefill and send only the changed fields (cleared ones as `null`); saving with no change closes without a request. An installment row edits as one payment (no plan fields; Purchased stays editable) with a note that the other payments don't change; a recurring row has no Purchased date and a note linking to the Recurring screen. A deleted lookup stays selected as "Name (deleted)" only while it is still the chosen value. Edit opens from the details panel and from the row menu (desktop table; `MonthTable` takes `onEdit`, and the menu only exists when it is given and the month is editable); the form replaces the details panel, and saving keeps the table on its page. The installment note has no link to the plan yet (T-31 put View plan in the details panel only). The phone list has no row menu: Edit is reached through the details panel.
 
 #### T-30 Delete expense (M-18)
 - **Includes:** `ConfirmDeleteModal` asking "Are you sure you want to delete the {expense type} {item}?" (type: one-time expense, installment or recurring expense). Also available in past months.
@@ -277,9 +277,10 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 - **Status: done (2026-11-13).** `ConfirmDeleteModal` (the existing one) asks "Are you sure you want to delete the {type} {item}?" (`lib/expense-delete.ts`); `MonthScreen` holds the `deleting` expense and the `useDeleteExpense` call. Delete is in the desktop row menu (`MonthTable` `onDelete`) and in the details panel; the phone reaches it through the panel. A successful delete toasts "{item} deleted". A 404 counts as already deleted (no toast); other failures toast "Couldn't delete the expense. Try again.". Deleting from the panel hides it at once and clears `?expense=` (the open row would otherwise be read by id after the delete and report a 404); if the delete fails the panel comes back. Checked in the browser against the real API on desktop and at 390px, in light and dark, in the current and a past month: cancel sends nothing, one `DELETE` per confirm, the pending spinner, the failure toast, focus in the modal and Escape, and the last row of the last page falling back to the previous page. Test rows were removed afterwards.
 
 #### T-31 Change an installment plan's amount (M-19)
-- **Blocked by a decision:** View plan was dropped from the row details (T-24), so M-19 has no entry point yet. Decide where Change amount lives (for example an action in the details' installment section) before starting.
-- **Includes:** a Change amount field, opened from that entry point; the confirmation naming the current month; `PATCH /installment-groups/:id`; refresh of the months it affects. The backend changes only rows from the current month onward, so opened from a past month the confirmation says the change applies from this month onward and past rows keep their amount.
+- **Includes:** a **View plan** button in the details' Installment plan tab opens the plan dialog, driven by the address: `?plan=<id>` beside `?expense=` (`useLinkedPlan`, `parsePlanId` and `planHref` in `lib/selection-link.ts`), so the link can be shared, a pasted link opens the dialog over the month screen, and Back closes it leaving the row's details open. The dialog reads `GET /installment-groups/:id` (description, amount per payment, number of payments, interval, first purchase, last payment) and offers **Change amount**: a field, then a confirmation naming the **current calendar month** ("Payments in {month} and later will change to CAD {amount}. Earlier payments keep their amount."), then `PATCH /installment-groups/:id`. The backend changes only payments from the current UTC month onward, whichever month is on screen, so the wording is the same from a past month.
 - **Done when:** the M-19 acceptance criteria pass.
+- **Backend:** BE-6 pending (see [todo.md](../specs/todo.md)): the rule "a paid current-month payment keeps its amount, the change starts next month" is not implemented by the backend, which changes every payment from the current month on, paid or not. The screen can't apply it itself (the dialog doesn't know whether the current payment is paid), so until BE-6 lands the confirmation says "{current month} and later" and a paid payment is overwritten too. When it lands, update the confirmation wording (`planChangeMessage`, M-19) to the delivered rule. Optional: `amountPerInstallment` inside `expense.installment` (saves the plan read).
+- **Status: done (2026-11-16).** `InstallmentPlanDialog` (view, amount and confirm steps) is rendered by `MonthScreen` while `?plan=` is set. It has no "n of N", because that belongs to one payment; the plan carries the total. A plan that doesn't exist (404) or an id that isn't a UUID (400) toasts "This plan no longer exists." and drops the param; `useInstallmentGroup` doesn't retry, so that happens at once. `planChangeApplies` and `planChangeMessage` in `lib/installment-plan.ts`; `describeApiError` gained the `changePlanAmount` context. A plan whose last payment is before the current month shows a note and the button is disabled, because nothing would change. Without edit access the dialog is read-only. Checked in the browser against the real API (desktop and 390px, dark): View plan adds `&plan=<id>`, Back closes the dialog and keeps the details, a pasted link opens it, Close on a pasted link drops the param, bad ids toast, one `PATCH` with `{"amountPerInstallment":120.5}`, the table refreshed and the earlier month kept its amount, a failing PATCH keeps the dialog open with the generic toast, no horizontal scroll, no console errors. Light theme not looked at. The edit form's installment note still has no link to the plan: it can use `useLinkedPlan` now.
 
 #### T-32 Add, edit, delete income (M-20, M-21)
 - **Includes:** the income form (Description, Amount, Salary switch, Received date) from **+ Add** and the income panel; edit and delete from each income's menu.
@@ -342,10 +343,10 @@ Delivered on 2026-11-03 and no longer waited on: envelope spend (G-5), plan size
 |---|---|---|
 | G-12 category name on envelopes | T-19, T-24 | Replace "(deleted)" with the real category name |
 | BE-1 salary with the month | T-35, T-37 | Send the salary with `POST /budget-periods` |
+| BE-6 keep paid payments when changing a plan's amount | T-31 | Reword the confirmation in `planChangeMessage` and M-19 to the delivered rule |
 
 ## 5. Open questions
 
 | Question | Blocks |
 |---|---|
 | U-2: Do adding and deleting envelopes (M-23, M-24) stay, given budgets are read-only? | T-33 |
-| U-3: Where does Change amount (M-19) live now that View plan is gone from the row details? | T-31 |

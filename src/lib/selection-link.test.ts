@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest"
 import {
 	monthChangeHref,
+	parsePlanId,
 	parseSelection,
+	planHref,
 	selectionHref
 } from "./selection-link"
 
@@ -96,5 +98,27 @@ describe("monthChangeHref", () => {
 		expect(
 			monthChangeHref(params("envelope=v1"), { year: 2027, month: 1 })
 		).toBe("?envelope=v1&period=2027-01")
+	})
+})
+
+describe("parsePlanId", () => {
+	it("reads the plan and ignores a missing or blank value", () => {
+		expect(parsePlanId(params("plan=g1"))).toBe("g1")
+		expect(parsePlanId(params("plan=%20"))).toBeNull()
+		expect(parsePlanId(params("period=2026-11"))).toBeNull()
+	})
+})
+
+describe("planHref", () => {
+	it("opens a plan beside the open expense and the rest of the address", () => {
+		expect(planHref(params("period=2026-11&expense=e1&page=2"), "g1")).toBe(
+			"?period=2026-11&expense=e1&page=2&plan=g1"
+		)
+	})
+
+	it("closes the plan and keeps the rest", () => {
+		expect(planHref(params("period=2026-11&expense=e1&plan=g1"), null)).toBe(
+			"?period=2026-11&expense=e1"
+		)
 	})
 })

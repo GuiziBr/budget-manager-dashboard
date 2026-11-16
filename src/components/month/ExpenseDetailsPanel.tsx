@@ -49,6 +49,8 @@ interface ExpenseDetailsPanelProps {
 	onTogglePaid?: (expense: Expense) => void
 	onEdit?: (expense: Expense) => void
 	onDelete?: (expense: Expense) => void
+	/** Opens the plan dialog (M-19); the plan is named in the address. */
+	onViewPlan?: (planId: Id) => void
 }
 
 const t = translations.month.details
@@ -110,11 +112,15 @@ function PanelBody({
 	canEdit,
 	onTogglePaid,
 	onEdit,
-	onDelete
+	onDelete,
+	onViewPlan
 }: {
 	row: MonthRow
 	canEdit: boolean
-} & Pick<ExpenseDetailsPanelProps, "onTogglePaid" | "onEdit" | "onDelete">) {
+} & Pick<
+	ExpenseDetailsPanelProps,
+	"onTogglePaid" | "onEdit" | "onDelete" | "onViewPlan"
+>) {
 	const { expense, installment } = row
 	// Payment and Dates always apply; the other two only for that kind of expense
 	const available: DetailsTab[] = [
@@ -219,6 +225,15 @@ function PanelBody({
 								{orNone(formatFullDate(rowInstallmentEndDate(installment)))}
 							</DetailsField>
 						</DetailsSection>
+						<Button
+							variant="outline"
+							className="mt-3 w-full"
+							onClick={() =>
+								expense.installment && onViewPlan?.(expense.installment.id)
+							}
+						>
+							{t.viewPlan}
+						</Button>
 					</TabsContent>
 				)}
 				{row.type === "recurring" && (
