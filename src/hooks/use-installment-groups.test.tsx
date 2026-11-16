@@ -57,6 +57,16 @@ describe("useInstallmentGroup", () => {
 
 		await waitFor(() => expect(result.current.isError).toBe(true))
 	})
+
+	it("doesn't retry a failed read, so a link to a missing plan reports at once", async () => {
+		const get = vi.spyOn(api, "get").mockRejectedValue(new Error("404"))
+		const { wrapper } = createQueryWrapper()
+
+		const { result } = renderHook(() => useInstallmentGroup("g1"), { wrapper })
+
+		await waitFor(() => expect(result.current.isError).toBe(true))
+		expect(get).toHaveBeenCalledTimes(1)
+	})
 })
 
 describe("useUpdateInstallmentGroup", () => {

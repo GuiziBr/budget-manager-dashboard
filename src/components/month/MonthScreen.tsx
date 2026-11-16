@@ -10,6 +10,7 @@ import { EnvelopesCard } from "@/components/month/EnvelopesCard"
 import { ExpenseDetailsPanel } from "@/components/month/ExpenseDetailsPanel"
 import { ExpenseFormPanel } from "@/components/month/ExpenseFormPanel"
 import { IncomePanel } from "@/components/month/IncomePanel"
+import { InstallmentPlanDialog } from "@/components/month/InstallmentPlanDialog"
 import { MonthError } from "@/components/month/MonthError"
 import { MonthHeader } from "@/components/month/MonthHeader"
 import { MonthNotOpened } from "@/components/month/MonthNotOpened"
@@ -25,6 +26,7 @@ import {
 	useDeleteExpense,
 	useUpdateExpense
 } from "@/hooks/use-expenses"
+import { useLinkedPlan } from "@/hooks/use-linked-plan"
 import { useLinkedSelection } from "@/hooks/use-linked-selection"
 import { useLinkedSelectionSync } from "@/hooks/use-linked-selection-sync"
 import { PHONE_QUERY, useMediaQuery } from "@/hooks/use-media-query"
@@ -55,6 +57,8 @@ export function MonthScreen() {
 	const queryClient = useQueryClient()
 	// What the details panel shows (one expense or one envelope) lives in the address, so it can be shared
 	const link = useLinkedSelection()
+	// The installment plan dialog is in the address too (`?plan=`), over the row's details
+	const plan = useLinkedPlan()
 	// An expense being deleted is hidden at once: the address updates a moment later,
 	// and until then the panel would read the gone row by id and report a 404
 	const [removingId, setRemovingId] = useState<string | null>(null)
@@ -228,8 +232,18 @@ export function MonthScreen() {
 						onTogglePaid={togglePaid}
 						onEdit={openEdit}
 						onDelete={setDeleting}
+						onViewPlan={plan.open}
 						returnFocusRef={detailsOpener}
 					/>
+					{plan.planId && (
+						<InstallmentPlanDialog
+							key={plan.planId}
+							planId={plan.planId}
+							onClose={plan.close}
+							onMissing={plan.clear}
+							canEdit={canEdit}
+						/>
+					)}
 					<EnvelopeDetailsPanel
 						onClose={link.close}
 						onNavigate={showEnvelope}

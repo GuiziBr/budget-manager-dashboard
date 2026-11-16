@@ -518,7 +518,7 @@ The expense is created in the month being viewed (except installments, see M-15)
 *As the budget owner, I want to change the amount of all remaining payments of a plan at once.*
 
 **How it works**
-1. **View plan**, in the Installment plan tab of the row details, opens the plan dialog with the amount per payment.
+1. **View plan**, in the Installment plan tab of the row details, opens the plan dialog with the amount per payment. The plan is in the address (`?plan=<id>`), so the link can be shared and Back closes it.
 2. **Change amount** lets me enter a new amount per payment.
 3. The confirmation says: "Payments in {current month} and later will change to CAD {amount}. Earlier payments keep their amount." The current month is today's calendar month, not the month on screen.
 

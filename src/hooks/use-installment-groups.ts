@@ -24,7 +24,9 @@ export function useInstallmentGroup(id: Id | undefined) {
 	return useQuery({
 		queryKey: installmentGroupQueryKey(id),
 		queryFn: () => api.get<InstallmentGroup>(`installment-groups/${id}`),
-		enabled: id !== undefined
+		enabled: id !== undefined,
+		// A link to a plan that isn't there answers 404 or 400 for good: report it at once
+		retry: false
 	})
 }
 

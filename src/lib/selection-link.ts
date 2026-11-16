@@ -61,3 +61,18 @@ export function monthChangeHref(
 	params.delete("page")
 	return toHref(params)
 }
+
+const PLAN_PARAM = "plan"
+
+/** The installment plan the address points at (`?plan=<id>`); blank counts as nothing. */
+export function parsePlanId(params: URLSearchParams): Id | null {
+	return params.get(PLAN_PARAM)?.trim() || null
+}
+
+/** The same address with the plan dialog open on `id` (or closed), keeping everything else, the open row included. */
+export function planHref(current: URLSearchParams, id: Id | null): string {
+	const params = new URLSearchParams(current.toString())
+	if (id) params.set(PLAN_PARAM, id)
+	else params.delete(PLAN_PARAM)
+	return toHref(params)
+}

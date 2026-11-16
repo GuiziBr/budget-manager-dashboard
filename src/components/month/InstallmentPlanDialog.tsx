@@ -1,7 +1,7 @@
 "use client"
 
 import { DollarSign, Loader2 } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { DetailsField, DetailsSection } from "@/components/month/DetailsSheet"
 import { Button } from "@/components/ui/button"
@@ -21,6 +21,7 @@ import {
 	useInstallmentGroup,
 	useUpdateInstallmentGroup
 } from "@/hooks/use-installment-groups"
+import { ApiError } from "@/lib/api"
 import { getApiErrorMessage } from "@/lib/api-error-message"
 import { formatFullDate } from "@/lib/format-date"
 import { planChangeApplies, planChangeMessage } from "@/lib/installment-plan"
@@ -30,15 +31,15 @@ import {
 	formatMoneyInput,
 	parseMoney
 } from "@/lib/money"
-import { type RowInstallment, rowInstallmentEndDate } from "@/lib/month-rows"
+import { installmentEndDate } from "@/lib/month-rows"
 import type { Id } from "@/types"
 
 interface InstallmentPlanDialogProps {
-	open: boolean
-	onOpenChange: (open: boolean) => void
 	planId: Id
-	description: string
-	installment: RowInstallment
+	/** Closes the dialog (the address drops `?plan=`). */
+	onClose: () => void
+	/** The plan can't be read (gone, or not a plan id): the link is dropped. */
+	onMissing: () => void
 	/** Without it the plan is shown but its amount can't be changed. */
 	canEdit: boolean
 }
@@ -50,40 +51,51 @@ const details = translations.month.details
 
 // A fixed id keeps repeated failures from stacking toasts
 const SAVE_TOAST_ID = "plan-amount-failed"
+const MISSING_TOAST_ID = "plan-missing"
 
 /**
  * One installment plan: its details and the amount per payment (read from the
  * plan, since the expense doesn't carry it), with the flow to change that amount (M-19).
  */
 export function InstallmentPlanDialog({
-	open,
-	onOpenChange,
 	planId,
-	description,
-	installment,
+	onClose,
+	onMissing,
 	canEdit
 }: InstallmentPlanDialogProps) {
-	const group = useInstallmentGroup(open ? planId : undefined)
+	const group = useInstallmentGroup(planId)
 	const update = useUpdateInstallmentGroup()
 	const [step, setStep] = useState<Step>("view")
 	const [text, setText] = useState("")
 	const [touched, setTouched] = useState(false)
 
-	const endDate = rowInstallmentEndDate(installment)
-	const applies = planChangeApplies(endDate)
+	// 404: the plan is gone. 400: the id isn't even a UUID
+	const missing =
+		group.isError &&
+		group.error instanceof ApiError &&
+		(group.error.status === 404 || group.error.status === 400)
+	useEffect(() => {
+		if (!missing) return
+		toast.error(translations.errors.planGone, { id: MISSING_TOAST_ID })
+		onMissing()
+	}, [missing, onMissing])
+
+	const plan = group.data
+	const endDate = plan
+		? installmentEndDate({
+				firstPurchasedAt: plan.firstPurchasedAt,
+				totalInstallments: plan.totalInstallments,
+				paymentIntervalDays: plan.paymentIntervalDays
+			})
+		: null
+	const applies = endDate ? planChangeApplies(endDate) : false
 	const check = checkMoney(text)
 	const amount = parseMoney(text)
 	const invalid = touched && check !== "ok"
 
-	const reset = () => {
-		setStep("view")
-		setText("")
-		setTouched(false)
-	}
 	const handleOpenChange = (next: boolean) => {
 		if (update.isPending) return
-		if (!next) reset()
-		onOpenChange(next)
+		if (!next) onClose()
 	}
 	const review = () => {
 		setTouched(true)
@@ -94,10 +106,9 @@ export function InstallmentPlanDialog({
 		update.mutate(
 			{ id: planId, amountPerInstallment: amount },
 			{
-				onSuccess: () => {
-					toast.success(t.saved.replace("{item}", description))
-					reset()
-					onOpenChange(false)
+				onSuccess: (saved) => {
+					toast.success(t.saved.replace("{item}", saved.description))
+					onClose()
 				},
 				onError: (error) =>
 					toast.error(
@@ -111,11 +122,13 @@ export function InstallmentPlanDialog({
 	}
 
 	return (
-		<Dialog open={open} onOpenChange={handleOpenChange}>
+		<Dialog open onOpenChange={handleOpenChange}>
 			<DialogContent className="sm:max-w-[425px]">
 				<DialogHeader>
 					<DialogTitle>{t.title}</DialogTitle>
-					<DialogDescription className="pt-1">{description}</DialogDescription>
+					<DialogDescription className="pt-1">
+						{plan?.description ?? t.description}
+					</DialogDescription>
 				</DialogHeader>
 
 				{step === "view" && (
@@ -130,27 +143,23 @@ export function InstallmentPlanDialog({
 									details.none
 								)}
 							</DetailsField>
-							<DetailsField label={details.fields.payment}>
-								{details.installmentProgress
-									.replace(
-										"{n}",
-										installment.number === null
-											? details.none
-											: String(installment.number)
-									)
-									.replace("{total}", String(installment.total))}
+							<DetailsField label={t.payments}>
+								{plan ? String(plan.totalInstallments) : details.none}
 							</DetailsField>
 							<DetailsField label={details.fields.interval}>
-								{details.intervalDays.replace(
-									"{days}",
-									String(installment.paymentIntervalDays)
-								)}
+								{plan
+									? details.intervalDays.replace(
+											"{days}",
+											String(plan.paymentIntervalDays)
+										)
+									: details.none}
 							</DetailsField>
 							<DetailsField label={details.fields.firstPurchase}>
-								{formatFullDate(installment.firstPurchasedAt) ?? details.none}
+								{(plan && formatFullDate(plan.firstPurchasedAt)) ??
+									details.none}
 							</DetailsField>
 							<DetailsField label={details.fields.endDate}>
-								{formatFullDate(endDate) ?? details.none}
+								{(endDate && formatFullDate(endDate)) ?? details.none}
 							</DetailsField>
 						</DetailsSection>
 						{group.isError && (
@@ -165,7 +174,7 @@ export function InstallmentPlanDialog({
 								</button>
 							</p>
 						)}
-						{canEdit && !applies && (
+						{canEdit && plan && !applies && (
 							<p className="text-muted-foreground text-sm">{t.noEffect}</p>
 						)}
 						<DialogFooter>

@@ -117,6 +117,7 @@ export const translations = {
 			title: "Installment plan",
 			description: "Details of this installment plan",
 			amountPerPayment: "Amount per payment",
+			payments: "Payments",
 			loadFailed: "Couldn't load the plan.",
 			retry: "Retry",
 			changeAmount: "Change amount",

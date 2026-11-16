@@ -10,7 +10,6 @@ import {
 	PositionCounter,
 	StepButton
 } from "@/components/month/DetailsSheet"
-import { InstallmentPlanDialog } from "@/components/month/InstallmentPlanDialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -50,6 +49,8 @@ interface ExpenseDetailsPanelProps {
 	onTogglePaid?: (expense: Expense) => void
 	onEdit?: (expense: Expense) => void
 	onDelete?: (expense: Expense) => void
+	/** Opens the plan dialog (M-19); the plan is named in the address. */
+	onViewPlan?: (planId: Id) => void
 }
 
 const t = translations.month.details
@@ -111,11 +112,15 @@ function PanelBody({
 	canEdit,
 	onTogglePaid,
 	onEdit,
-	onDelete
+	onDelete,
+	onViewPlan
 }: {
 	row: MonthRow
 	canEdit: boolean
-} & Pick<ExpenseDetailsPanelProps, "onTogglePaid" | "onEdit" | "onDelete">) {
+} & Pick<
+	ExpenseDetailsPanelProps,
+	"onTogglePaid" | "onEdit" | "onDelete" | "onViewPlan"
+>) {
 	const { expense, installment } = row
 	// Payment and Dates always apply; the other two only for that kind of expense
 	const available: DetailsTab[] = [
@@ -125,7 +130,6 @@ function PanelBody({
 		...(row.type === "recurring" ? (["recurring"] as const) : [])
 	]
 	const [tab, setTab] = useState<DetailsTab>("payment")
-	const [planOpen, setPlanOpen] = useState(false)
 	// Stepping to an expense without the chosen tab falls back to Payment
 	const activeTab = available.includes(tab) ? tab : "payment"
 	const status = row.overdue
@@ -224,18 +228,12 @@ function PanelBody({
 						<Button
 							variant="outline"
 							className="mt-3 w-full"
-							onClick={() => setPlanOpen(true)}
+							onClick={() =>
+								expense.installment && onViewPlan?.(expense.installment.id)
+							}
 						>
 							{t.viewPlan}
 						</Button>
-						<InstallmentPlanDialog
-							open={planOpen}
-							onOpenChange={setPlanOpen}
-							planId={expense.installment?.id ?? ""}
-							description={expense.description}
-							installment={installment}
-							canEdit={canEdit}
-						/>
 					</TabsContent>
 				)}
 				{row.type === "recurring" && (

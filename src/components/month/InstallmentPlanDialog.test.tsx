@@ -21,13 +21,6 @@ const group = {
 	deletedAt: null
 }
 
-const installment = {
-	number: 3,
-	total: 6,
-	paymentIntervalDays: 30,
-	firstPurchasedAt: "2026-09-10T00:00:00.000Z"
-}
-
 beforeEach(() => {
 	vi.useFakeTimers({ toFake: ["Date"] })
 	vi.setSystemTime(new Date("2026-11-15T12:00:00Z"))
@@ -40,25 +33,27 @@ afterEach(() => {
 })
 
 function setup(
-	props: Partial<Parameters<typeof InstallmentPlanDialog>[0]> = {}
+	props: Partial<Parameters<typeof InstallmentPlanDialog>[0]> = {},
+	plan: Partial<typeof group> = {}
 ) {
-	const get = vi.spyOn(api, "get").mockResolvedValue(group as never)
+	const get = vi
+		.spyOn(api, "get")
+		.mockResolvedValue({ ...group, ...plan } as never)
 	const patch = vi.spyOn(api, "patch").mockResolvedValue(group as never)
-	const onOpenChange = vi.fn()
+	const onClose = vi.fn()
+	const onMissing = vi.fn()
 	const { wrapper } = createQueryWrapper()
 	render(
 		<InstallmentPlanDialog
-			open
-			onOpenChange={onOpenChange}
 			planId="g1"
-			description="Car finance"
-			installment={installment}
+			onClose={onClose}
+			onMissing={onMissing}
 			canEdit
 			{...props}
 		/>,
 		{ wrapper }
 	)
-	return { get, patch, onOpenChange, user: userEvent.setup() }
+	return { get, patch, onClose, onMissing, user: userEvent.setup() }
 }
 
 const type = async (user: ReturnType<typeof userEvent.setup>, digits: string) =>
@@ -69,17 +64,59 @@ describe("InstallmentPlanDialog", () => {
 		const { get } = setup()
 		expect(await screen.findByText("CAD 450.00")).toBeInTheDocument()
 		expect(get).toHaveBeenCalledWith("installment-groups/g1")
-		expect(screen.getByText("3 of 6")).toBeInTheDocument()
+		expect(screen.getByText("Car finance")).toBeInTheDocument()
+		expect(screen.getByText("6")).toBeInTheDocument()
 		expect(screen.getByText("Every 30 days")).toBeInTheDocument()
+		expect(screen.getByText("10 Sep 2026")).toBeInTheDocument()
+		expect(screen.getByText("7 Feb 2027")).toBeInTheDocument()
 	})
 
-	it("doesn't read the plan while closed", () => {
-		const { get } = setup({ open: false })
-		expect(get).not.toHaveBeenCalled()
+	it("closes from Close", async () => {
+		const { user, onClose } = setup()
+		await user.click(await screen.findByRole("button", { name: "Close" }))
+		expect(onClose).toHaveBeenCalled()
+	})
+
+	it("drops the link and says so when the plan doesn't exist", async () => {
+		const { get, onMissing } = setup()
+		get.mockRejectedValue(new ApiError("not found", 404))
+		// the first resolved read is replaced by a failing one on a fresh mount
+		const { wrapper } = createQueryWrapper()
+		const missing = vi.fn()
+		render(
+			<InstallmentPlanDialog
+				planId="gone"
+				onClose={vi.fn()}
+				onMissing={missing}
+				canEdit
+			/>,
+			{ wrapper }
+		)
+		await vi.waitFor(() => expect(missing).toHaveBeenCalled())
+		expect(toast.error).toHaveBeenCalledWith("This plan no longer exists.", {
+			id: "plan-missing"
+		})
+		expect(onMissing).not.toHaveBeenCalled()
+	})
+
+	it("treats a malformed id (400) like a missing plan", async () => {
+		vi.spyOn(api, "get").mockRejectedValue(new ApiError("bad id", 400))
+		const { wrapper } = createQueryWrapper()
+		const missing = vi.fn()
+		render(
+			<InstallmentPlanDialog
+				planId="nope"
+				onClose={vi.fn()}
+				onMissing={missing}
+				canEdit
+			/>,
+			{ wrapper }
+		)
+		await vi.waitFor(() => expect(missing).toHaveBeenCalled())
 	})
 
 	it("changes the amount after a confirmation naming the current month", async () => {
-		const { patch, user, onOpenChange } = setup()
+		const { patch, user, onClose } = setup()
 		await user.click(
 			await screen.findByRole("button", { name: "Change amount" })
 		)
@@ -97,7 +134,7 @@ describe("InstallmentPlanDialog", () => {
 				amountPerInstallment: 120.5
 			})
 		)
-		await vi.waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false))
+		await vi.waitFor(() => expect(onClose).toHaveBeenCalled())
 		expect(toast.success).toHaveBeenCalledWith("Car finance plan updated")
 	})
 
@@ -125,7 +162,7 @@ describe("InstallmentPlanDialog", () => {
 	})
 
 	it("keeps the dialog open and toasts when saving fails", async () => {
-		const { patch, user, onOpenChange } = setup()
+		const { patch, user, onClose } = setup()
 		patch.mockRejectedValue(new ApiError("boom", 500))
 		await user.click(
 			await screen.findByRole("button", { name: "Change amount" })
@@ -139,7 +176,7 @@ describe("InstallmentPlanDialog", () => {
 				expect.anything()
 			)
 		)
-		expect(onOpenChange).not.toHaveBeenCalled()
+		expect(onClose).not.toHaveBeenCalled()
 		expect(screen.getByRole("button", { name: "Save" })).toBeEnabled()
 	})
 
@@ -161,12 +198,7 @@ describe("InstallmentPlanDialog", () => {
 	})
 
 	it("offers no change when every payment is in a past month", async () => {
-		setup({
-			installment: {
-				...installment,
-				firstPurchasedAt: "2026-01-10T00:00:00.000Z"
-			}
-		})
+		setup({}, { firstPurchasedAt: "2026-01-10" })
 		expect(await screen.findByText(/none can change/)).toBeInTheDocument()
 		expect(screen.getByRole("button", { name: "Change amount" })).toBeDisabled()
 	})
@@ -185,11 +217,9 @@ describe("InstallmentPlanDialog", () => {
 			.mockResolvedValue(group as never)
 		render(
 			<InstallmentPlanDialog
-				open
-				onOpenChange={vi.fn()}
 				planId="g1"
-				description="Car finance"
-				installment={installment}
+				onClose={vi.fn()}
+				onMissing={vi.fn()}
 				canEdit
 			/>,
 			{ wrapper }
