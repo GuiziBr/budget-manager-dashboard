@@ -10,6 +10,7 @@ import {
 	PositionCounter,
 	StepButton
 } from "@/components/month/DetailsSheet"
+import { InstallmentPlanDialog } from "@/components/month/InstallmentPlanDialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -124,6 +125,7 @@ function PanelBody({
 		...(row.type === "recurring" ? (["recurring"] as const) : [])
 	]
 	const [tab, setTab] = useState<DetailsTab>("payment")
+	const [planOpen, setPlanOpen] = useState(false)
 	// Stepping to an expense without the chosen tab falls back to Payment
 	const activeTab = available.includes(tab) ? tab : "payment"
 	const status = row.overdue
@@ -219,6 +221,21 @@ function PanelBody({
 								{orNone(formatFullDate(rowInstallmentEndDate(installment)))}
 							</DetailsField>
 						</DetailsSection>
+						<Button
+							variant="outline"
+							className="mt-3 w-full"
+							onClick={() => setPlanOpen(true)}
+						>
+							{t.viewPlan}
+						</Button>
+						<InstallmentPlanDialog
+							open={planOpen}
+							onOpenChange={setPlanOpen}
+							planId={expense.installment?.id ?? ""}
+							description={expense.description}
+							installment={installment}
+							canEdit={canEdit}
+						/>
 					</TabsContent>
 				)}
 				{row.type === "recurring" && (

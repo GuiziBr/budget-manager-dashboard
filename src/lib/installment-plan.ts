@@ -1,7 +1,7 @@
 import { translations } from "@/constants/translations"
 import { formatFullDate, formatMonthYear } from "@/lib/format-date"
 import { formatCad } from "@/lib/money"
-import type { Month } from "@/lib/month"
+import { currentMonth, type Month, monthLabel } from "@/lib/month"
 import type { BudgetPeriod } from "@/types"
 
 const t = translations.month.form.plan
@@ -130,4 +130,28 @@ export function planToast(
 	}
 	if (placement.waiting > 0) parts.push(t.rest)
 	return parts.join(" ")
+}
+
+const planText = translations.month.plan
+
+/**
+ * Whether changing a plan's amount reaches any payment: the backend rewrites the
+ * payments of the current UTC month and later, so a plan that ended earlier is untouched.
+ * `endDate` is the plan's last payment ("YYYY-MM-DD").
+ */
+export function planChangeApplies(
+	endDate: string,
+	now: Date = new Date()
+): boolean {
+	return endDate.slice(0, 7) >= now.toISOString().slice(0, 7)
+}
+
+/** "Payments in November 2026 and later will change to CAD 120.50. Earlier payments keep their amount." */
+export function planChangeMessage(
+	amount: number,
+	now: Date = new Date()
+): string {
+	return planText.confirm
+		.replace("{month}", monthLabel(currentMonth(now)))
+		.replace("{amount}", formatCad(amount))
 }

@@ -14,6 +14,7 @@ export type ApiErrorContext =
 	| { action: "deleteMonth" }
 	| { action: "createEnvelope"; category: string }
 	| { action: "saveExpense" }
+	| { action: "changePlanAmount" }
 	| { action: "mutate" }
 
 export type ApiErrorKind =
@@ -24,6 +25,7 @@ export type ApiErrorKind =
 	| "noPeriodForInstallments"
 	| "futureDate"
 	| "lookupGone"
+	| "planGone"
 	| "monthClosed"
 	| "generic"
 
@@ -101,6 +103,12 @@ export function describeApiError(
 			default:
 				return generic()
 		}
+	}
+
+	if (context.action === "changePlanAmount") {
+		return status === 404
+			? { kind: "planGone", message: errors.planGone }
+			: generic()
 	}
 
 	if (context.action !== "saveExpense") return generic()

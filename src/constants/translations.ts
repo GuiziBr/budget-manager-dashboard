@@ -113,6 +113,28 @@ export const translations = {
 			edit: "Edit",
 			delete: "Delete"
 		},
+		plan: {
+			title: "Installment plan",
+			description: "Details of this installment plan",
+			amountPerPayment: "Amount per payment",
+			loadFailed: "Couldn't load the plan.",
+			retry: "Retry",
+			changeAmount: "Change amount",
+			newAmount: "New amount per payment",
+			placeholder: "0.00",
+			review: "Review",
+			confirm:
+				"Payments in {month} and later will change to {amount}. Earlier payments keep their amount.",
+			save: "Save",
+			back: "Back",
+			close: "Close",
+			noEffect:
+				"Every payment of this plan is in a past month, so none can change.",
+			saved: "{item} plan updated",
+			saveFailed: "Couldn't change the plan's amount. Try again.",
+			invalid: "Enter an amount above 0 with at most 2 decimals.",
+			tooLarge: "The amount is too large."
+		},
 		delete: {
 			title: "Delete expense",
 			confirm: "Are you sure you want to delete the {type} {item}?",
@@ -265,6 +287,7 @@ export const translations = {
 			spendUnavailable: "Spend unavailable right now",
 			overBy: "Over by {amount}",
 			viewRecurring: "View on Recurring",
+			viewPlan: "View plan",
 			markPaid: "Mark as paid today",
 			markUnpaid: "Mark as unpaid",
 			edit: "Edit",
@@ -291,6 +314,7 @@ export const translations = {
 			"Open the month of the first payment before adding this plan.",
 		lookupGone: "{field} no longer exists. Choose another.",
 		monthClosed: "Envelopes of past months can't be changed.",
+		planGone: "This plan no longer exists.",
 		futureDate: "The purchase date can't be in the future.",
 		generic: "Something went wrong. Try again.",
 		fields: {

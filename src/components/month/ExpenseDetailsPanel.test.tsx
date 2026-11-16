@@ -212,6 +212,12 @@ describe("ExpenseDetailsPanel", () => {
 		expect(panel.getByText("Every 14 days")).toBeInTheDocument()
 		expect(panel.getByText("10 Nov 2023")).toBeInTheDocument()
 		expect(panel.getByText("22 Oct 2027")).toBeInTheDocument()
+		expect(panel.getByRole("button", { name: "View plan" })).toBeInTheDocument()
+	})
+
+	it("has no View plan button on one-time and recurring expenses", async () => {
+		setup([expense(1)])
+		const panel = await dialog()
 		expect(panel.queryByRole("button", { name: "View plan" })).toBeNull()
 	})
 

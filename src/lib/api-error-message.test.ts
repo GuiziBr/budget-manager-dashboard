@@ -202,3 +202,25 @@ describe("isMonthClosedError", () => {
 		expect(isMonthClosedError(null)).toBe(false)
 	})
 })
+
+describe("changing a plan's amount", () => {
+	const change = { action: "changePlanAmount" } as const
+
+	it("says the plan is gone on a 404", () => {
+		expect(describeApiError(new ApiError("not found", 404), change)).toEqual({
+			kind: "planGone",
+			message: "This plan no longer exists."
+		})
+	})
+
+	it("gives the generic message for anything else", () => {
+		for (const status of [400, 500]) {
+			expect(describeApiError(new ApiError("x", status), change).kind).toBe(
+				"generic"
+			)
+		}
+		expect(describeApiError(new TypeError("offline"), change).kind).toBe(
+			"generic"
+		)
+	})
+})
