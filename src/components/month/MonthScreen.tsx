@@ -42,6 +42,7 @@ import { PHONE_QUERY, useMediaQuery } from "@/hooks/use-media-query"
 import { useMonthAccess } from "@/hooks/use-month-access"
 import { useMonthPage } from "@/hooks/use-month-page"
 import { ApiError } from "@/lib/api"
+import { getApiErrorMessage, isMonthClosedError } from "@/lib/api-error-message"
 import {
 	availableEnvelopeCategories,
 	envelopeDeleteMessage
@@ -247,9 +248,20 @@ export function MonthScreen() {
 				if (wasOpen && monthKeyRef.current === confirmedMonth) {
 					link.show({ kind: "envelope", id: envelope.id })
 				}
-				toast.error(translations.month.envelopes.deleteFailed, {
-					id: ENVELOPE_DELETE_TOAST_ID
-				})
+				// The month ended while the screen was open: retrying can't work, so say why
+				// and refresh, which is the only way the screen learns the envelopes are locked
+				const closed = isMonthClosedError(error)
+				if (closed) {
+					queryClient.invalidateQueries({
+						queryKey: BUDGET_ENVELOPES_QUERY_KEY
+					})
+				}
+				toast.error(
+					closed
+						? getApiErrorMessage(error, { action: "deleteEnvelope" })
+						: translations.month.envelopes.deleteFailed,
+					{ id: ENVELOPE_DELETE_TOAST_ID }
+				)
 			}
 		})
 	}

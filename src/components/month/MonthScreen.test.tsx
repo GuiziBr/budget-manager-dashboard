@@ -1658,6 +1658,37 @@ describe("MonthScreen envelopes", () => {
 		expect(toast.success).not.toHaveBeenCalled()
 	})
 
+	it("says the month is closed, not to retry, when the delete is rejected with 422", async () => {
+		const { del } = open(`envelope=${GROCERY_ID}`)
+		del.mockRejectedValue(new ApiError("past", 422))
+		const user = setup()
+		const details = await screen.findByRole("dialog", { name: "Grocery" })
+		await user.click(within(details).getByRole("button", { name: "Delete" }))
+		const confirm = await screen.findByRole("dialog", {
+			name: "Delete envelope"
+		})
+		const envelopeReads = () =>
+			vi
+				.mocked(api.get)
+				.mock.calls.filter(([endpoint]) =>
+					String(endpoint).startsWith("budget-envelopes?")
+				).length
+		const before = envelopeReads()
+		await user.click(within(confirm).getByRole("button", { name: "Delete" }))
+
+		await vi.waitFor(() =>
+			expect(toast.error).toHaveBeenCalledWith(
+				"Envelopes of past months can't be changed.",
+				expect.anything()
+			)
+		)
+		// The envelopes are read again, and the details come back
+		await vi.waitFor(() => expect(envelopeReads()).toBeGreaterThan(before))
+		await vi.waitFor(() =>
+			expect(new URLSearchParams(nav.search).get("envelope")).toBe(GROCERY_ID)
+		)
+	})
+
 	it("hides Edit budget in a past month", async () => {
 		open(`period=2026-10&envelope=${GROCERY_ID}`, [
 			envelope(GROCERY_ID, "c-grocery", 600, "2026-10")
