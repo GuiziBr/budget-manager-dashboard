@@ -1,6 +1,6 @@
 # Month Screen — Implementation Plan
 
-Status: draft 10 (T-35 done) · Last updated: 2026-11-16
+Status: draft 11 (T-36 built) · Last updated: 2026-11-17
 
 Breaks the [Month screen spec](../specs/month-screen.md) and the wireframes in `design.pen` into small tasks. Each task is one pull request to `development`, sized to be reviewed in one sitting.
 
@@ -313,6 +313,7 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 #### T-36 Open-month review: bills, installments, envelopes (M-02, step 3)
 - **Includes:** the review sheet after opening; recurring bills with editable amounts; installments with `n of N` and a "Last payment" tag; envelopes read-only; Done saves the changed amounts; closing without Done keeps the month as generated; Retry per failed section.
 - **Done when:** the first, second and fourth M-02 acceptance criteria pass.
+- **Status: built (2026-11-17), browser QA pending.** Detailed plan: [t-36-open-month-review.md](t-36-open-month-review.md). `OpenMonthReview` (a `DetailsSheet` with three `ReviewSection`s) opens from `MonthScreen` after a 201 on `POST /budget-periods`, never on a 409, and closes on a month change. Bills are the month's expenses with `recurringExpenseId`, installments those with `installment` (`lib/month-review.ts`); `useReviewExpenses` reads every page (100 per page) and `useSaveReviewBills` sends one `PATCH` per changed amount, keeping the saved rows and retrying only the failed ones. Done with no edits, Close, X and Escape send nothing. Covered by component, hook and lib tests. Not done: the browser checks of the plan's §7 (the dev server and API weren't running), so desktop/390px, light/dark and the real-API run are still to do.
 
 #### T-37 Open-month review: salary (M-02, step 3)
 - **Includes:** "Copy last month's salary", listing last month's salary incomes with editable amounts and checkboxes, or a "Salary" field; one `POST /incomes` per income on Done. Before any retry, re-read the month's incomes and skip salaries that already exist with the same description and amount, so a lost response doesn't create a duplicate. If a salary still fails, the month stays usable and the review says which salary is missing (it can be added from the income panel).

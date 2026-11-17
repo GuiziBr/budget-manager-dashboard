@@ -19,6 +19,7 @@ import { MonthNotOpened } from "@/components/month/MonthNotOpened"
 import { MonthNotTracked } from "@/components/month/MonthNotTracked"
 import { MonthSkeleton } from "@/components/month/MonthSkeleton"
 import { MonthTable } from "@/components/month/MonthTable"
+import { OpenMonthReview } from "@/components/month/OpenMonthReview"
 import { SummaryCards } from "@/components/month/SummaryCards"
 import { translations } from "@/constants/translations"
 import {
@@ -119,6 +120,8 @@ export function MonthScreen() {
 	const monthKeyRef = useRef(monthKey)
 	monthKeyRef.current = monthKey
 	const [panelMonth, setPanelMonth] = useState(monthKey)
+	// The month just opened, while its review (M-02) is on screen
+	const [reviewPeriodId, setReviewPeriodId] = useState<string | null>(null)
 	if (panelMonth !== monthKey) {
 		setPanelMonth(monthKey)
 		setIncomeFor(null)
@@ -132,12 +135,15 @@ export function MonthScreen() {
 		setEnvelopeFormOpen(false)
 		setEditingEnvelope(null)
 		setDeletingEnvelope(null)
+		setReviewPeriodId(null)
 	}
 	const createPeriod = useCreateBudgetPeriod()
 	const openMonth = () =>
 		createPeriod.mutate(
 			{ year: month.year, month: month.month },
 			{
+				// A new month opens its review; a 409 (already open) doesn't
+				onSuccess: (created) => setReviewPeriodId(created.id),
 				onError: (error) => {
 					const described = describeApiError(error, {
 						action: "openMonth",
@@ -568,6 +574,14 @@ export function MonthScreen() {
 						/>
 					)}
 				</>
+			)}
+			{reviewPeriodId && (
+				<OpenMonthReview
+					key={reviewPeriodId}
+					periodId={reviewPeriodId}
+					month={month}
+					onClose={() => setReviewPeriodId(null)}
+				/>
 			)}
 		</main>
 	)
