@@ -99,6 +99,7 @@ export const translations = {
 					amountTooLarge: "The amount can't be more than 99,999,999.99."
 				},
 				save: "Save",
+				finish: "Finish",
 				cancel: "Cancel",
 				saved: "{item} added to {month}.",
 				savedEdit: "{item} updated."

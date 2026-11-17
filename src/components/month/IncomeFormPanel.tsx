@@ -258,7 +258,7 @@ function IncomeForm({
 
 			<div className="flex shrink-0 flex-col gap-2 border-border border-t px-5 py-5">
 				<Button type="submit" disabled={busy}>
-					{t.save}
+					{income ? t.save : t.finish}
 				</Button>
 				<Button
 					type="button"

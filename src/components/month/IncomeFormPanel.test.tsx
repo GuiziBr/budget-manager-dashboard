@@ -83,7 +83,7 @@ describe("IncomeFormPanel", () => {
 		await user.type(screen.getByLabelText("Amount"), "614400")
 		await user.click(screen.getByRole("switch", { name: /Salary/ }))
 		await user.type(screen.getByLabelText("Received"), "2026-11-05")
-		await user.click(screen.getByRole("button", { name: "Save" }))
+		await user.click(screen.getByRole("button", { name: "Finish" }))
 
 		await vi.waitFor(() => expect(onClose).toHaveBeenCalled())
 		expect(post).toHaveBeenCalledWith("incomes", {
@@ -103,7 +103,7 @@ describe("IncomeFormPanel", () => {
 
 		await user.type(screen.getByLabelText("Description"), "Gift")
 		await user.type(screen.getByLabelText("Amount"), "5000")
-		await user.click(screen.getByRole("button", { name: "Save" }))
+		await user.click(screen.getByRole("button", { name: "Finish" }))
 
 		await vi.waitFor(() => expect(onClose).toHaveBeenCalled())
 		expect(post).toHaveBeenCalledWith("incomes", {
@@ -118,7 +118,7 @@ describe("IncomeFormPanel", () => {
 		const post = vi.spyOn(api, "post")
 		const { user, onClose } = setup()
 
-		await user.click(screen.getByRole("button", { name: "Save" }))
+		await user.click(screen.getByRole("button", { name: "Finish" }))
 
 		expect(screen.getByLabelText("Description")).toHaveAttribute(
 			"aria-invalid",
@@ -140,7 +140,7 @@ describe("IncomeFormPanel", () => {
 
 		await user.type(screen.getByLabelText("Description"), "Gift")
 		await user.type(screen.getByLabelText("Amount"), "5000")
-		await user.click(screen.getByRole("button", { name: "Save" }))
+		await user.click(screen.getByRole("button", { name: "Finish" }))
 
 		await vi.waitFor(() =>
 			expect(toast.error).toHaveBeenCalledWith(
