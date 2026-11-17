@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useQueryClient } from "@tanstack/react-query"
-import { DollarSign, Plus } from "lucide-react"
+import { DollarSign } from "lucide-react"
 import Link from "next/link"
 import { type RefObject, useEffect, useMemo, useRef, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
@@ -875,7 +875,7 @@ function ExpenseForm({
 
 			<div className="flex shrink-0 flex-col gap-2 border-border border-t px-5 py-5">
 				<Button type="submit" disabled={busy}>
-					{t.save}
+					{editing ? t.save : t.finish}
 				</Button>
 				{!editing && (
 					<Button
@@ -884,7 +884,6 @@ function ExpenseForm({
 						disabled={busy}
 						onClick={save("another")}
 					>
-						<Plus className="size-4" aria-hidden="true" />
 						{t.finishAddAnother}
 					</Button>
 				)}

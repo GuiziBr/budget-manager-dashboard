@@ -102,7 +102,7 @@ describe("ExpenseFormPanel", () => {
 		expect(
 			screen.getByRole("dialog", { name: "Add expense" })
 		).toHaveTextContent("November 2026")
-		expect(screen.getByRole("button", { name: "Save" })).toBeVisible()
+		expect(screen.getByRole("button", { name: "Finish" })).toBeVisible()
 		expect(
 			screen.getByRole("button", { name: "Finish & add another" })
 		).toBeVisible()
@@ -128,7 +128,7 @@ describe("ExpenseFormPanel", () => {
 		await ready()
 		await fillRequired(user)
 
-		await user.click(screen.getByRole("button", { name: "Save" }))
+		await user.click(screen.getByRole("button", { name: "Finish" }))
 
 		await vi.waitFor(() => expect(onClose).toHaveBeenCalled())
 		expect(post).toHaveBeenCalledWith("expenses", {
@@ -164,7 +164,7 @@ describe("ExpenseFormPanel", () => {
 		await fillRequired(user)
 		await choose(user, "Store", "Costco")
 		await user.type(screen.getByLabelText("Due"), "2026-11-20")
-		await user.click(screen.getByRole("button", { name: "Save" }))
+		await user.click(screen.getByRole("button", { name: "Finish" }))
 		await vi.waitFor(() => expect(post).toHaveBeenCalled())
 		expect(post.mock.calls[0][1]).toMatchObject({
 			storeId: "s1",
@@ -176,7 +176,7 @@ describe("ExpenseFormPanel", () => {
 		const post = vi.spyOn(api, "post")
 		const { user, onClose } = setup()
 		await ready()
-		await user.click(screen.getByRole("button", { name: "Save" }))
+		await user.click(screen.getByRole("button", { name: "Finish" }))
 		await vi.waitFor(() =>
 			expect(screen.getByLabelText("Description")).toHaveAttribute(
 				"aria-invalid",
@@ -205,7 +205,7 @@ describe("ExpenseFormPanel", () => {
 	it("points each invalid select at its reason, like the text fields", async () => {
 		const { user } = setup()
 		await ready()
-		await user.click(screen.getByRole("button", { name: "Save" }))
+		await user.click(screen.getByRole("button", { name: "Finish" }))
 		await vi.waitFor(() =>
 			expect(
 				screen.getByRole("combobox", { name: "Category" })
@@ -233,7 +233,7 @@ describe("ExpenseFormPanel", () => {
 		await choose(user, "Category", "Utilities")
 		await choose(user, "Payment type", "Credit Card")
 		await user.type(screen.getByLabelText("Amount"), "25")
-		await user.click(screen.getByRole("button", { name: "Save" }))
+		await user.click(screen.getByRole("button", { name: "Finish" }))
 		expect(
 			await screen.findByText("Bank is required for this payment type.")
 		).toBeInTheDocument()
@@ -258,7 +258,7 @@ describe("ExpenseFormPanel", () => {
 		const field = screen.getByLabelText("Amount")
 		await user.clear(field)
 		await user.type(field, "0")
-		await user.click(screen.getByRole("button", { name: "Save" }))
+		await user.click(screen.getByRole("button", { name: "Finish" }))
 		expect(
 			await screen.findByText("Enter an amount above 0, up to 2 decimals.")
 		).toBeInTheDocument()
@@ -276,7 +276,7 @@ describe("ExpenseFormPanel", () => {
 		// One digit past the largest amount, 99,999,999.99
 		await user.type(field, "10000000000")
 		expect(field).toHaveValue("100,000,000.00")
-		await user.click(screen.getByRole("button", { name: "Save" }))
+		await user.click(screen.getByRole("button", { name: "Finish" }))
 		expect(
 			await screen.findByText("The amount can't be more than 99,999,999.99.")
 		).toBeInTheDocument()
@@ -306,7 +306,7 @@ describe("ExpenseFormPanel", () => {
 		await user.clear(field)
 		await user.type(field, "1005000")
 		expect(field).toHaveValue("10,050.00")
-		await user.click(screen.getByRole("button", { name: "Save" }))
+		await user.click(screen.getByRole("button", { name: "Finish" }))
 		await vi.waitFor(() => expect(post).toHaveBeenCalled())
 		expect(post.mock.calls[0][1]).toMatchObject({ amount: 10_050 })
 	})
@@ -327,7 +327,7 @@ describe("ExpenseFormPanel", () => {
 		await ready()
 		await fillRequired(user)
 		await user.type(screen.getByLabelText("Purchased"), "2999-01-01")
-		await user.click(screen.getByRole("button", { name: "Save" }))
+		await user.click(screen.getByRole("button", { name: "Finish" }))
 		expect(
 			await screen.findByText("The purchase date can't be in the future.")
 		).toBeInTheDocument()
@@ -345,7 +345,7 @@ describe("ExpenseFormPanel", () => {
 		const { user, onClose } = setup()
 		await ready()
 		await fillRequired(user)
-		await user.click(screen.getByRole("button", { name: "Save" }))
+		await user.click(screen.getByRole("button", { name: "Finish" }))
 		expect(
 			await screen.findByText("The purchase date can't be in the future.")
 		).toBeInTheDocument()
@@ -412,7 +412,7 @@ describe("ExpenseFormPanel", () => {
 		}
 
 		await fillRequired(user)
-		await user.click(screen.getByRole("button", { name: "Save" }))
+		await user.click(screen.getByRole("button", { name: "Finish" }))
 		await vi.waitFor(() => expect(onClose).toHaveBeenCalled())
 		// Saving stores nothing for the next time
 		expect(window.localStorage.getItem("month.expense-form.last")).toBe(
@@ -440,7 +440,7 @@ describe("ExpenseFormPanel", () => {
 		const { user, onClose } = setup()
 		await ready()
 		await fillRequired(user)
-		await user.click(screen.getByRole("button", { name: "Save" }))
+		await user.click(screen.getByRole("button", { name: "Finish" }))
 		expect(
 			await screen.findByText("Bank is required for this payment type.")
 		).toBeInTheDocument()
@@ -464,7 +464,7 @@ describe("ExpenseFormPanel", () => {
 		await ready()
 		await fillRequired(user)
 		const before = vi.mocked(api.get).mock.calls.length
-		await user.click(screen.getByRole("button", { name: "Save" }))
+		await user.click(screen.getByRole("button", { name: "Finish" }))
 		expect(
 			await screen.findByText("Category no longer exists. Choose another.")
 		).toBeInTheDocument()
@@ -482,7 +482,7 @@ describe("ExpenseFormPanel", () => {
 		const { user, onClose } = setup()
 		await ready()
 		await fillRequired(user)
-		await user.click(screen.getByRole("button", { name: "Save" }))
+		await user.click(screen.getByRole("button", { name: "Finish" }))
 		await vi.waitFor(() =>
 			expect(toast.error).toHaveBeenCalledWith(
 				"Something went wrong. Try again.",
@@ -504,7 +504,7 @@ describe("ExpenseFormPanel", () => {
 		const { user, onClose } = setup()
 		await ready()
 		await fillRequired(user)
-		await user.click(screen.getByRole("button", { name: "Save" }))
+		await user.click(screen.getByRole("button", { name: "Finish" }))
 		await vi.waitFor(() => expect(post).toHaveBeenCalled())
 
 		// Every way out is held back until the request answers
@@ -523,7 +523,7 @@ describe("ExpenseFormPanel", () => {
 		const { user, onClose } = setup()
 		await ready()
 		await fillRequired(user)
-		await user.click(screen.getByRole("button", { name: "Save" }))
+		await user.click(screen.getByRole("button", { name: "Finish" }))
 		await vi.waitFor(() => expect(toast.error).toHaveBeenCalled())
 		await vi.waitFor(() =>
 			expect(screen.getByRole("button", { name: "Cancel" })).toBeEnabled()
@@ -641,7 +641,7 @@ describe("ExpenseFormPanel", () => {
 			await ready()
 			await fillPlan(user)
 
-			await user.click(screen.getByRole("button", { name: "Save" }))
+			await user.click(screen.getByRole("button", { name: "Finish" }))
 
 			await vi.waitFor(() => expect(onClose).toHaveBeenCalled())
 			expect(post).toHaveBeenCalledWith("expenses", {
@@ -668,7 +668,7 @@ describe("ExpenseFormPanel", () => {
 			await ready()
 			await user.click(screen.getByRole("tab", { name: "Installments" }))
 			await user.type(screen.getByLabelText("Number of payments"), "1")
-			await user.click(screen.getByRole("button", { name: "Save" }))
+			await user.click(screen.getByRole("button", { name: "Finish" }))
 
 			expect(screen.getByLabelText("Number of payments")).toHaveAttribute(
 				"aria-invalid",
@@ -699,7 +699,7 @@ describe("ExpenseFormPanel", () => {
 			const date = screen.getByLabelText("First purchase date")
 			await user.clear(date)
 			await user.type(date, "2026-06-01")
-			await user.click(screen.getByRole("button", { name: "Save" }))
+			await user.click(screen.getByRole("button", { name: "Finish" }))
 
 			expect(post).not.toHaveBeenCalled()
 			expect(date).toHaveAttribute("aria-invalid", "true")
@@ -722,7 +722,7 @@ describe("ExpenseFormPanel", () => {
 			// November opens in another tab after this list was loaded
 			opened = [...opened, { id: "p1", year: 2026, month: 11 }]
 
-			await user.click(screen.getByRole("button", { name: "Save" }))
+			await user.click(screen.getByRole("button", { name: "Finish" }))
 
 			await vi.waitFor(() => expect(onClose).toHaveBeenCalled())
 			expect(post).toHaveBeenCalledOnce()
@@ -754,7 +754,7 @@ describe("ExpenseFormPanel", () => {
 			await fillPlan(user)
 			failing = true
 
-			await user.click(screen.getByRole("button", { name: "Save" }))
+			await user.click(screen.getByRole("button", { name: "Finish" }))
 
 			await vi.waitFor(() => expect(post).toHaveBeenCalledOnce())
 			await vi.waitFor(() =>
@@ -779,7 +779,7 @@ describe("ExpenseFormPanel", () => {
 			await ready()
 			await fillPlan(user)
 
-			await user.click(screen.getByRole("button", { name: "Save" }))
+			await user.click(screen.getByRole("button", { name: "Finish" }))
 
 			await vi.waitFor(() => expect(onClose).toHaveBeenCalled())
 			expect(toast.success).toHaveBeenCalledWith(
@@ -794,7 +794,7 @@ describe("ExpenseFormPanel", () => {
 			const { user } = setup()
 			await ready()
 			await fillPlan(user)
-			await user.click(screen.getByRole("button", { name: "Save" }))
+			await user.click(screen.getByRole("button", { name: "Finish" }))
 
 			await vi.waitFor(() =>
 				expect(screen.getByLabelText("First purchase date")).toHaveAttribute(
@@ -872,7 +872,7 @@ describe("ExpenseFormPanel", () => {
 			await fillBill(user)
 			await user.type(screen.getByLabelText("Due"), "2026-11-20")
 
-			await user.click(screen.getByRole("button", { name: "Save" }))
+			await user.click(screen.getByRole("button", { name: "Finish" }))
 
 			await vi.waitFor(() => expect(onClose).toHaveBeenCalled())
 			expect(post).toHaveBeenCalledWith("expenses", {
@@ -898,7 +898,7 @@ describe("ExpenseFormPanel", () => {
 			await user.type(screen.getByLabelText("Purchased"), "2026-11-30")
 			await fillBill(user)
 
-			await user.click(screen.getByRole("button", { name: "Save" }))
+			await user.click(screen.getByRole("button", { name: "Finish" }))
 
 			await vi.waitFor(() => expect(onClose).toHaveBeenCalled())
 			expect(post.mock.calls[0][1]).not.toHaveProperty("purchasedAt")
@@ -934,7 +934,7 @@ describe("ExpenseFormPanel", () => {
 			await ready()
 			await user.click(screen.getByRole("tab", { name: "Recurring" }))
 
-			await user.click(screen.getByRole("button", { name: "Save" }))
+			await user.click(screen.getByRole("button", { name: "Finish" }))
 
 			expect(screen.getByLabelText("Description")).toHaveAttribute(
 				"aria-invalid",

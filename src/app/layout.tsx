@@ -19,7 +19,7 @@ const roboto = Roboto({
 
 export const metadata: Metadata = {
 	title: "Budget Manager",
-	description: "Budget Manager Dashboard"
+	description: "Budget Manager"
 }
 
 export default function RootLayout({

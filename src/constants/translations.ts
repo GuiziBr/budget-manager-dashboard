@@ -99,6 +99,7 @@ export const translations = {
 					amountTooLarge: "The amount can't be more than 99,999,999.99."
 				},
 				save: "Save",
+				finish: "Finish",
 				cancel: "Cancel",
 				saved: "{item} added to {month}.",
 				savedEdit: "{item} updated."
@@ -115,7 +116,6 @@ export const translations = {
 			overBudget: "{n} over budget",
 			overBudgetShort: "{n} over",
 			unavailable: "—",
-			ofAllocated: "{spent} / {allocated}",
 			deleteTitle: "Delete envelope",
 			deleteConfirm:
 				"Are you sure you want to delete the {category} envelope? Its spend will leave this month's totals.",
@@ -297,6 +297,7 @@ export const translations = {
 				interval: "Enter the days between payments.",
 				firstPurchase: "Choose the first purchase date."
 			},
+			finish: "Finish",
 			finishAddAnother: "Finish & add another",
 			cancel: "Cancel",
 			saved: "{item} added to {month}."

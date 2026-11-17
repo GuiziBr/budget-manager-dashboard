@@ -268,10 +268,26 @@ describe("MonthTable rows", () => {
 			name: "Paid: Expense 1"
 		})
 		expect(checkbox).toBeChecked()
-		expect(checkbox.closest("td")).not.toHaveClass("opacity-50")
+		expect(checkbox.closest("td")).not.toHaveClass("opacity-70")
 		expect(within(row).getAllByText("1 Nov").length).toBeGreaterThan(0)
 		expect(within(row).getByText("$100.00").closest("td")).toHaveClass(
-			"opacity-50"
+			"opacity-70"
+		)
+	})
+
+	it("uses the foreground colour for secondary text in a paid row, the muted one in an unpaid row", async () => {
+		mockPages([
+			expense(1, { paidAt: "2026-11-01" }),
+			expense(2, { paidAt: null })
+		])
+		setup()
+		const paid = (await screen.findByText("Expense 1")).closest(
+			"tr"
+		) as HTMLElement
+		const unpaid = screen.getByText("Expense 2").closest("tr") as HTMLElement
+		expect(within(paid).getByText("Housing")).toHaveClass("text-foreground")
+		expect(within(unpaid).getByText("Housing")).toHaveClass(
+			"text-muted-foreground"
 		)
 	})
 

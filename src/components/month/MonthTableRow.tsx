@@ -36,6 +36,12 @@ function paidLabel(row: MonthRow) {
 	return template.replace("{item}", row.expense.description)
 }
 
+/**
+ * Paid rows are softened, not faded: 70% keeps text above 4.5:1 in both themes (50% gave 3.4:1 in light).
+ * Secondary text switches to the foreground colour inside them, since muted text at 70% would drop to 3:1.
+ */
+const DIMMED = "opacity-70"
+
 /** The paid control; it stays at full strength in dimmed rows. Read-only when there is no handler (past months). */
 function PaidCheckbox({
 	row,
@@ -68,7 +74,8 @@ export function MonthTableRow({
 	const { expense } = row
 	const due = formatDayMonth(expense.dueAt)
 	const paidDate = formatDayMonth(expense.paidAt)
-	const dim = row.unpaid ? undefined : "opacity-50"
+	const dim = row.unpaid ? undefined : DIMMED
+	const muted = row.unpaid ? "text-muted-foreground" : "text-foreground"
 	const cell = "px-4 py-0"
 
 	return (
@@ -96,11 +103,16 @@ export function MonthTableRow({
 				</button>
 			</td>
 			<td className={cn(cell, dim)}>
-				<Badge className="px-2 py-0.5 text-[11px]">{row.category}</Badge>
+				<Badge
+					className={cn(
+						"px-2 py-0.5 text-[11px]",
+						!row.unpaid && "text-foreground"
+					)}
+				>
+					{row.category}
+				</Badge>
 			</td>
-			<td
-				className={cn(cell, dim, "truncate text-[13px] text-muted-foreground")}
-			>
+			<td className={cn(cell, dim, "truncate text-[13px]", muted)}>
 				{row.paymentType}
 			</td>
 			<td className={cn(cell, dim, "whitespace-nowrap text-[13px]")}>
@@ -111,7 +123,7 @@ export function MonthTableRow({
 						{due}
 					</span>
 				) : (
-					<span className="text-muted-foreground">{due ?? t.noDate}</span>
+					<span className={muted}>{due ?? t.noDate}</span>
 				)}
 			</td>
 			<td className={cell}>
@@ -122,9 +134,7 @@ export function MonthTableRow({
 					onKeyDown={(event) => event.stopPropagation()}
 				>
 					<PaidCheckbox row={row} onToggle={onTogglePaid} />
-					{paidDate && (
-						<span className="text-muted-foreground text-xs">{paidDate}</span>
-					)}
+					{paidDate && <span className={cn("text-xs", muted)}>{paidDate}</span>}
 				</div>
 			</td>
 			<td className={cn(cell, dim, "whitespace-nowrap font-medium text-sm")}>
@@ -177,7 +187,8 @@ export function MonthListRow({
 	const { expense } = row
 	const due = formatDayMonth(expense.dueAt)
 	const paidDate = formatDayMonth(expense.paidAt)
-	const dim = row.unpaid ? undefined : "opacity-50"
+	const dim = row.unpaid ? undefined : DIMMED
+	const muted = row.unpaid ? "text-muted-foreground" : "text-foreground"
 
 	let meta: string | null = null
 	if (!row.unpaid && paidDate) meta = t.paidOn.replace("{date}", paidDate)
@@ -218,9 +229,7 @@ export function MonthListRow({
 							<span
 								className={cn(
 									"truncate text-xs",
-									row.overdue
-										? "font-semibold text-danger"
-										: "text-muted-foreground"
+									row.overdue ? "font-semibold text-danger" : muted
 								)}
 							>
 								{meta}

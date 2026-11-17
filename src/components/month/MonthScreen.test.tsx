@@ -657,7 +657,7 @@ describe("MonthScreen income panel", () => {
 		expect(screen.queryByText("Pay day")).toBeNull()
 		await user.type(within(form).getByLabelText("Description"), "Gift")
 		await user.type(within(form).getByLabelText("Amount"), "5000")
-		await user.click(within(form).getByRole("button", { name: "Save" }))
+		await user.click(within(form).getByRole("button", { name: "Finish" }))
 
 		await vi.waitFor(() =>
 			expect(post).toHaveBeenCalledWith(
@@ -772,7 +772,7 @@ describe("MonthScreen income panel", () => {
 		const first = await addIncome()
 		await user.type(within(first).getByLabelText("Description"), "Gift")
 		await user.type(within(first).getByLabelText("Amount"), "5000")
-		await user.click(within(first).getByRole("button", { name: "Save" }))
+		await user.click(within(first).getByRole("button", { name: "Finish" }))
 
 		// The user moves on to October and starts another income there
 		nav.search = "period=2026-10"
