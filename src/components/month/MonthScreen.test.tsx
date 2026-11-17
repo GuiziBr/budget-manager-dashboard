@@ -152,6 +152,8 @@ describe("MonthScreen states", () => {
 			await user.click(within(dialog).getByRole("button", { name: "Cancel" }))
 			expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
 			expect(post).not.toHaveBeenCalled()
+			// Focus goes back to the Open button, not to the page
+			await vi.waitFor(() => expect(openButton()).resolves.toHaveFocus())
 		})
 
 		it("posts the month and shows it once created", async () => {
@@ -203,6 +205,19 @@ describe("MonthScreen states", () => {
 					get.mock.calls.filter(([e]) => String(e).includes("budget-periods"))
 						.length
 				).toBeGreaterThan(1)
+			)
+		})
+
+		it("keeps the generic message for a 422, not the envelope one", async () => {
+			vi.spyOn(api, "get").mockResolvedValue([])
+			vi.spyOn(api, "post").mockRejectedValue(new ApiError("nope", 422))
+			const user = setup()
+			await openAndConfirm(user)
+			await vi.waitFor(() =>
+				expect(toast.error).toHaveBeenCalledWith(
+					"Something went wrong. Try again.",
+					expect.anything()
+				)
 			)
 		})
 

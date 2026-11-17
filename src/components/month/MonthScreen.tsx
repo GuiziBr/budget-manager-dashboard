@@ -149,7 +149,8 @@ export function MonthScreen() {
 						refetch()
 						return
 					}
-					toast.error(described.message, { id: OPEN_MONTH_TOAST_ID })
+					// Anything else is generic: a 422 here would read as the envelope message
+					toast.error(translations.errors.generic, { id: OPEN_MONTH_TOAST_ID })
 				}
 			}
 		)

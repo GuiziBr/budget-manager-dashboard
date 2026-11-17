@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
 	Dialog,
@@ -23,6 +23,7 @@ export function MonthNotOpened({
 }: MonthNotOpenedProps) {
 	const t = translations.month.states
 	const [confirming, setConfirming] = useState(false)
+	const openerRef = useRef<HTMLButtonElement>(null)
 
 	const confirm = () => {
 		setConfirming(false)
@@ -34,11 +35,24 @@ export function MonthNotOpened({
 			<p className="font-serif text-base font-bold text-foreground">
 				{t.notOpenedTitle.replace("{month}", label)}
 			</p>
-			<Button onClick={() => setConfirming(true)} disabled={isOpening}>
+			<Button
+				ref={openerRef}
+				onClick={() => setConfirming(true)}
+				disabled={isOpening}
+			>
 				{t.openMonth.replace("{month}", label)}
 			</Button>
 			<Dialog open={confirming} onOpenChange={setConfirming}>
-				<DialogContent className="sm:max-w-[425px]">
+				<DialogContent
+					className="sm:max-w-[425px]"
+					onCloseAutoFocus={(event) => {
+						// Radix has no trigger to return to, so give focus back to the Open button
+						const opener = openerRef.current
+						if (!opener?.isConnected) return
+						event.preventDefault()
+						opener.focus()
+					}}
+				>
 					<DialogHeader>
 						<DialogTitle>
 							{t.openConfirmTitle.replace("{month}", label)}
