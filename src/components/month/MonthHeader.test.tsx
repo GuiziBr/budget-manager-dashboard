@@ -116,5 +116,22 @@ describe("MonthHeader", () => {
 			await user.click(item)
 			expect(onDeleteMonth).not.toHaveBeenCalled()
 		})
+
+		it("sits left of the month arrows on the phone", async () => {
+			vi.stubGlobal("matchMedia", (query: string) => ({
+				matches: true,
+				media: query,
+				addEventListener: () => {},
+				removeEventListener: () => {}
+			}))
+			setup({ onDeleteMonth: vi.fn() })
+			const menu = await screen.findByRole("button", { name: "Month actions" })
+			const prev = screen.getByRole("button", { name: /Previous month/ })
+			expect(
+				menu.compareDocumentPosition(prev) & Node.DOCUMENT_POSITION_FOLLOWING
+			).toBeTruthy()
+			expect(menu.parentElement).toBe(prev.parentElement)
+			vi.unstubAllGlobals()
+		})
 	})
 })
