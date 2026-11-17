@@ -95,7 +95,7 @@ export function SummaryCards({ periodId, onViewIncome }: SummaryCardsProps) {
 		return (
 			<section aria-label={t.label}>
 				<Card className="flex flex-col gap-1.5 border-transparent bg-primary p-[18px] text-primary-foreground">
-					<div className="flex items-center gap-1.5 text-primary-foreground/80">
+					<div className="flex items-center gap-1.5 text-primary-foreground">
 						<Scale aria-hidden="true" className="size-3.5" />
 						<span className={labelClass}>{t.balance}</span>
 					</div>
@@ -107,9 +107,9 @@ export function SummaryCards({ periodId, onViewIncome }: SummaryCardsProps) {
 						<button
 							type="button"
 							onClick={onViewIncome}
-							className="flex min-w-0 flex-1 flex-col gap-0.5 rounded-[10px] border border-primary-foreground/20 bg-primary-foreground/12 px-2.5 py-2 text-left"
+							className="flex min-w-0 flex-1 flex-col gap-0.5 rounded-[10px] border border-primary-foreground/20 px-2.5 py-2 text-left"
 						>
-							<span className="flex items-center justify-between text-xs text-primary-foreground/80">
+							<span className="flex items-center justify-between text-xs text-primary-foreground">
 								{t.income}
 								<ChevronRight aria-hidden="true" className="size-3.5" />
 							</span>
@@ -118,8 +118,8 @@ export function SummaryCards({ periodId, onViewIncome }: SummaryCardsProps) {
 								{formatCad(income, { compact: true })}
 							</span>
 						</button>
-						<div className="flex min-w-0 flex-1 flex-col gap-0.5 rounded-[10px] border border-transparent bg-primary-foreground/12 px-2.5 py-2">
-							<span className="text-xs text-primary-foreground/80">
+						<div className="flex min-w-0 flex-1 flex-col gap-0.5 rounded-[10px] border border-primary-foreground/20 px-2.5 py-2">
+							<span className="text-xs text-primary-foreground">
 								{t.expenses}
 							</span>
 							<span className="text-base font-semibold font-[family-name:var(--font-roboto)]">
@@ -162,7 +162,7 @@ export function SummaryCards({ periodId, onViewIncome }: SummaryCardsProps) {
 				<MetricValue value={expenses} />
 			</Card>
 			<Card className="flex flex-col gap-1.5 border-transparent bg-primary p-5 text-primary-foreground">
-				<div className="flex items-center gap-1.5 text-primary-foreground/80">
+				<div className="flex items-center gap-1.5 text-primary-foreground">
 					<Scale aria-hidden="true" className="size-3.5" />
 					<span className={labelClass}>{t.balance}</span>
 				</div>
