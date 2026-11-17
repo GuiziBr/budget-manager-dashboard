@@ -2029,4 +2029,57 @@ describe("MonthScreen delete month", () => {
 		await vi.waitFor(() => expect(nav.search).toContain("period=2026-03"))
 		expect(toast.error).not.toHaveBeenCalled()
 	})
+
+	it("lands on a month opened elsewhere while the delete ran", async () => {
+		let periods = [make(2026, 11), make(2026, 3), make(2025, 12)]
+		vi.spyOn(api, "get").mockImplementation((async (endpoint: string) =>
+			endpoint.includes("budget-periods") ? periods : []) as never)
+		vi.spyOn(api, "getPage").mockResolvedValue({
+			data: [],
+			total: 0,
+			totalAmount: 0,
+			page: 1,
+			limit: 10
+		} as never)
+		vi.spyOn(api, "delete").mockImplementation((async () => {
+			periods = [make(2026, 10), make(2026, 3), make(2025, 12)]
+		}) as never)
+		const user = setup()
+		const item = await openMenu(user)
+		await vi.waitFor(() =>
+			expect(item).not.toHaveAttribute("aria-disabled", "true")
+		)
+		await user.click(item)
+		const dialog = await screen.findByRole("dialog", { name: "Delete month" })
+		await user.click(within(dialog).getByRole("button", { name: "Delete" }))
+		await vi.waitFor(() => expect(nav.search).toContain("period=2026-10"))
+	})
+
+	it("keeps Delete month disabled while the previous month's expenses stand in", async () => {
+		let release: (page: unknown) => void = () => {}
+		vi.spyOn(api, "get").mockImplementation((async (endpoint: string) =>
+			endpoint.includes("budget-periods")
+				? [make(2026, 11), make(2026, 10)]
+				: []) as never)
+		vi.spyOn(api, "getPage").mockImplementation((async (
+			_endpoint: string,
+			params: { budgetPeriodId?: string }
+		) =>
+			params.budgetPeriodId === "2026-10"
+				? { data: [], total: 0, totalAmount: 0, page: 1, limit: 10 }
+				: new Promise((resolve) => {
+						release = resolve
+					})) as never)
+		nav.search = "period=2026-10"
+		const user = setup()
+		const item = await openMenu(user)
+		await vi.waitFor(() =>
+			expect(item).not.toHaveAttribute("aria-disabled", "true")
+		)
+		await user.keyboard("{Escape}")
+		await user.click(screen.getByRole("button", { name: /Next month/ }))
+		const again = await openMenu(user)
+		expect(again).toHaveAttribute("aria-disabled", "true")
+		release({ data: [], total: 0, totalAmount: 0, page: 1, limit: 10 })
+	})
 })

@@ -193,8 +193,10 @@ export function MonthScreen() {
 	// Page 1 and the incomes share the cache with the table and the summary cards
 	const firstPage = useMonthExpensesPage(period?.id, 1)
 	const monthIncomes = useMonthIncomes(period?.id)
+	// Page 1 of the previous month stays on screen while this month's loads (keepPreviousData)
+	const expensesKnown = !!firstPage.data && !firstPage.isPlaceholderData
 	const holdsNothing =
-		!!firstPage.data &&
+		expensesKnown &&
 		!!monthIncomes.data &&
 		!!monthEnvelopes.data &&
 		firstPage.data.total === 0 &&
@@ -202,14 +204,19 @@ export function MonthScreen() {
 		monthEnvelopes.data.length === 0
 	const deleteMonthDisabledReason = holdsNothing
 		? undefined
-		: firstPage.data && monthIncomes.data && monthEnvelopes.data
+		: expensesKnown && monthIncomes.data && monthEnvelopes.data
 			? translations.errors.monthNotEmpty
 			: translations.month.deleteMonth.loading
 	const deletePeriod = useDeleteBudgetPeriod()
-	const leaveDeletedMonth = () => {
-		// Replace, so Back doesn't return to the month that is gone
+	// Read the periods again first: a month opened elsewhere meanwhile may now be the nearest one
+	const leaveDeletedMonth = async (requestedKey: string) => {
+		const refreshed = await refetch()
+		// The user may have moved to another month while the periods reloaded
+		if (monthKeyRef.current !== requestedKey) return
 		router.replace(
-			monthHref(previousOpenedMonth(periods, month) ?? currentMonth())
+			monthHref(
+				previousOpenedMonth(refreshed.data ?? periods, month) ?? currentMonth()
+			)
 		)
 	}
 	const confirmDeleteMonth = () => {
@@ -221,7 +228,7 @@ export function MonthScreen() {
 				toast.success(
 					translations.month.deleteMonth.deleted.replace("{month}", label)
 				)
-				if (monthKeyRef.current === requestedKey) leaveDeletedMonth()
+				void leaveDeletedMonth(requestedKey)
 			},
 			onError: (error) => {
 				setDeletingMonth(false)
@@ -238,8 +245,7 @@ export function MonthScreen() {
 				}
 				if (error instanceof ApiError && error.status === 404) {
 					// Already deleted elsewhere
-					refetch()
-					if (monthKeyRef.current === requestedKey) leaveDeletedMonth()
+					void leaveDeletedMonth(requestedKey)
 					return
 				}
 				toast.error(translations.month.deleteMonth.failed, {
