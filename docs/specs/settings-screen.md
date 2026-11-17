@@ -107,6 +107,7 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 | Store | Name\* |
 
 4. On success the form closes, the list refreshes and a toast says "{Name} added" or "{Name} saved".
+5. **What is sent.** Add always sends every field the API requires on create: the name, and for categories and payment types the flag too, `false` when the switch is off (`hasBudgetEnvelope` and `hasStatement` are required on `POST`). Edit sends only the fields that changed.
 
 **Rules**
 - The name is trimmed and can't be empty. The API documents no maximum length; the form follows the API.
@@ -136,7 +137,7 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 - The switch is in the category form (Add and Edit).
 - A hint under it reads: "Months you open from now on get an envelope for this category. Existing envelopes don't change."
 - Turning it **on** makes the category appear in **+ Add → Category** of the Month screen (M-23) for current and future months, where an envelope can be added by hand.
-- Turning it **off** doesn't remove envelopes that already exist. They can be deleted from the Month screen (M-24).
+- Turning it **off** doesn't remove envelopes that already exist. They can be deleted from the Month screen (M-24) only in the current and future months: the backend refuses to change or delete envelopes of past months (422, M-25).
 
 **Acceptance criteria**
 - *Given* a category without envelopes, *when* I turn the switch on and save, *then* its row shows the "Uses envelopes" badge and the category is offered in + Add → Category.
@@ -189,8 +190,9 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 ### S-14 Duplicate names
 
 - The backend answers 409 for a duplicate. The screen shows the message of the Add and rename table.
-- **Before sending**, the form compares the name, ignoring case and surrounding spaces, with the list already loaded and marks the field at once. This is stricter than an exact match, and safe either way: if the backend turns out to be case-sensitive (G-7), "grocery" next to "Grocery" is blocked by the screen only, which is the intended behaviour for a one-person budget.
-- The server's answer always wins when the list on screen is stale.
+- **Before sending** a new or changed name, the form compares it, ignoring case and surrounding spaces, with the other items already loaded, and marks the field at once. The item being edited is not compared with itself, and a save that keeps the name unchanged (a flag-only edit, for example) doesn't run the check. This is stricter than an exact match, and safe either way: if the backend turns out to be case-sensitive (G-7), "grocery" next to "Grocery" can exist, and only new or changed names are blocked by the screen, which is the intended behaviour for a one-person budget.
+- **A local match is confirmed before it blocks.** The list on screen may be stale (another client may have deleted or renamed the item). On a match, the form first re-reads the list; it marks the field only if the match is still there, and otherwise sends the request.
+- The server's answer always wins: a 409 marks the field even when the list showed no match.
 
 **Acceptance criteria**
 - *Given* "Grocery" exists, *when* I type " grocery " in a new category, *then* the field turns red before I save.
@@ -201,17 +203,17 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 
 - **Editing is always allowed.** There are no read-only states on this screen.
 - **Strings** live in `src/constants/translations.ts`; colours only through tokens.
-- **Cache.** A change invalidates the lookup's query key, so the Month screen's forms and rows show it without a reload. The lists use the existing 10-minute cache otherwise (T-10).
+- **Cache.** A change invalidates the lookup's query key, so the Month screen's forms show it without a reload. A **rename** also invalidates the expenses (`EXPENSES_QUERY_KEY`), because each expense row carries the names it shows; without that, rows already cached would keep the old name until they were read again. The lists use the existing 10-minute cache otherwise (T-10).
 - **Layout.** Checked in light and dark, on desktop and at 390px, with nothing scrolling sideways except the tab strip.
 
 ## 5. Backend endpoints used
 
 | Need | Endpoints |
 |---|---|
-| Categories | `GET`, `POST`, `PATCH`, `DELETE /categories` (`name`, `hasBudgetEnvelope`) |
-| Payment types | `GET`, `POST`, `PATCH`, `DELETE /payment-types` (`name`, `hasStatement`) |
-| Banks | `GET`, `POST`, `PATCH`, `DELETE /banks` (`name`) |
-| Stores | `GET`, `POST`, `PATCH`, `DELETE /stores` (`name`) |
+| Categories | `GET /categories`, `POST /categories` (`name`, `hasBudgetEnvelope`, both required), `PATCH /categories/:id`, `DELETE /categories/:id` |
+| Payment types | `GET /payment-types`, `POST /payment-types` (`name`, `hasStatement`, both required), `PATCH /payment-types/:id`, `DELETE /payment-types/:id` |
+| Banks | `GET /banks`, `POST /banks` (`name`), `PATCH /banks/:id`, `DELETE /banks/:id` |
+| Stores | `GET /stores`, `POST /stores` (`name`), `PATCH /stores/:id`, `DELETE /stores/:id` |
 
 `GET /{lookup}/:id` isn't needed: the lists are loaded whole. The read hooks already exist (T-10); the mutations are new.
 

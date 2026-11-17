@@ -60,8 +60,8 @@ Size: **S** ≈ half a day, **M** ≈ a day.
 - **Goal:** the rules of the add and rename form in one tested module, shared by the four lookups.
 - **Includes:**
   - a Zod schema for the name (trimmed, not empty) and the two flags (`hasBudgetEnvelope`, `hasStatement`), per lookup;
-  - `isDuplicateName(name, items, ignoreId?)`: compares ignoring case and surrounding spaces against the loaded list, skipping the item being edited;
-  - `buildCreateLookupInput` and `buildUpdateLookupInput` (only changed fields; no change → `null`, so the caller closes without a request), `lookupToFormValues` for the prefill, and `sortLookups` (alphabetical, ignoring case).
+  - `isDuplicateName(name, items, ignoreId?)`: compares ignoring case and surrounding spaces against the loaded list, skipping the item being edited. Callers run it only for a new or changed name (`nameChanged` helper), never on a save that keeps the name;
+  - `buildCreateLookupInput` (always sends every field the API requires on create: the name, and for categories and payment types the flag too, `false` when the switch is off) and `buildUpdateLookupInput` (only changed fields; no change → `null`, so the caller closes without a request), `lookupToFormValues` for the prefill, and `sortLookups` (alphabetical, ignoring case).
 - **Done when:** tests cover trimming, the empty name, the duplicate check (case, spaces, the edited item itself), only-changed-fields and the no-change case.
 - **Backend:**
   - **G-7** (name uniqueness, see ST-01): the duplicate check here is deliberately stricter than an exact match and is correct under either rule. *To address when reached:* if the backend confirms exact-match, keep the check as it is (the screen blocks "grocery" next to "Grocery" on purpose, S-14) and say so in the spec; if it confirms ignoring case, nothing changes.
@@ -71,9 +71,9 @@ Size: **S** ≈ half a day, **M** ≈ a day.
 
 #### ST-03 Lookup mutation hooks
 - **Goal:** create, rename and delete for the four lookups, next to the read hooks T-10 built.
-- **Includes:** in `use-categories.ts`, `use-payment-types.ts`, `use-banks.ts` and `use-stores.ts`: `useCreateX`, `useUpdateX` (takes `{ id, ...changedFields }`) and `useDeleteX`, each invalidating the lookup's own query key (`CATEGORIES_QUERY_KEY`, …). Tests with `src/test/query-wrapper.tsx`.
-- **Done when:** each hook sends the expected request (`POST`, `PATCH` with only the given fields, `DELETE`), invalidates the list on success, and leaves it alone on error.
-- **Note:** the Month screen reads the same keys, so a change shows in the expense form and rows after the refetch. No other query needs invalidating: expenses carry their own names, and renaming an item shows the new name on past rows once their data is read again.
+- **Includes:** in `use-categories.ts`, `use-payment-types.ts`, `use-banks.ts` and `use-stores.ts`: `useCreateX`, `useUpdateX` (takes `{ id, ...changedFields }`) and `useDeleteX`, each invalidating the lookup's own query key (`CATEGORIES_QUERY_KEY`, …); `useUpdateX` also invalidates `EXPENSES_QUERY_KEY` (a rename). Tests with `src/test/query-wrapper.tsx`.
+- **Done when:** each hook sends the expected request (`POST`, `PATCH` with only the given fields, `DELETE`), invalidates the list on success (and, for an update, the expenses), and leaves everything alone on error.
+- **Note:** the Month screen's forms read the lookup keys, so a change shows there after the refetch. Expense rows carry the names they display, so a rename must also invalidate the expenses (`EXPENSES_QUERY_KEY`, the root key the expense mutations already use); otherwise rows cached within their 30-second `staleTime` keep the old name. Creates and deletes need only the lookup's own key: a deleted item stays on past rows as "(deleted)", which the expense data already says.
 
 ### Phase 2 — Read-only Settings screen
 
@@ -92,9 +92,9 @@ Size: **S** ≈ half a day, **M** ≈ a day.
 #### ST-06 Lookup form panel: add and rename (S-02, S-06, S-09, S-11, S-14)
 - **Includes:**
   - `LookupFormPanel`: the add and edit form on the shell of the income and envelope forms. `DetailsSheet` currently lives in `components/month/`; move it to `components/` in this task, since two screens now use it. Fields per lookup as in the spec (Name\*; the two switches arrive in ST-07 and ST-08). **Save** and **Cancel** only;
-  - add from the tab's Add button (and the empty state); edit from the row menu, prefilled with `lookupToFormValues`; only changed fields are sent, and saving with no change closes without a request;
+  - add from the tab's Add button (and the empty state); edit from the row menu, prefilled with `lookupToFormValues`; on add every required field is sent (the flags as `false` when off), on edit only the changed fields, and saving with no change closes without a request;
   - success: the panel closes and a toast says "{Name} added" or "{Name} saved";
-  - **duplicate names (S-14):** `isDuplicateName` marks the Name field red before sending; a 409 does the same and shows the toast from ST-01. The form keeps what was typed;
+  - **duplicate names (S-14):** `isDuplicateName` runs only for a new or changed name, never on a flag-only save and never against the item being edited. On a match the form first re-reads the list (the cache may be stale) and marks the Name field red only if the match is still there; otherwise it sends the request. A 409 marks the field too and shows the toast from ST-01. The form keeps what was typed;
   - a 404 on edit shows "This {item} no longer exists.", closes the form and refreshes the list; other failures show the generic toast and keep the form open;
   - the form closes when the tab changes; one panel at a time.
 - **Done when:** the S-02 and S-14 acceptance criteria pass: adding "Nubank" shows it in the list and in the expense form's bank select, a duplicate marks the field and adds nothing (also for " grocery "), and saving an unchanged item sends no request.
@@ -103,13 +103,13 @@ Size: **S** ≈ half a day, **M** ≈ a day.
   - **G-15** (no maximum length documented for names): *To address when reached:* if a limit is confirmed, add it to the schema from ST-02, to the field's hint, and to this form's tests; until then the form accepts any non-empty name and relies on the server's 400 (generic toast).
 
 #### ST-07 Category flag: Uses envelopes (S-03)
-- **Includes:** the **Uses envelopes** switch (`switch.tsx`) in the category form, off by default on Add, with the hint "Months you open from now on get an envelope for this category. Existing envelopes don't change."; the flag sent only when changed; the row's badge and the Month screen's **+ Add → Category** (M-23) update after the list refreshes (same query key, no extra code expected: check it).
+- **Includes:** the **Uses envelopes** switch (`switch.tsx`) in the category form, off by default on Add, with the hint "Months you open from now on get an envelope for this category. Existing envelopes don't change."; on add `hasBudgetEnvelope` is always sent (`false` when the switch is off, because the API requires it), on edit only when changed; the row's badge and the Month screen's **+ Add → Category** (M-23) update after the list refreshes (same query key, no extra code expected: check it).
 - **Done when:** the S-03 acceptance criteria pass: turning it on shows the badge and offers the category in + Add → Category.
 - **Backend:**
   - **G-14** (existing envelopes when turned off): the API docs only say that creating an envelope for a category without the flag returns 400; they don't say what happens to envelopes that already exist, nor whether the flag also affects months already open. The hint above assumes existing envelopes are left alone. *To address when reached:* check against the real API (turn the flag off on a category that has an envelope in the current month, then read the envelopes and try the Month screen's Edit budget and Delete on it). If anything differs, reword the hint and the spec's S-03, and if the envelope becomes unusable add a note in the Month screen's envelope details.
 
 #### ST-08 Payment type flag: Requires a bank (S-07)
-- **Includes:** the **Requires a bank** switch in the payment type form, off by default on Add, with the hint "Expenses paid this way must have a bank. Existing expenses aren't checked again."; the flag sent only when changed; the expense form's Bank asterisk follows the new setting once the list refreshes (M-14).
+- **Includes:** the **Requires a bank** switch in the payment type form, off by default on Add, with the hint "Expenses paid this way must have a bank. Existing expenses aren't checked again."; on add `hasStatement` is always sent (`false` when off, because the API requires it), on edit only when changed; the expense form's Bank asterisk follows the new setting once the list refreshes (M-14).
 - **Done when:** the S-07 acceptance criteria pass: after turning it on for Debit, adding an expense paid with Debit marks Bank as required.
 - **Backend:** none. `PATCH /payment-types/:id` takes `hasStatement` and, per the API docs, doesn't re-validate existing expenses (which the hint says). An edit form for an existing expense whose payment type now requires a bank is answered by the server's 400 (the Month screen already maps it, T-29).
 
