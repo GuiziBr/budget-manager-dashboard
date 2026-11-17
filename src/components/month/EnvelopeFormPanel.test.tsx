@@ -218,6 +218,29 @@ describe("EnvelopeFormPanel (edit budget)", () => {
 		expect(toast.success).toHaveBeenCalledWith("Grocery budget updated.")
 	})
 
+	it("holds the panel open while a save is in flight", async () => {
+		let finish: (value: unknown) => void = () => {}
+		const patch = vi
+			.spyOn(api, "patch")
+			.mockReturnValue(new Promise((resolve) => (finish = resolve)) as never)
+		const { user, onClose } = setup({ envelope: existing })
+		await ready()
+
+		await user.type(screen.getByLabelText("Budget"), "0")
+		await user.click(screen.getByRole("button", { name: "Save" }))
+		await vi.waitFor(() => expect(patch).toHaveBeenCalledTimes(1))
+
+		// Neither Escape, Cancel nor a second Save may close it or send a second request
+		await user.keyboard("{Escape}")
+		expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled()
+		expect(screen.getByRole("button", { name: "Save" })).toBeDisabled()
+		expect(onClose).not.toHaveBeenCalled()
+		expect(patch).toHaveBeenCalledTimes(1)
+
+		finish({})
+		await vi.waitFor(() => expect(onClose).toHaveBeenCalledTimes(1))
+	})
+
 	it("closes without a request when the budget is unchanged", async () => {
 		const patch = vi.spyOn(api, "patch")
 		const onSaved = vi.fn()

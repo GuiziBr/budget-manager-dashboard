@@ -133,9 +133,11 @@ describe("useCreateEnvelope", () => {
 
 describe("useUpdateEnvelope", () => {
 	it("sends only the budget and refreshes every envelope query", async () => {
+		// The real PATCH response carries no spend fields
+		const { spentAmount: _spent, spendUpdatedAt: _updated, ...saved } = envelope
 		const patch = vi
 			.spyOn(api, "patch")
-			.mockResolvedValue({ ...envelope, allocatedAmount: 350 })
+			.mockResolvedValue({ ...saved, allocatedAmount: 350 })
 		const { wrapper, queryClient } = createQueryWrapper()
 		queryClient.setQueryData(["budget-envelopes", "month", "p1"], [envelope])
 		const invalidate = vi.spyOn(queryClient, "invalidateQueries")

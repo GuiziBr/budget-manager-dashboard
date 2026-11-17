@@ -1644,7 +1644,19 @@ describe("MonthScreen envelopes", () => {
 
 	it("treats a 404 on delete as already deleted", async () => {
 		const { del } = open(`envelope=${GROCERY_ID}`)
-		del.mockRejectedValue(new ApiError("gone", 404))
+		// Someone else deleted it: the server no longer lists it once the app asks again
+		const read = vi.mocked(api.get).getMockImplementation()
+		let gone = false
+		vi.mocked(api.get).mockImplementation((async (endpoint: string) => {
+			const result = (await read?.(endpoint)) as { id: string }[]
+			return gone && endpoint.startsWith("budget-envelopes?")
+				? result.filter((e) => e.id !== GROCERY_ID)
+				: result
+		}) as never)
+		del.mockImplementation((async () => {
+			gone = true
+			throw new ApiError("gone", 404)
+		}) as never)
 		const user = setup()
 		const details = await screen.findByRole("dialog", { name: "Grocery" })
 		await user.click(within(details).getByRole("button", { name: "Delete" }))
@@ -1654,6 +1666,14 @@ describe("MonthScreen envelopes", () => {
 		await user.click(within(confirm).getByRole("button", { name: "Delete" }))
 
 		await vi.waitFor(() => expect(del).toHaveBeenCalled())
+		// The list is refreshed: the tile and the confirmation are gone, the rest stays
+		await vi.waitFor(() => expect(screen.queryByText("Grocery")).toBeNull())
+		await vi.waitFor(() =>
+			expect(
+				screen.queryByRole("dialog", { name: "Delete envelope" })
+			).toBeNull()
+		)
+		expect(screen.getByText("Fuel")).toBeInTheDocument()
 		expect(toast.error).not.toHaveBeenCalled()
 		expect(toast.success).not.toHaveBeenCalled()
 	})
