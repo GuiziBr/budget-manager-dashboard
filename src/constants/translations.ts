@@ -376,7 +376,7 @@ export const translations = {
 			},
 			envelopes: {
 				title: "Categories",
-				hint: "You can change a budget later from the envelope's details.",
+				hint: "You can change a category's budget later from the month screen.",
 				empty: "No categories",
 				loadError: "Couldn't load the categories"
 			},
