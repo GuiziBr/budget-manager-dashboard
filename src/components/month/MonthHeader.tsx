@@ -1,6 +1,12 @@
 "use client"
 
-import { ChevronDown, ChevronLeft, ChevronRight, Ellipsis } from "lucide-react"
+import {
+	ChevronDown,
+	ChevronLeft,
+	ChevronRight,
+	Ellipsis,
+	Trash2
+} from "lucide-react"
 import { AddMenu, type AddMenuActions } from "@/components/month/AddMenu"
 import { PastMonthPill } from "@/components/month/PastMonthPill"
 import { Button } from "@/components/ui/button"
@@ -12,18 +18,65 @@ import {
 	DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { translations } from "@/constants/translations"
+import { PHONE_QUERY, useMediaQuery } from "@/hooks/use-media-query"
 import { useMonthAccess } from "@/hooks/use-month-access"
 import { groupPeriodsByYear, monthLabel } from "@/lib/month"
 
-export function MonthHeader(actions: AddMenuActions) {
+export interface MonthHeaderActions extends AddMenuActions {
+	/** Delete month shows when given; it asks for confirmation itself. */
+	onDeleteMonth?: () => void
+	/** Why the month can't be deleted yet; the entry then shows it and does nothing. */
+	deleteMonthDisabledReason?: string
+}
+
+export function MonthHeader({
+	onDeleteMonth,
+	deleteMonthDisabledReason,
+	...actions
+}: MonthHeaderActions) {
 	const { month, periods, prev, next, select, state, canEdit } =
 		useMonthAccess()
+	const isPhone = useMediaQuery(PHONE_QUERY)
 	const groups = groupPeriodsByYear(periods)
 	const t = translations.month
+
+	const monthMenu = onDeleteMonth && (
+		<DropdownMenu>
+			<DropdownMenuTrigger asChild>
+				<Button
+					variant="outline"
+					size="icon"
+					className={`rounded-[10px] shadow-none ${isPhone ? "order-2 size-10" : ""}`}
+					aria-label={t.moreActions}
+				>
+					<Ellipsis className="size-4" />
+				</Button>
+			</DropdownMenuTrigger>
+			<DropdownMenuContent align="end" className="w-60 p-1.5">
+				<DropdownMenuItem
+					disabled={!!deleteMonthDisabledReason}
+					className="flex-col items-start gap-0.5"
+					onSelect={onDeleteMonth}
+				>
+					<span className="flex items-center gap-2">
+						<Trash2 className="size-4" />
+						{t.deleteMonth.menu}
+					</span>
+					{deleteMonthDisabledReason && (
+						<span className="text-xs font-normal text-muted-foreground">
+							{deleteMonthDisabledReason}
+						</span>
+					)}
+				</DropdownMenuItem>
+			</DropdownMenuContent>
+		</DropdownMenu>
+	)
 
 	return (
 		<header className="flex flex-wrap items-center gap-2 lg:flex-nowrap lg:gap-3 lg:pb-2">
 			<div className="flex w-full min-w-0 items-center gap-2 lg:w-76 lg:shrink lg:gap-1">
+				{/* Phone: left of the month arrows */}
+				{isPhone && monthMenu}
 				<Button
 					variant="outline"
 					size="icon"
@@ -97,19 +150,12 @@ export function MonthHeader(actions: AddMenuActions) {
 			</div>
 			{/* Desktop: to the right of the whole switcher */}
 			{state === "past" && <PastMonthPill className="hidden lg:flex" />}
-			<div className="ml-auto hidden items-center gap-2 lg:flex">
-				{/* Placeholder: Delete month arrives with T-38 */}
-				<Button
-					variant="outline"
-					size="icon"
-					disabled
-					className="rounded-[10px] shadow-none"
-					aria-label={t.moreActions}
-				>
-					<Ellipsis className="size-4" />
-				</Button>
-				{canEdit && <AddMenu {...actions} />}
-			</div>
+			{!isPhone && (
+				<div className="ml-auto flex items-center gap-2">
+					{!isPhone && monthMenu}
+					{canEdit && <AddMenu {...actions} />}
+				</div>
+			)}
 		</header>
 	)
 }

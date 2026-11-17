@@ -1,6 +1,7 @@
 "use client"
 
 import { useQueryClient } from "@tanstack/react-query"
+import { useRouter } from "next/navigation"
 import { useRef, useState } from "react"
 import { toast } from "sonner"
 import { ConfirmDeleteModal } from "@/components/ConfirmDeleteModal"
@@ -28,15 +29,23 @@ import {
 	useDeleteEnvelope,
 	useMonthEnvelopes
 } from "@/hooks/use-budget-envelopes"
-import { useCreateBudgetPeriod } from "@/hooks/use-budget-periods"
+import {
+	useCreateBudgetPeriod,
+	useDeleteBudgetPeriod
+} from "@/hooks/use-budget-periods"
 import { useCategories } from "@/hooks/use-categories"
 import {
 	EXPENSES_QUERY_KEY,
 	expenseQueryKey,
 	useDeleteExpense,
+	useMonthExpensesPage,
 	useUpdateExpense
 } from "@/hooks/use-expenses"
-import { INCOMES_QUERY_KEY, useDeleteIncome } from "@/hooks/use-incomes"
+import {
+	INCOMES_QUERY_KEY,
+	useDeleteIncome,
+	useMonthIncomes
+} from "@/hooks/use-incomes"
 import { useLinkedPlan } from "@/hooks/use-linked-plan"
 import { useLinkedSelection } from "@/hooks/use-linked-selection"
 import { useLinkedSelectionSync } from "@/hooks/use-linked-selection-sync"
@@ -56,8 +65,9 @@ import {
 import { deleteMessage } from "@/lib/expense-delete"
 import { todayIso } from "@/lib/format-date"
 import { incomeDeleteMessage } from "@/lib/income-form"
-import { monthLabel } from "@/lib/month"
+import { currentMonth, monthLabel, previousOpenedMonth } from "@/lib/month"
 import { isUnpaid } from "@/lib/month-rows"
+import { monthHref } from "@/lib/navigation"
 import type { BudgetEnvelope, Expense, Income } from "@/types"
 
 // A fixed id keeps repeated failures from stacking toasts
@@ -66,10 +76,20 @@ const DELETE_TOAST_ID = "expense-delete-failed"
 const INCOME_DELETE_TOAST_ID = "income-delete-failed"
 const ENVELOPE_DELETE_TOAST_ID = "envelope-delete-failed"
 const OPEN_MONTH_TOAST_ID = "month-open-failed"
+const DELETE_MONTH_TOAST_ID = "month-delete-failed"
 
 export function MonthScreen() {
-	const { month, period, state, canEdit, canEditEnvelopes, error, refetch } =
-		useMonthAccess()
+	const {
+		month,
+		period,
+		periods,
+		state,
+		canEdit,
+		canEditEnvelopes,
+		error,
+		refetch
+	} = useMonthAccess()
+	const router = useRouter()
 	const label = monthLabel(month)
 	const isPhone = useMediaQuery(PHONE_QUERY)
 	const [incomeFor, setIncomeFor] = useState<string | null>(null)
@@ -122,6 +142,8 @@ export function MonthScreen() {
 	const [panelMonth, setPanelMonth] = useState(monthKey)
 	// The month just opened, while its review (M-02) is on screen
 	const [reviewPeriodId, setReviewPeriodId] = useState<string | null>(null)
+	// Waiting for the delete month confirmation
+	const [deletingMonth, setDeletingMonth] = useState(false)
 	if (panelMonth !== monthKey) {
 		setPanelMonth(monthKey)
 		setIncomeFor(null)
@@ -136,6 +158,7 @@ export function MonthScreen() {
 		setEditingEnvelope(null)
 		setDeletingEnvelope(null)
 		setReviewPeriodId(null)
+		setDeletingMonth(false)
 	}
 	const createPeriod = useCreateBudgetPeriod()
 	const openMonth = () => {
@@ -166,6 +189,70 @@ export function MonthScreen() {
 				}
 			}
 		)
+	}
+	// Page 1 and the incomes share the cache with the table and the summary cards
+	const firstPage = useMonthExpensesPage(period?.id, 1)
+	const monthIncomes = useMonthIncomes(period?.id)
+	// Page 1 of the previous month stays on screen while this month's loads (keepPreviousData)
+	const expensesKnown = !!firstPage.data && !firstPage.isPlaceholderData
+	const holdsNothing =
+		expensesKnown &&
+		!!monthIncomes.data &&
+		!!monthEnvelopes.data &&
+		firstPage.data.total === 0 &&
+		monthIncomes.data.length === 0 &&
+		monthEnvelopes.data.length === 0
+	const deleteMonthDisabledReason = holdsNothing
+		? undefined
+		: expensesKnown && monthIncomes.data && monthEnvelopes.data
+			? translations.errors.monthNotEmpty
+			: translations.month.deleteMonth.loading
+	const deletePeriod = useDeleteBudgetPeriod()
+	// Read the periods again first: a month opened elsewhere meanwhile may now be the nearest one
+	const leaveDeletedMonth = async (requestedKey: string) => {
+		const refreshed = await refetch()
+		// The user may have moved to another month while the periods reloaded
+		if (monthKeyRef.current !== requestedKey) return
+		router.replace(
+			monthHref(
+				previousOpenedMonth(refreshed.data ?? periods, month) ?? currentMonth()
+			)
+		)
+	}
+	const confirmDeleteMonth = () => {
+		if (!period) return
+		const requestedKey = monthKey
+		deletePeriod.mutate(period.id, {
+			onSuccess: () => {
+				setDeletingMonth(false)
+				toast.success(
+					translations.month.deleteMonth.deleted.replace("{month}", label)
+				)
+				void leaveDeletedMonth(requestedKey)
+			},
+			onError: (error) => {
+				setDeletingMonth(false)
+				const described = describeApiError(error, { action: "deleteMonth" })
+				if (described.kind === "monthNotEmpty") {
+					// The screen was stale: reload what the month holds
+					toast.error(described.message, { id: DELETE_MONTH_TOAST_ID })
+					queryClient.invalidateQueries({ queryKey: EXPENSES_QUERY_KEY })
+					queryClient.invalidateQueries({ queryKey: INCOMES_QUERY_KEY })
+					queryClient.invalidateQueries({
+						queryKey: BUDGET_ENVELOPES_QUERY_KEY
+					})
+					return
+				}
+				if (error instanceof ApiError && error.status === 404) {
+					// Already deleted elsewhere
+					void leaveDeletedMonth(requestedKey)
+					return
+				}
+				toast.error(translations.month.deleteMonth.failed, {
+					id: DELETE_MONTH_TOAST_ID
+				})
+			}
+		})
 	}
 	const updateExpense = useUpdateExpense({ optimistic: true })
 	// Ticking records today; unticking clears the date. The change shows at once and rolls back on failure
@@ -401,6 +488,12 @@ export function MonthScreen() {
 			<h1 className="sr-only">{translations.navigation.items.month}</h1>
 			{/* The phone has the floating button instead */}
 			<MonthHeader
+				onDeleteMonth={
+					(state === "open" || state === "past") && period
+						? () => setDeletingMonth(true)
+						: undefined
+				}
+				deleteMonthDisabledReason={deleteMonthDisabledReason}
 				onAddExpense={isPhone ? undefined : openForm}
 				onAddIncome={isPhone ? undefined : (opener) => openIncomeForm(opener)}
 				onAddEnvelope={
@@ -529,6 +622,17 @@ export function MonthScreen() {
 							if (!editing && page > 1) setPage(1)
 						}}
 						returnFocusRef={formOpener}
+					/>
+					<ConfirmDeleteModal
+						isOpen={deletingMonth}
+						onClose={() => setDeletingMonth(false)}
+						onConfirm={confirmDeleteMonth}
+						title={translations.month.deleteMonth.title}
+						description={translations.month.deleteMonth.confirm.replace(
+							"{month}",
+							label
+						)}
+						isPending={deletePeriod.isPending}
 					/>
 					<ConfirmDeleteModal
 						isOpen={deleting !== null && canEdit}

@@ -84,6 +84,22 @@ export function findPeriod(
 	)
 }
 
+// The latest opened month before `month`, which may be several months back
+export function previousOpenedMonth(
+	periods: BudgetPeriod[],
+	month: Month
+): Month | null {
+	const limit = monthIndex(month)
+	let best: Month | null = null
+	for (const period of periods) {
+		const index = monthIndex(period)
+		if (index < limit && (!best || index > monthIndex(best))) {
+			best = { year: period.year, month: period.month }
+		}
+	}
+	return best
+}
+
 export interface PeriodYearGroup {
 	year: number
 	periods: BudgetPeriod[]

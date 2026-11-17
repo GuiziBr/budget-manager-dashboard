@@ -10,6 +10,7 @@ import {
 	monthLabel,
 	nextMonth,
 	parseMonth,
+	previousOpenedMonth,
 	prevMonth,
 	resolveMonth
 } from "./month"
@@ -245,5 +246,28 @@ describe("groupPeriodsByYear", () => {
 		const input = [make(2025, 1), make(2026, 1)]
 		groupPeriodsByYear(input)
 		expect(input[0].year).toBe(2025)
+	})
+})
+
+describe("previousOpenedMonth", () => {
+	const periods = [period(2026, 11), period(2026, 3), period(2025, 12)]
+
+	it("skips months that were never opened", () => {
+		expect(previousOpenedMonth(periods, { year: 2026, month: 11 })).toEqual({
+			year: 2026,
+			month: 3
+		})
+	})
+
+	it("crosses the year boundary", () => {
+		expect(previousOpenedMonth(periods, { year: 2026, month: 3 })).toEqual({
+			year: 2025,
+			month: 12
+		})
+	})
+
+	it("ignores later months and gives null when nothing is earlier", () => {
+		expect(previousOpenedMonth(periods, { year: 2025, month: 12 })).toBeNull()
+		expect(previousOpenedMonth([], { year: 2026, month: 1 })).toBeNull()
 	})
 })
