@@ -1,6 +1,6 @@
 # Month Screen — Implementation Plan
 
-Status: draft 8 (T-33 done) · Last updated: 2026-11-16
+Status: draft 9 (T-34 done) · Last updated: 2026-11-16
 
 Breaks the [Month screen spec](../specs/month-screen.md) and the wireframes in `design.pen` into small tasks. Each task is one pull request to `development`, sized to be reviewed in one sitting.
 
@@ -297,8 +297,9 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 - **Status: done (2026-11-16).** `EnvelopeFormPanel` (same shell as the income form; category select in add mode, read-only text in edit mode, the spend as a hint), `lib/envelope-form.ts`, `useUpdateEnvelope`, `AddMenu` entries that can be disabled with a reason, the Edit budget button in `EnvelopeDetailsPanel`, and the delete confirmation in `MonthScreen` (the details hide at once and come back if it fails; a 404 counts as already deleted). Saving a changed budget brings the details back; saving with the same budget closes with no request. `describeApiError` gained `updateEnvelope` and `deleteEnvelope` (404 gives "This envelope no longer exists."). Checked in the browser against the real API: Add menu with the Envelope entry disabled (all categories used) and enabled after a delete; one `DELETE` (204), then `POST` with the expected body (201); `PATCH` with `{"allocatedAmount":…}` only (200), spend intact and over-budget status updated; unchanged save sends nothing; past month has no Envelope entry, Edit budget or Delete; dark and light on desktop, 390px with no horizontal scroll. Not confirmed in the browser: a failing request (Chrome's offline mode didn't stop the request; covered by the component tests). The Parking envelope used for the test was recreated with the same budget (new id); Grocery's budget was restored. `design.pen` has no envelope form frames yet; the form was compared with the income form.
 
 #### T-34 Past-month envelope guard (M-25)
-- **Includes:** a 422 on creating or deleting an envelope shows "Envelopes of past months can't be changed" (`errors.monthClosed`, `isMonthClosedError`) and refreshes the envelopes. It only happens when a month ends while the screen is open, since the screen already hides those actions in past months.
+- **Includes:** a 422 on creating, editing or deleting an envelope shows "Envelopes of past months can't be changed" (`errors.monthClosed`, `isMonthClosedError`) and refreshes the envelopes. It only happens when a month ends while the screen is open, since the screen already hides those actions in past months.
 - **Done when:** simulating a 422 on an envelope mutation shows the message.
+- **Status: done (2026-11-16).** Delete and the form's create path already showed the message (T-33 and `335a020`); this task made the envelope form refresh the envelopes after a 422 too, as it already did for 409 and 404, and added tests for create and edit-budget (the fields keep what was typed and the form stays open). Backend: none. The controls stay until the clock moves the screen into the next month, because `canEditEnvelopes` comes from the date, not from the API. Not checked in the browser: a real 422 can't be produced without a month ending; covered by the component tests.
 - Expenses and incomes no longer return 422, so the read-only switch this task used to cover is gone (2026-11-10).
 
 ### Phase 5 — Month lifecycle
