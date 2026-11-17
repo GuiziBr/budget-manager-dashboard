@@ -21,7 +21,7 @@ import {
 } from "@/hooks/use-budget-envelopes"
 import { useCategories } from "@/hooks/use-categories"
 import { ApiError } from "@/lib/api"
-import { getApiErrorMessage } from "@/lib/api-error-message"
+import { getApiErrorMessage, isMonthClosedError } from "@/lib/api-error-message"
 import {
 	availableEnvelopeCategories,
 	buildCreateEnvelopeInput,
@@ -182,10 +182,12 @@ function EnvelopeForm({
 				)
 			}
 		} catch (error) {
-			// Someone else added or removed it meanwhile: refresh so the options and tiles are right
+			// Someone else added or removed it meanwhile, or the month ended while the form
+			// was open: refresh so the options and tiles are right
 			if (
-				error instanceof ApiError &&
-				(error.status === 409 || error.status === 404)
+				(error instanceof ApiError &&
+					(error.status === 409 || error.status === 404)) ||
+				isMonthClosedError(error)
 			) {
 				queryClient.invalidateQueries({ queryKey: BUDGET_ENVELOPES_QUERY_KEY })
 			}

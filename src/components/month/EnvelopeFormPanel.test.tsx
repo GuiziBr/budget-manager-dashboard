@@ -151,10 +151,17 @@ describe("EnvelopeFormPanel (add)", () => {
 		expect(screen.getByLabelText("Budget")).toHaveValue("100.00")
 	})
 
-	it("shows the month-closed message for a 422", async () => {
+	it("shows the month-closed message for a 422 and refreshes the envelopes", async () => {
 		vi.spyOn(api, "post").mockRejectedValue(new ApiError("past", 422))
 		const { user } = setup()
 		await ready()
+		const envelopeReads = () =>
+			vi
+				.mocked(api.get)
+				.mock.calls.filter(([endpoint]) =>
+					String(endpoint).startsWith("budget-envelopes")
+				).length
+		const before = envelopeReads()
 
 		await user.click(screen.getByRole("combobox", { name: "Category" }))
 		await user.click(await screen.findByRole("option", { name: "Fuel" }))
@@ -167,6 +174,7 @@ describe("EnvelopeFormPanel (add)", () => {
 				expect.anything()
 			)
 		)
+		await vi.waitFor(() => expect(envelopeReads()).toBeGreaterThan(before))
 	})
 
 	it("closes with Cancel without a request", async () => {
@@ -252,6 +260,31 @@ describe("EnvelopeFormPanel (edit budget)", () => {
 		await vi.waitFor(() => expect(onClose).toHaveBeenCalled())
 		expect(patch).not.toHaveBeenCalled()
 		expect(onSaved).toHaveBeenCalledWith(existing)
+	})
+
+	it("says the month is closed for a 422, keeps the form and refreshes", async () => {
+		vi.spyOn(api, "patch").mockRejectedValue(new ApiError("past", 422))
+		const { user, onClose } = setup({ envelope: existing })
+		await ready()
+		const envelopeReads = () =>
+			vi
+				.mocked(api.get)
+				.mock.calls.filter(([endpoint]) =>
+					String(endpoint).startsWith("budget-envelopes")
+				).length
+		const before = envelopeReads()
+
+		await user.type(screen.getByLabelText("Budget"), "0")
+		await user.click(screen.getByRole("button", { name: "Save" }))
+
+		await vi.waitFor(() =>
+			expect(toast.error).toHaveBeenCalledWith(
+				"Envelopes of past months can't be changed.",
+				expect.anything()
+			)
+		)
+		expect(onClose).not.toHaveBeenCalled()
+		await vi.waitFor(() => expect(envelopeReads()).toBeGreaterThan(before))
 	})
 
 	it("says the envelope is gone for a 404 and keeps the form", async () => {
