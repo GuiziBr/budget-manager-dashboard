@@ -1,6 +1,6 @@
 # Month Screen — Implementation Plan
 
-Status: draft 12 (T-37 built) · Last updated: 2026-11-17
+Status: draft 13 (T-38 built) · Last updated: 2026-11-17
 
 Breaks the [Month screen spec](../specs/month-screen.md) and the wireframes in `design.pen` into small tasks. Each task is one pull request to `development`, sized to be reviewed in one sitting.
 
@@ -324,6 +324,8 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 #### T-38 Delete an empty month (M-03)
 - **Includes:** Delete month in the header menu, disabled with a reason when the month isn't empty; a confirmation; landing on the previous opened month.
 - **Done when:** the M-03 acceptance criteria pass.
+- **Backend:** none. `DELETE /budget-periods/:id` answers 204, 409 when the month still holds rows, 404 when gone.
+- **Status: built (2026-11-17), browser QA pending.** The header's ⋯ button (now on the phone too) opens a menu with **Delete month**, shown for every opened month (current, future and past). It is disabled with "Remove this month's expenses, incomes and envelopes first." while page 1 of the expenses (`total`), the incomes or the envelopes have rows, and while they load. `MonthScreen` asks with `ConfirmDeleteModal` ("Are you sure you want to delete {month}?"), calls `useDeleteBudgetPeriod`, then `router.replace`s to `previousOpenedMonth(periods, month)` (`lib/month.ts`; the current month when none is left), so Back doesn't return to the deleted month. A 409 toasts the not-empty message and refreshes the month's data; a 404 counts as already deleted; other failures toast "Couldn't delete the month. Try again.". Covered by lib, header and screen tests. Not done: the browser checks against the real API (desktop/390px, light/dark).
 
 ### Phase 6 — Polish
 

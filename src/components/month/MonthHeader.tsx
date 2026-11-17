@@ -1,6 +1,12 @@
 "use client"
 
-import { ChevronDown, ChevronLeft, ChevronRight, Ellipsis } from "lucide-react"
+import {
+	ChevronDown,
+	ChevronLeft,
+	ChevronRight,
+	Ellipsis,
+	Trash2
+} from "lucide-react"
 import { AddMenu, type AddMenuActions } from "@/components/month/AddMenu"
 import { PastMonthPill } from "@/components/month/PastMonthPill"
 import { Button } from "@/components/ui/button"
@@ -15,7 +21,18 @@ import { translations } from "@/constants/translations"
 import { useMonthAccess } from "@/hooks/use-month-access"
 import { groupPeriodsByYear, monthLabel } from "@/lib/month"
 
-export function MonthHeader(actions: AddMenuActions) {
+export interface MonthHeaderActions extends AddMenuActions {
+	/** Delete month shows when given; it asks for confirmation itself. */
+	onDeleteMonth?: () => void
+	/** Why the month can't be deleted yet; the entry then shows it and does nothing. */
+	deleteMonthDisabledReason?: string
+}
+
+export function MonthHeader({
+	onDeleteMonth,
+	deleteMonthDisabledReason,
+	...actions
+}: MonthHeaderActions) {
 	const { month, periods, prev, next, select, state, canEdit } =
 		useMonthAccess()
 	const groups = groupPeriodsByYear(periods)
@@ -97,18 +114,41 @@ export function MonthHeader(actions: AddMenuActions) {
 			</div>
 			{/* Desktop: to the right of the whole switcher */}
 			{state === "past" && <PastMonthPill className="hidden lg:flex" />}
-			<div className="ml-auto hidden items-center gap-2 lg:flex">
-				{/* Placeholder: Delete month arrives with T-38 */}
-				<Button
-					variant="outline"
-					size="icon"
-					disabled
-					className="rounded-[10px] shadow-none"
-					aria-label={t.moreActions}
-				>
-					<Ellipsis className="size-4" />
-				</Button>
-				{canEdit && <AddMenu {...actions} />}
+			<div className="ml-auto flex items-center gap-2">
+				{onDeleteMonth && (
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button
+								variant="outline"
+								size="icon"
+								className="rounded-[10px] shadow-none"
+								aria-label={t.moreActions}
+							>
+								<Ellipsis className="size-4" />
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end" className="w-60 p-1.5">
+							<DropdownMenuItem
+								disabled={!!deleteMonthDisabledReason}
+								className="flex-col items-start gap-0.5"
+								onSelect={onDeleteMonth}
+							>
+								<span className="flex items-center gap-2">
+									<Trash2 className="size-4" />
+									{t.deleteMonth.menu}
+								</span>
+								{deleteMonthDisabledReason && (
+									<span className="text-xs font-normal text-muted-foreground">
+										{deleteMonthDisabledReason}
+									</span>
+								)}
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
+				)}
+				<div className="hidden lg:block">
+					{canEdit && <AddMenu {...actions} />}
+				</div>
 			</div>
 		</header>
 	)

@@ -37,6 +37,14 @@ export const translations = {
 		next: "Next month: {month}",
 		switcherLabel: "{month}, choose a month",
 		moreActions: "Month actions",
+		deleteMonth: {
+			menu: "Delete month",
+			loading: "Checking what this month holds…",
+			title: "Delete month",
+			confirm: "Are you sure you want to delete {month}?",
+			deleted: "{month} deleted",
+			failed: "Couldn't delete the month. Try again."
+		},
 		noOpenedMonths: "No opened months yet",
 		summary: {
 			label: "Month summary",

@@ -1896,3 +1896,137 @@ describe("MonthScreen envelopes", () => {
 		expect(screen.queryByRole("button", { name: "Edit budget" })).toBeNull()
 	})
 })
+
+describe("MonthScreen delete month", () => {
+	const row = {
+		id: "11111111-1111-4111-8111-111111111111",
+		budgetPeriodId: "2026-11",
+		recurringExpenseId: null,
+		description: "Hydro bill",
+		installmentNumber: null,
+		purchasedAt: null,
+		dueAt: "2026-11-28",
+		paidAt: null,
+		amount: 120,
+		category: { id: "c1", name: "Utilities" },
+		paymentType: { id: "t1", name: "Debit" },
+		bank: null,
+		store: null,
+		installment: null,
+		monthsRunning: null,
+		createdAt: "",
+		updatedAt: "",
+		deletedAt: null
+	}
+	const arrange = (empty: boolean) => {
+		vi.spyOn(api, "get").mockImplementation((async (endpoint: string) => {
+			if (endpoint.includes("budget-periods")) {
+				return [make(2026, 11), make(2026, 3), make(2025, 12)]
+			}
+			return []
+		}) as never)
+		vi.spyOn(api, "getPage").mockResolvedValue({
+			data: empty ? [] : [row],
+			total: empty ? 0 : 1,
+			totalAmount: empty ? 0 : 120,
+			page: 1,
+			limit: 10
+		} as never)
+	}
+	const openMenu = async (user: ReturnType<typeof setup>) => {
+		await user.click(
+			await screen.findByRole("button", { name: "Month actions" })
+		)
+		return screen.findByRole("menuitem", { name: /Delete month/ })
+	}
+
+	it("disables Delete month with the reason while the month holds rows", async () => {
+		arrange(false)
+		const user = setup()
+		await screen.findByText("Hydro bill")
+		const item = await openMenu(user)
+		await vi.waitFor(() =>
+			expect(item).toHaveTextContent(
+				"Remove this month's expenses, incomes and envelopes first."
+			)
+		)
+		expect(item).toHaveAttribute("aria-disabled", "true")
+	})
+
+	it("confirms, deletes the period and lands on the previous opened month", async () => {
+		arrange(true)
+		const del = vi.spyOn(api, "delete").mockResolvedValue(undefined as never)
+		const user = setup()
+		const item = await openMenu(user)
+		await vi.waitFor(() =>
+			expect(item).not.toHaveAttribute("aria-disabled", "true")
+		)
+		await user.click(item)
+		const dialog = await screen.findByRole("dialog", { name: "Delete month" })
+		expect(dialog).toHaveTextContent(
+			"Are you sure you want to delete November 2026?"
+		)
+		expect(del).not.toHaveBeenCalled()
+		await user.click(within(dialog).getByRole("button", { name: "Delete" }))
+		await vi.waitFor(() =>
+			expect(del).toHaveBeenCalledWith("budget-periods/2026-11")
+		)
+		await vi.waitFor(() => expect(nav.search).toContain("period=2026-03"))
+		expect(nav.history).toEqual([])
+		expect(toast.success).toHaveBeenCalledWith("November 2026 deleted")
+	})
+
+	it("keeps the month and says why when the server answers 409", async () => {
+		arrange(true)
+		vi.spyOn(api, "delete").mockRejectedValue(new ApiError("not empty", 409))
+		const user = setup()
+		const item = await openMenu(user)
+		await vi.waitFor(() =>
+			expect(item).not.toHaveAttribute("aria-disabled", "true")
+		)
+		await user.click(item)
+		const dialog = await screen.findByRole("dialog", { name: "Delete month" })
+		await user.click(within(dialog).getByRole("button", { name: "Delete" }))
+		await vi.waitFor(() =>
+			expect(toast.error).toHaveBeenCalledWith(
+				"Remove this month's expenses, incomes and envelopes first.",
+				expect.anything()
+			)
+		)
+		expect(nav.search).toBe("")
+	})
+
+	it("shows the generic failure toast for other errors", async () => {
+		arrange(true)
+		vi.spyOn(api, "delete").mockRejectedValue(new ApiError("boom", 500))
+		const user = setup()
+		const item = await openMenu(user)
+		await vi.waitFor(() =>
+			expect(item).not.toHaveAttribute("aria-disabled", "true")
+		)
+		await user.click(item)
+		const dialog = await screen.findByRole("dialog", { name: "Delete month" })
+		await user.click(within(dialog).getByRole("button", { name: "Delete" }))
+		await vi.waitFor(() =>
+			expect(toast.error).toHaveBeenCalledWith(
+				"Couldn't delete the month. Try again.",
+				expect.anything()
+			)
+		)
+	})
+
+	it("treats a 404 as already deleted and leaves the month", async () => {
+		arrange(true)
+		vi.spyOn(api, "delete").mockRejectedValue(new ApiError("gone", 404))
+		const user = setup()
+		const item = await openMenu(user)
+		await vi.waitFor(() =>
+			expect(item).not.toHaveAttribute("aria-disabled", "true")
+		)
+		await user.click(item)
+		const dialog = await screen.findByRole("dialog", { name: "Delete month" })
+		await user.click(within(dialog).getByRole("button", { name: "Delete" }))
+		await vi.waitFor(() => expect(nav.search).toContain("period=2026-03"))
+		expect(toast.error).not.toHaveBeenCalled()
+	})
+})
