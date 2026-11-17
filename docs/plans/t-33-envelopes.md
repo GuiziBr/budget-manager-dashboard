@@ -37,7 +37,7 @@ This reverses M-22 ("budgets are read-only") and the "`PATCH /budget-envelopes/:
 - `CreateEnvelopeInput` exists; there is no `UpdateEnvelopeInput`. `BudgetEnvelope` is documented as never patched.
 - `EnvelopeDetailsPanel` already takes `canEdit` and an optional `onDelete`, and renders the Delete button; there is no Edit button.
 - `AddMenu` already has an `onAddEnvelope` entry and the "Envelope" label and hint in translations; `MonthScreen` does not pass it. Entries can't be disabled yet (needed for M-23 step 2).
-- `describeApiError` already has the `createEnvelope` context (409 → "{category} already has an envelope this month") and maps every 422 to `errors.monthClosed`. `mutate` is the fallback for update and delete.
+- `describeApiError` already has the `createEnvelope` context (409 → "{category} already has an envelope this month") and maps every 422 to `errors.monthClosed`. T-33 adds `updateEnvelope` and `deleteEnvelope` contexts for update and delete.
 - `Category.hasBudgetEnvelope` is in the type and the dev API (`/categories` returns Baby, Fuel, Grocery… with `true`).
 - `IncomeFormPanel` is the template for the new form: `DetailsSheet` shell, react-hook-form + Zod, red border and no visible message, hidden reason for screen readers, `formatMoneyInput` / `checkMoney` / `parseMoney` from `lib/money`, a `key` per entity to remount, `onSavingChange` to block dismissal during a save, a toast on server error.
 - Every envelope query shares the `["budget-envelopes"]` prefix, and the summary cards read the same list, so invalidating that key refreshes the card, the details panel, the totals and the by-id cache in one go.
@@ -78,7 +78,7 @@ Order matters: 3.1 to 3.3 are pure and testable first; the UI follows.
 - Tests (`EnvelopeFormPanel.test.tsx`): renders add and edit, only eligible categories offered, validation red border, create body, update body only when changed, no request on unchanged, 409 / 422 / generic toasts, saving blocks Escape.
 
 ### 3.5 Wire-up in `MonthScreen` and the panels
-- `AddMenu`: allow an entry to be **disabled with a reason**. `onAddEnvelope` plus a new `envelopeDisabledReason?: string`; a disabled item shows the M-23 text "Every envelope category already has an envelope this month." in its hint line, is not focusable-to-run, and keeps `aria-disabled`. Same for `AddFabMenu`. Update `AddMenu.test.tsx` and `AddFab.test.tsx`.
+- `AddMenu`: allow an entry to be **disabled with a reason**. `onAddEnvelope` plus a new `envelopeDisabledReason?: string`; a disabled item shows the M-23 text "Every category already has a budget this month." in its hint line, is not focusable-to-run, and keeps `aria-disabled`. Same for `AddFabMenu`. Update `AddMenu.test.tsx` and `AddFab.test.tsx`.
 - `MonthHeader` and the phone `AddFabMenu` receive `onAddEnvelope` only when `canEditEnvelopes`.
 - `MonthScreen`: state `envelopeFormOpen` and `editingEnvelope`, an `openEnvelopeForm(opener, envelope?)` that follows the same "one panel at a time" rule (closes the income panel, the other forms and the open details), resets on month change, renders `<EnvelopeFormPanel open={envelopeFormOpen && canEditEnvelopes} …/>`.
 - Edit opened from the details panel: the form replaces the details panel (as Edit does for expenses). On save the details panel for that envelope comes back, so the new budget and bar show at once (`link.show({ kind: "envelope", id })`), unless the month changed meanwhile (reuse the `monthKeyRef` guard from the income form).
@@ -114,12 +114,12 @@ Run against the real backend (`NEXT_PUBLIC_API_URL`, dev API at `localhost:3002`
 ### 5.1 Functional checks (each: snapshot, then the network and console)
 | # | Scenario | Expect |
 |---|---|---|
-| F-1 | Open + Add on desktop | Entries Expense, Income, Envelope; Envelope shows its hint |
-| F-2 | Envelope → category list | Only categories with `hasBudgetEnvelope` and no envelope this month |
+| F-1 | Open + Add on desktop | Entries Expense, Income, Category; Category shows its hint |
+| F-2 | Category → category list | Only categories with `hasBudgetEnvelope` and no envelope this month |
 | F-3 | Submit empty form | Red borders on Category and Budget, no message text on screen, focus on the first invalid field, no request |
 | F-4 | Budget `0`, `1.234`, `100000000` | Rejected as in the income form; typing `10050` reads `100.50` |
 | F-5 | Add a valid envelope | One `POST /budget-envelopes` with the expected body (201), panel closes, toast, tile appears in the card in the right order, Expenses and Balance update by the spend of that category |
-| F-6 | Add every remaining eligible category (or run on a month where all are used) | The Envelope entry is disabled with the M-23 text |
+| F-6 | Add every remaining eligible category (or run on a month where all are used) | The Category entry is disabled with the M-23 text |
 | F-7 | Duplicate (create the same category in another tab, then submit) | 409 toast "{Category} already has an envelope this month.", list refreshed, category gone from the options |
 | F-8 | Open an envelope, Edit budget | Form prefilled, category read-only, spent hint shown |
 | F-9 | Save unchanged | Closes, **no** request |
@@ -129,7 +129,7 @@ Run against the real backend (`NEXT_PUBLIC_API_URL`, dev API at `localhost:3002`
 | F-13 | Delete, confirm | One `DELETE` (204), panel closes, `?envelope=` removed, tile gone, balance rises by the spend, toast |
 | F-14 | Delete the same envelope twice (second tab) | 404 handled quietly, list refreshed |
 | F-15 | Failure paths: block the request with DevTools or stop the API | Generic toast, form keeps what was typed, delete restores the panel |
-| F-16 | Past month (switcher) | No Envelope entry in the Add menu or phone button, no Edit budget or Delete in the details; expense and income actions still present |
+| F-16 | Past month (switcher) | No Category entry in the Add menu or phone button, no Edit budget or Delete in the details; expense and income actions still present |
 | F-17 | Month change while the form is open | Form closes, nothing saved to the wrong month |
 | F-18 | Shared link `?envelope=<id>` then Edit budget | Works from a link; Back and Close behave as for the other panels |
 | F-19 | Keyboard | Add menu by keys, focus lands in the first field, Tab order, Escape closes (not during a save), focus returns to the opener, the dimmed page is inert |
@@ -141,7 +141,7 @@ Take screenshots of each state and compare with the income and expense form fram
 | Surface | Light | Dark |
 |---|---|---|
 | Add menu with Envelope (desktop) | ✓ | ✓ |
-| Add menu with the disabled Envelope entry | ✓ | ✓ |
+| Add menu with the disabled Category entry | ✓ | ✓ |
 | Add envelope form: empty, errors, filled (desktop) | ✓ | ✓ |
 | Edit budget form (desktop) | ✓ | ✓ |
 | Envelope details with Edit budget and Delete buttons | ✓ | ✓ |

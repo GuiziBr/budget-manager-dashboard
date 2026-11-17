@@ -306,7 +306,7 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 2. Below the amount and status, the details are in **tabs**, one per group: **Payment** (the default), **Dates**, **Installment plan** and **Recurring bill**. Payment and Dates are always there; the other two appear only for an installment or a recurring expense. The chosen tab is kept while stepping to another expense, and falls back to Payment if that expense doesn't have it. Details show the item (no type chip under the title: the number of an installment or the month of a recurring bill is in its tab), category (to the right of the amount) and amount; the status (paid, unpaid, overdue) is the first row of the Payment tab, a **Mark as paid today** button when unpaid, and every field not shown in the table: payment type, **bank, store**, **purchased**, due and paid dates.
 3. For installments they add the plan: `n of N`, interval, first purchase date and **end date**. A **View plan** button below the plan opens the plan dialog (M-19). The plan's amount per payment is shown only there, because the row's own amount can differ after a single-row edit (M-17).
 4. For recurring rows they add the bill's start month, "Month 11" (M-10) and a link to the bill on the Recurring screen.
-5. Actions: Mark paid / unpaid, Edit, Delete (an envelope's Delete is hidden in past months).
+5. Actions: Mark paid / unpaid, Edit, Delete (an envelope's Edit budget and Delete are hidden in past months).
 6. **Shareable link.** The open expense or envelope is in the address: `?expense=<id>` or `?envelope=<id>`, next to `?period=` and `?page=`. Opening a row adds a history entry, so the back button closes the panel; closing it goes back to that entry, or just removes the param when the panel came from a pasted link. A link opens the details wherever the row is (any page, any sort, any month): if the address names another month than the one shown, the screen switches to the row's month (replacing the address, so back doesn't land on the wrong month). A link to something that doesn't exist, or whose month isn't opened, shows "This expense no longer exists." (or "This envelope…") and drops the param. An id that isn't shaped like one the API issues (a tampered address) is treated the same way, without a request: the id is never put into a request path unchecked. Changing month drops the selection.
 7. **Previous / next.** Two arrows at the top right, beside Close, show the previous and next expense in the order of the table (the server's sort). At the last row of a page, Next continues to the first row of the next page, and Previous at the first row goes to the last row of the previous page; the table moves to that page too. The address (`?page=` and `?expense=`) updates in one step without adding history, so the back button still closes the panel in one step. A count such as `(11/36)` to the left of the arrows shows the place of the open expense in the whole month (not just its page); it is left out for an expense that isn't on the page on screen. The neighbouring page is read only when the open expense is on the edge of its page. The Up and Down arrow keys do the same while the panel is open (not when typing in a field or with a modifier key held). The arrows are disabled at the very first and very last expense of the month, and for an expense that isn't on the page on screen (a pasted link). The envelope panel has its own arrows (M-11).
 
@@ -315,7 +315,7 @@ On a 390px screen Balance is one card, with Income and Expenses as two figures i
 
 **Acceptance criteria**
 - *Given* Car finance payment 78 of a 14-day plan with 104 payments starting 2023-11-10, *then* the details show 78 of 104 and the end date.
-- *Given* a past month, *then* an expense's details show the same actions as in the current month, and an envelope's details show no Delete.
+- *Given* a past month, *then* an expense's details show the same actions as in the current month, and an envelope's details show no Edit budget and no Delete.
 - *Given* a link with `?expense=<id>` for an expense on page 3 of October and no `period`, *when* I open it, *then* October is shown and the details of that expense are open.
 - *Given* the details of the third expense on a page are open, *when* I choose Next, *then* the fourth expense's details show and `?expense=` holds its id, and *when* I then press back, *then* the panel is closed.
 - *Given* the last expense of page 1 is open, *when* I choose Next, *then* the first expense of page 2 shows, the table is on page 2 with that row highlighted, and `?page=2&expense=<id>` is in the address.
@@ -608,7 +608,7 @@ The expense is created in the month being viewed (except installments, see M-15)
 **How it works**
 - A small "Past month" pill beside the month name. Its note says: "You can edit this month. Envelopes of past months can't be changed."
 - In an opened past month, paid controls, Edit, Delete and **+ Add** for expenses and incomes work as in the current month.
-- Envelopes are the exception: the backend answers 422 when an envelope of a past period is created or deleted, so **+ Add → Category** and the envelope's Delete are hidden.
+- Envelopes are the exception: the backend answers 422 when an envelope of a past period is created, changed or deleted, so **+ Add → Category**, the envelope's Edit budget and its Delete are hidden.
 
 **Rules**
 - A month is past when it's before the current month (UTC).
@@ -618,7 +618,7 @@ The expense is created in the month being viewed (except installments, see M-15)
 
 **Acceptance criteria**
 - *Given* today is in November 2026, *when* I view an opened October 2026, *then* the Past month pill shows, and I can tick a row paid, edit and delete expenses and incomes, and add new ones.
-- *Given* the same month, *then* the envelope details have no Delete.
+- *Given* the same month, *then* the envelope details have no Edit budget and no Delete.
 
 #### M-26 Remembered form values
 
