@@ -587,7 +587,12 @@ export function MonthScreen() {
 					key={reviewPeriodId}
 					periodId={reviewPeriodId}
 					month={month}
-					onClose={() => setReviewPeriodId(null)}
+					// A save that finishes after a month change must not close a later review
+					onClose={() =>
+						setReviewPeriodId((current) =>
+							current === reviewPeriodId ? null : current
+						)
+					}
 				/>
 			)}
 		</main>
