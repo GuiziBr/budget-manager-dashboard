@@ -19,6 +19,7 @@ import { MonthNotOpened } from "@/components/month/MonthNotOpened"
 import { MonthNotTracked } from "@/components/month/MonthNotTracked"
 import { MonthSkeleton } from "@/components/month/MonthSkeleton"
 import { MonthTable } from "@/components/month/MonthTable"
+import { OpenMonthReview } from "@/components/month/OpenMonthReview"
 import { SummaryCards } from "@/components/month/SummaryCards"
 import { translations } from "@/constants/translations"
 import {
@@ -119,6 +120,8 @@ export function MonthScreen() {
 	const monthKeyRef = useRef(monthKey)
 	monthKeyRef.current = monthKey
 	const [panelMonth, setPanelMonth] = useState(monthKey)
+	// The month just opened, while its review (M-02) is on screen
+	const [reviewPeriodId, setReviewPeriodId] = useState<string | null>(null)
 	if (panelMonth !== monthKey) {
 		setPanelMonth(monthKey)
 		setIncomeFor(null)
@@ -132,12 +135,21 @@ export function MonthScreen() {
 		setEnvelopeFormOpen(false)
 		setEditingEnvelope(null)
 		setDeletingEnvelope(null)
+		setReviewPeriodId(null)
 	}
 	const createPeriod = useCreateBudgetPeriod()
-	const openMonth = () =>
+	const openMonth = () => {
+		const requestedKey = monthKey
 		createPeriod.mutate(
 			{ year: month.year, month: month.month },
 			{
+				// A new month opens its review; a 409 (already open) doesn't. If the user moved
+				// to another month while the request ran, the review would carry the wrong name
+				onSuccess: (created) => {
+					if (monthKeyRef.current === requestedKey) {
+						setReviewPeriodId(created.id)
+					}
+				},
 				onError: (error) => {
 					const described = describeApiError(error, {
 						action: "openMonth",
@@ -154,6 +166,7 @@ export function MonthScreen() {
 				}
 			}
 		)
+	}
 	const updateExpense = useUpdateExpense({ optimistic: true })
 	// Ticking records today; unticking clears the date. The change shows at once and rolls back on failure
 	const togglePaid = (expense: Expense) => {
@@ -568,6 +581,19 @@ export function MonthScreen() {
 						/>
 					)}
 				</>
+			)}
+			{reviewPeriodId && (
+				<OpenMonthReview
+					key={reviewPeriodId}
+					periodId={reviewPeriodId}
+					month={month}
+					// A save that finishes after a month change must not close a later review
+					onClose={() =>
+						setReviewPeriodId((current) =>
+							current === reviewPeriodId ? null : current
+						)
+					}
+				/>
 			)}
 		</main>
 	)

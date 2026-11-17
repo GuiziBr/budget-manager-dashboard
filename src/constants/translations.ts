@@ -351,6 +351,37 @@ export const translations = {
 			editBudget: "Edit budget",
 			delete: "Delete"
 		},
+		review: {
+			title: "Review",
+			description:
+				"Check what was generated for {month}. Edit the recurring bill amounts before you start the month.",
+			intro:
+				"Check what was generated for the month. You can change the recurring bill amounts now.",
+			done: "Done",
+			close: "Close",
+			ready: "{month} is ready",
+			bills: {
+				title: "Recurring bills",
+				empty: "No recurring bills",
+				loadError: "Couldn't load the recurring bills",
+				amountLabel: "Amount for {name}",
+				saveFailed: "Couldn't save {n} of the changes. Try again.",
+				retry: "Retry"
+			},
+			installments: {
+				title: "Installments",
+				empty: "No installments due this month",
+				loadError: "Couldn't load the installments",
+				lastPayment: "Last payment"
+			},
+			envelopes: {
+				title: "Categories",
+				hint: "You can change a category's budget later from the month screen.",
+				empty: "No categories",
+				loadError: "Couldn't load the categories"
+			},
+			loading: "Loading"
+		},
 		states: {
 			loading: "Loading month",
 			errorTitle: "Couldn't load your months",

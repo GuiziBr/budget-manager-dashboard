@@ -179,6 +179,70 @@ describe("MonthScreen states", () => {
 			)
 		})
 
+		it("opens the review of the new month after a 201 (M-02)", async () => {
+			let periods: ReturnType<typeof make>[] = []
+			vi.spyOn(api, "get").mockImplementation(async (endpoint) =>
+				String(endpoint).includes("budget-periods") ? periods : []
+			)
+			vi.spyOn(api, "getPage").mockResolvedValue({
+				data: [],
+				total: 0,
+				totalAmount: 0,
+				page: 1,
+				limit: 100
+			} as never)
+			vi.spyOn(api, "post").mockImplementation(async () => {
+				periods = [make(2026, 11)]
+				return make(2026, 11)
+			})
+			const user = setup()
+			await openAndConfirm(user)
+			expect(
+				await screen.findByRole("dialog", { name: "Review" })
+			).toHaveTextContent("November 2026")
+			// Closing without Done leaves the month as generated
+			await user.keyboard("{Escape}")
+			await vi.waitFor(() =>
+				expect(
+					screen.queryByRole("dialog", { name: "Review" })
+				).not.toBeInTheDocument()
+			)
+		})
+
+		it("opens no review when the month changed while it was being created", async () => {
+			vi.spyOn(api, "get").mockResolvedValue([])
+			let created: (period: ReturnType<typeof make>) => void = () => {}
+			vi.spyOn(api, "post").mockReturnValue(
+				new Promise((resolve) => {
+					created = resolve as typeof created
+				})
+			)
+			const user = setup()
+			await openAndConfirm(user)
+			await vi.waitFor(() => expect(api.post).toHaveBeenCalled())
+
+			act(() => {
+				nav.search = "period=2026-12"
+				notify()
+			})
+			await act(async () => created(make(2026, 11)))
+
+			expect(
+				screen.queryByRole("dialog", { name: "Review" })
+			).not.toBeInTheDocument()
+		})
+
+		it("opens no review on a 409", async () => {
+			vi.spyOn(api, "get").mockResolvedValue([])
+			vi.spyOn(api, "post").mockRejectedValue(new ApiError("exists", 409))
+			const user = setup()
+			await openAndConfirm(user)
+			await vi.waitFor(() => expect(toast.info).toHaveBeenCalled())
+			expect(
+				screen.queryByRole("dialog", { name: "Review" })
+			).not.toBeInTheDocument()
+		})
+
 		it("disables the button while the request is pending", async () => {
 			vi.spyOn(api, "get").mockResolvedValue([])
 			const post = vi.spyOn(api, "post").mockReturnValue(new Promise(() => {}))
