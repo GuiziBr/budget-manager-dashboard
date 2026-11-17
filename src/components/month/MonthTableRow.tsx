@@ -103,7 +103,14 @@ export function MonthTableRow({
 				</button>
 			</td>
 			<td className={cn(cell, dim)}>
-				<Badge className="px-2 py-0.5 text-[11px]">{row.category}</Badge>
+				<Badge
+					className={cn(
+						"px-2 py-0.5 text-[11px]",
+						!row.unpaid && "text-foreground"
+					)}
+				>
+					{row.category}
+				</Badge>
 			</td>
 			<td className={cn(cell, dim, "truncate text-[13px]", muted)}>
 				{row.paymentType}

@@ -275,6 +275,22 @@ describe("MonthTable rows", () => {
 		)
 	})
 
+	it("uses the foreground colour for secondary text in a paid row, the muted one in an unpaid row", async () => {
+		mockPages([
+			expense(1, { paidAt: "2026-11-01" }),
+			expense(2, { paidAt: null })
+		])
+		setup()
+		const paid = (await screen.findByText("Expense 1")).closest(
+			"tr"
+		) as HTMLElement
+		const unpaid = screen.getByText("Expense 2").closest("tr") as HTMLElement
+		expect(within(paid).getByText("Housing")).toHaveClass("text-foreground")
+		expect(within(unpaid).getByText("Housing")).toHaveClass(
+			"text-muted-foreground"
+		)
+	})
+
 	it("shows a dash when there is no due date", async () => {
 		mockPages([expense(1, { dueAt: null })])
 		setup()
