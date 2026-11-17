@@ -3,8 +3,12 @@ import { renderHook, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { ApiError, api } from "@/lib/api"
 import { createQueryWrapper } from "@/test/query-wrapper"
-import type { Expense } from "@/types"
-import { useReviewExpenses, useSaveReviewBills } from "./use-month-review"
+import type { Expense, Income } from "@/types"
+import {
+	useReviewExpenses,
+	useSaveReviewBills,
+	useSaveReviewSalaries
+} from "./use-month-review"
 
 afterEach(() => {
 	vi.restoreAllMocks()
@@ -84,5 +88,98 @@ describe("useSaveReviewBills", () => {
 		expect(patch).toHaveBeenCalledWith("expenses/b", { amount: 50 })
 		expect(outcome.saved).toEqual([{ id: "a", amount: 112.4 }])
 		expect(outcome.failed).toEqual([{ id: "b", amount: 50 }])
+	})
+})
+
+describe("useSaveReviewSalaries", () => {
+	const wanted = [
+		{ key: "a", description: "Salary", amount: 6144 },
+		{ key: "b", description: "Side job", amount: 500 }
+	]
+
+	it("posts each salary as a salary income without re-reading on the first attempt", async () => {
+		const get = vi.spyOn(api, "get")
+		const post = vi.spyOn(api, "post").mockResolvedValue({} as never)
+		const { wrapper } = createQueryWrapper()
+		const { result } = renderHook(() => useSaveReviewSalaries(), { wrapper })
+
+		const outcome = await result.current.mutateAsync({
+			periodId: "p1",
+			wanted,
+			recheck: false
+		})
+
+		expect(get).not.toHaveBeenCalled()
+		expect(post).toHaveBeenCalledTimes(2)
+		expect(post).toHaveBeenCalledWith("incomes", {
+			budgetPeriodId: "p1",
+			description: "Salary",
+			amount: 6144,
+			isSalary: true
+		})
+		expect(outcome.saved).toEqual(wanted)
+		expect(outcome.failed).toEqual([])
+	})
+
+	it("keeps the saved ones when one fails", async () => {
+		vi.spyOn(api, "post").mockImplementation((async (
+			_: string,
+			body: { description: string }
+		) => {
+			if (body.description === "Side job") throw new ApiError("boom", 500)
+			return {}
+		}) as never)
+		const { wrapper } = createQueryWrapper()
+		const { result } = renderHook(() => useSaveReviewSalaries(), { wrapper })
+
+		const outcome = await result.current.mutateAsync({
+			periodId: "p1",
+			wanted,
+			recheck: false
+		})
+
+		expect(outcome.saved.map((s) => s.key)).toEqual(["a"])
+		expect(outcome.failed.map((s) => s.key)).toEqual(["b"])
+	})
+
+	it("on a retry reads the month first and skips what is already there", async () => {
+		vi.spyOn(api, "get").mockResolvedValue([
+			{ description: "Salary", amount: 6144, isSalary: true }
+		] as Income[] as never)
+		const post = vi.spyOn(api, "post").mockResolvedValue({} as never)
+		const { wrapper } = createQueryWrapper()
+		const { result } = renderHook(() => useSaveReviewSalaries(), { wrapper })
+
+		const outcome = await result.current.mutateAsync({
+			periodId: "p1",
+			wanted,
+			recheck: true
+		})
+
+		expect(api.get).toHaveBeenCalledWith("incomes?budgetPeriodId=p1")
+		expect(post).toHaveBeenCalledTimes(1)
+		expect(post).toHaveBeenCalledWith(
+			"incomes",
+			expect.objectContaining({ description: "Side job" })
+		)
+		expect(outcome.saved.map((s) => s.key).sort()).toEqual(["a", "b"])
+		expect(outcome.failed).toEqual([])
+	})
+
+	it("sends nothing and fails all when the re-read fails", async () => {
+		vi.spyOn(api, "get").mockRejectedValue(new ApiError("boom", 500))
+		const post = vi.spyOn(api, "post")
+		const { wrapper } = createQueryWrapper()
+		const { result } = renderHook(() => useSaveReviewSalaries(), { wrapper })
+
+		const outcome = await result.current.mutateAsync({
+			periodId: "p1",
+			wanted,
+			recheck: true
+		})
+
+		expect(post).not.toHaveBeenCalled()
+		expect(outcome.saved).toEqual([])
+		expect(outcome.failed).toEqual(wanted)
 	})
 })

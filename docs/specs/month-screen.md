@@ -112,9 +112,7 @@ These terms and calculations are used throughout the document.
    - **Recurring bills:** each with its amount, editable (to correct estimates such as Hydro).
    - **Installments:** each with `n of N`; the last payment of a plan is tagged "Last payment".
    - **Envelopes:** each with its budget (set by the backend; editable afterwards, M-22).
-   - **Income:** a choice between
-     - **Copy last month's salary:** last month's **salary** incomes are listed with editable amounts and a checkbox each (all ticked). Other incomes are not offered.
-     - **Enter salary:** a single **Salary** amount field.
+   - **Income:** the salaries. It opens with last month's **salary** incomes, each as a row with its description and amount (other incomes are not offered). Each row can be edited or removed with its x button, and **Add salary** adds an empty row (a description that is left empty reads "Salary"). If last month has no salary, or wasn't opened, there are no rows until the user adds one.
 4. **Done** saves the edits, creates the incomes, and closes the review on the new month.
 
 **What gets saved, and when**
@@ -122,16 +120,16 @@ These terms and calculations are used throughout the document.
 | Step | Requests |
 |---|---|
 | Open (step 2) | `POST /budget-periods`. The backend generates the rows and envelopes in the same transaction |
-| Review loads | `GET /expenses` and `GET /budget-envelopes` for the new month; `GET /incomes` for last month, keeping only salary incomes (for copying) |
+| Review loads | `GET /expenses` and `GET /budget-envelopes` for the new month; `GET /incomes` for last month, keeping only salary incomes (the starting rows) |
 | Done: edited amounts | `PATCH /expenses/:id` for each changed row |
-| Done: incomes | `POST /incomes` with `isSalary: true` for each ticked copied salary, or for the entered salary |
+| Done: incomes | `POST /incomes` with `isSalary: true` for each salary row left in the Income section |
 
 **Rules**
 - The month is created in step 2, before the review. Closing the review without **Done** leaves the month opened with the generated rows and default budgets, and without incomes.
 - Income creation is done by the frontend, one request per income, not in the backend's transaction. If one fails, the others are kept and the failed one can be retried. **Before any retry**, the frontend re-reads the month's incomes and skips any salary that already exists with the same description and amount, so a request that succeeded but whose response was lost isn't created twice. If a salary still can't be saved, the month stays usable: the review says which salary is missing, and it can be added later from the income panel (M-20). A backend change to create the salary together with the month is under review ([todo.md](todo.md), BE-1); if adopted, the incomes would be sent with the Open request instead.
-- The salary field is optional. If left empty, a note says "You can add the salary later from the month".
-- The copied or entered salary is created as an income flagged as salary. Its description is "Salary".
-- "Copy last month's salary" is offered only when last month exists and has at least one salary income. Copied incomes keep their description.
+- Salaries are optional: a row with no amount is left out, and nothing is created if all are empty.
+- Each salary row is created as an income flagged as salary. Rows that start from last month keep its description; a row with no description is named "Salary".
+- The starting rows exist only when last month exists and has at least one salary income. Deleting a row means that salary isn't created.
 - Only the current month and future months can be opened. A past month that was never opened (for example, before you started using the app) shows "November 2025 wasn't tracked in the app" without an Open button. Past months that were opened are reached through the month switcher (M-01) and edited like the current month (M-25).
 
 **When something goes wrong**
@@ -139,12 +137,12 @@ These terms and calculations are used throughout the document.
 | Situation | What you see |
 |---|---|
 | The month already exists (opened elsewhere) | "December 2026 is already open." The month is loaded |
-| A saving step in the review fails | The review stays open, the failed section shows an error with **Retry**; the other sections keep their saved state |
+| A saving step in the review fails | The review stays open, the failed section shows an error with **Retry** (a hidden section opens by itself); the other sections keep their saved state |
 
 **Acceptance criteria**
 - *Given* December 2026 isn't opened, *when* I tap Open December 2026, *then* the review lists the recurring bills, installments and envelopes generated for December.
 - *Given* the review, *when* I change Hydro from 105.00 to 112.40 and tap Done, *then* the Hydro row in December shows `CAD 112.40` and the Hydro template is unchanged.
-- *Given* the review, *when* I choose Enter salary, type 6,144.00 and tap Done, *then* December has one income "Salary" of CAD 6,144.00 with a Salary badge.
+- *Given* the review, *when* I tap Add salary, type 6,144.00 and tap Done, *then* December has one income "Salary" of CAD 6,144.00 with a Salary badge.
 - *Given* the review, *when* I close it without tapping Done, *then* December is opened with its generated rows and has no incomes.
 
 #### M-03 Delete an empty month
