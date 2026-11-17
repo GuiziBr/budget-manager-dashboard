@@ -13,6 +13,8 @@ export type ApiErrorContext =
 	| { action: "openMonth"; month: string }
 	| { action: "deleteMonth" }
 	| { action: "createEnvelope"; category: string }
+	| { action: "updateEnvelope" }
+	| { action: "deleteEnvelope" }
 	| { action: "saveExpense" }
 	| { action: "changePlanAmount" }
 	| { action: "mutate" }
@@ -26,6 +28,7 @@ export type ApiErrorKind =
 	| "futureDate"
 	| "lookupGone"
 	| "planGone"
+	| "envelopeGone"
 	| "monthClosed"
 	| "generic"
 
@@ -103,6 +106,15 @@ export function describeApiError(
 			default:
 				return generic()
 		}
+	}
+
+	if (
+		context.action === "updateEnvelope" ||
+		context.action === "deleteEnvelope"
+	) {
+		return status === 404
+			? { kind: "envelopeGone", message: errors.envelopeGone }
+			: generic()
 	}
 
 	if (context.action === "changePlanAmount") {

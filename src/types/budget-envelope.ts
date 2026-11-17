@@ -2,7 +2,8 @@ import type { Id, IsoDate } from "./common"
 
 /**
  * `spentAmount` is `null` when the external spend API couldn't answer. `PATCH`
- * responses omit both spend fields, but the app never patches envelopes (M-22).
+ * responses omit both spend fields, so a cached envelope is never overwritten with one
+ * (the list is refetched instead).
  */
 export interface BudgetEnvelope {
 	id: Id
@@ -16,9 +17,13 @@ export interface BudgetEnvelope {
 	deletedAt: null
 }
 
-/** There is no update input: budgets are read-only in the app (M-22). */
 export interface CreateEnvelopeInput {
 	budgetPeriodId: Id
 	categoryId: Id
+	allocatedAmount: number
+}
+
+/** Only the budget can change (M-22). */
+export interface UpdateEnvelopeInput {
 	allocatedAmount: number
 }

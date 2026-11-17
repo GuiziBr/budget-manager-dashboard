@@ -65,7 +65,7 @@ The backend now sends everything a row needs: category, payment type, bank and s
 | 12 payments, 30 days, from 2026-11-15 | end date 2027-10-11 | M-15 |
 | Envelope 120 of 100 / 100 of 100 / allocation 0 / spend `null` | over / not over / over with no ratio / not over, no ratio | M-04, M-11 |
 | Unknown category id | `categoryName` null | G-12 |
-| Two over-budget among five envelopes | over-budget first, original order inside each group | M-04 |
+| Two over-budget among five envelopes | over-budget first; each group alphabetical by category (changed 2026-11-16, was API order) | M-04 |
 | Inputs | not mutated | — |
 
 ## 5. Done when

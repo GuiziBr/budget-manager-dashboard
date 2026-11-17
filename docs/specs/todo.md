@@ -85,7 +85,8 @@ One tab per lookup, plus appearance. Lists are short and not paginated.
 
 | ID | Question | Current behaviour | Blocks |
 |---|---|---|---|
-| U-2 | Do adding and deleting envelopes (M-23, M-24) stay? Adding one means entering its budget, while budgets are otherwise read-only (M-22) | Kept in the spec, with the budget entered once on creation | Plan task T-33 |
+
+U-2 (do adding and deleting envelopes stay?) was resolved on 2026-11-16: they stay, and an envelope's budget can be edited from its details (M-22, M-23, T-33).
 
 U-1 (marking a bill paid after its month ends) and BE-3 were resolved on 2026-11-10: the backend now lets expenses and incomes of past months be changed, so past months are edited like the current one (envelopes excepted, M-25). G-1 (undocumented 422 for past-month expenses) is resolved with it. U-3 (envelope rows in the table) was resolved on 2026-11-02: with server-side pagination, envelopes live only in the Envelopes card.
 

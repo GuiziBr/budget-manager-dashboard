@@ -3,7 +3,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { ApiError, api } from "@/lib/api"
 import { isUuid } from "@/lib/id"
-import type { BudgetEnvelope, CreateEnvelopeInput, Id } from "@/types"
+import type {
+	BudgetEnvelope,
+	CreateEnvelopeInput,
+	Id,
+	UpdateEnvelopeInput
+} from "@/types"
 
 /** Every envelope query starts with this key, so invalidating it refreshes all of them. */
 export const BUDGET_ENVELOPES_QUERY_KEY = ["budget-envelopes"] as const
@@ -61,7 +66,24 @@ export function useCreateEnvelope() {
 	})
 }
 
-/** There is no update hook: budgets are read-only in the app (M-22). */
+/**
+ * Changes an envelope's budget (M-22). The response has no spend, so nothing is written
+ * to the cache from it: every envelope query is refetched instead.
+ */
+export function useUpdateEnvelope() {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: ({ id, ...input }: UpdateEnvelopeInput & { id: Id }) =>
+			api.patch<Omit<BudgetEnvelope, "spentAmount" | "spendUpdatedAt">>(
+				`budget-envelopes/${id}`,
+				input
+			),
+		onSuccess: () =>
+			queryClient.invalidateQueries({ queryKey: BUDGET_ENVELOPES_QUERY_KEY })
+	})
+}
+
 export function useDeleteEnvelope() {
 	const queryClient = useQueryClient()
 

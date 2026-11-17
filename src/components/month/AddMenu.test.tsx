@@ -51,3 +51,23 @@ describe("AddFabMenu focus", () => {
 		expect(fab).toHaveFocus()
 	})
 })
+
+describe("AddFabMenu envelope entry", () => {
+	it("shows why the Envelope entry can't be used and doesn't run it", async () => {
+		const user = userEvent.setup()
+		const onAddEnvelope = vi.fn()
+		render(
+			<AddFabMenu
+				open
+				onOpenChange={() => {}}
+				onAddEnvelope={onAddEnvelope}
+				envelopeDisabledReason="Nothing left to add."
+			/>
+		)
+		const entry = await screen.findByRole("menuitem", { name: /Category/ })
+		expect(entry).toBeDisabled()
+		expect(entry).toHaveTextContent("Nothing left to add.")
+		await user.click(entry)
+		expect(onAddEnvelope).not.toHaveBeenCalled()
+	})
+})

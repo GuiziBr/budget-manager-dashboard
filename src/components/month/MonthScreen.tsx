@@ -6,6 +6,7 @@ import { toast } from "sonner"
 import { ConfirmDeleteModal } from "@/components/ConfirmDeleteModal"
 import { AddFabMenu } from "@/components/month/AddMenu"
 import { EnvelopeDetailsPanel } from "@/components/month/EnvelopeDetailsPanel"
+import { EnvelopeFormPanel } from "@/components/month/EnvelopeFormPanel"
 import { EnvelopesCard } from "@/components/month/EnvelopesCard"
 import { ExpenseDetailsPanel } from "@/components/month/ExpenseDetailsPanel"
 import { ExpenseFormPanel } from "@/components/month/ExpenseFormPanel"
@@ -20,7 +21,13 @@ import { MonthSkeleton } from "@/components/month/MonthSkeleton"
 import { MonthTable } from "@/components/month/MonthTable"
 import { SummaryCards } from "@/components/month/SummaryCards"
 import { translations } from "@/constants/translations"
-import { envelopeQueryKey } from "@/hooks/use-budget-envelopes"
+import {
+	BUDGET_ENVELOPES_QUERY_KEY,
+	envelopeQueryKey,
+	useDeleteEnvelope,
+	useMonthEnvelopes
+} from "@/hooks/use-budget-envelopes"
+import { useCategories } from "@/hooks/use-categories"
 import {
 	EXPENSES_QUERY_KEY,
 	expenseQueryKey,
@@ -35,6 +42,11 @@ import { PHONE_QUERY, useMediaQuery } from "@/hooks/use-media-query"
 import { useMonthAccess } from "@/hooks/use-month-access"
 import { useMonthPage } from "@/hooks/use-month-page"
 import { ApiError } from "@/lib/api"
+import { getApiErrorMessage, isMonthClosedError } from "@/lib/api-error-message"
+import {
+	availableEnvelopeCategories,
+	envelopeDeleteMessage
+} from "@/lib/envelope-form"
 import { deleteMessage } from "@/lib/expense-delete"
 import { todayIso } from "@/lib/format-date"
 import { incomeDeleteMessage } from "@/lib/income-form"
@@ -46,6 +58,7 @@ import type { BudgetEnvelope, Expense, Income } from "@/types"
 const PAID_TOAST_ID = "paid-update-failed"
 const DELETE_TOAST_ID = "expense-delete-failed"
 const INCOME_DELETE_TOAST_ID = "income-delete-failed"
+const ENVELOPE_DELETE_TOAST_ID = "envelope-delete-failed"
 
 export function MonthScreen() {
 	const { month, period, state, canEdit, canEditEnvelopes, error, refetch } =
@@ -65,7 +78,25 @@ export function MonthScreen() {
 	const [deletingIncome, setDeletingIncome] = useState<Income | null>(null)
 	// The income form opened from the income panel gives the panel back when it closes
 	const [returnToIncomes, setReturnToIncomes] = useState(false)
+	const [envelopeFormOpen, setEnvelopeFormOpen] = useState(false)
+	// The envelope whose budget is being edited; without one the form adds an envelope
+	const [editingEnvelope, setEditingEnvelope] = useState<BudgetEnvelope | null>(
+		null
+	)
+	// The envelope waiting for the delete confirmation
+	const [deletingEnvelope, setDeletingEnvelope] =
+		useState<BudgetEnvelope | null>(null)
 	const queryClient = useQueryClient()
+	const categories = useCategories()
+	const monthEnvelopes = useMonthEnvelopes(period?.id)
+	const categoryNameOf = (id: string) =>
+		categories.data?.find((category) => category.id === id)?.name ?? null
+	// Known only once both lists loaded; until then the entry stays usable (the form shows its own loading)
+	const noEnvelopeLeft =
+		!!categories.data &&
+		!!monthEnvelopes.data &&
+		availableEnvelopeCategories(categories.data, monthEnvelopes.data).length ===
+			0
 	// What the details panel shows (one expense or one envelope) lives in the address, so it can be shared
 	const link = useLinkedSelection()
 	// The installment plan dialog is in the address too (`?plan=`), over the row's details
@@ -74,9 +105,7 @@ export function MonthScreen() {
 	// and until then the panel would read the gone row by id and report a 404
 	const [removingId, setRemovingId] = useState<string | null>(null)
 	const selection =
-		link.selection?.kind === "expense" && link.selection.id === removingId
-			? null
-			: link.selection
+		link.selection && link.selection.id === removingId ? null : link.selection
 	useLinkedSelectionSync({ ...link, selection, month })
 	// Changing month clears the income panel, so coming back to a month doesn't reopen it
 	const monthKey = `${month.year}-${month.month}`
@@ -94,6 +123,9 @@ export function MonthScreen() {
 		setEditingIncome(null)
 		setDeletingIncome(null)
 		setReturnToIncomes(false)
+		setEnvelopeFormOpen(false)
+		setEditingEnvelope(null)
+		setDeletingEnvelope(null)
 	}
 	const updateExpense = useUpdateExpense({ optimistic: true })
 	// Ticking records today; unticking clears the date. The change shows at once and rolls back on failure
@@ -179,6 +211,60 @@ export function MonthScreen() {
 			}
 		})
 	}
+	const deleteEnvelope = useDeleteEnvelope()
+	const confirmDeleteEnvelope = () => {
+		if (!deletingEnvelope) return
+		const envelope = deletingEnvelope
+		const name = categoryNameOf(envelope.categoryId)
+		const confirmedMonth = monthKey
+		// Close the open details first: once the envelope is gone the panel would read it by id and hit a 404
+		const wasOpen =
+			link.selection?.kind === "envelope" && link.selection.id === envelope.id
+		if (wasOpen) {
+			setRemovingId(envelope.id)
+			link.clear()
+		}
+		deleteEnvelope.mutate(envelope.id, {
+			onSuccess: () => {
+				setDeletingEnvelope(null)
+				toast.success(
+					translations.month.envelopes.deleted.replace(
+						"{category}",
+						name ?? translations.month.details.deleted
+					)
+				)
+			},
+			onError: (error) => {
+				setDeletingEnvelope(null)
+				// Already gone (deleted elsewhere): refresh to drop the tile and update the totals
+				if (error instanceof ApiError && error.status === 404) {
+					queryClient.invalidateQueries({
+						queryKey: BUDGET_ENVELOPES_QUERY_KEY
+					})
+					return
+				}
+				// Still there: bring the details back, unless the month changed meanwhile
+				setRemovingId(null)
+				if (wasOpen && monthKeyRef.current === confirmedMonth) {
+					link.show({ kind: "envelope", id: envelope.id })
+				}
+				// The month ended while the screen was open: retrying can't work, so say why
+				// and refresh, which is the only way the screen learns the envelopes are locked
+				const closed = isMonthClosedError(error)
+				if (closed) {
+					queryClient.invalidateQueries({
+						queryKey: BUDGET_ENVELOPES_QUERY_KEY
+					})
+				}
+				toast.error(
+					closed
+						? getApiErrorMessage(error, { action: "deleteEnvelope" })
+						: translations.month.envelopes.deleteFailed,
+					{ id: ENVELOPE_DELETE_TOAST_ID }
+				)
+			}
+		})
+	}
 	const incomeOpener = useRef<HTMLElement | null>(null)
 	const detailsOpener = useRef<HTMLElement | null>(null)
 	const formOpener = useRef<HTMLElement | null>(null)
@@ -190,6 +276,7 @@ export function MonthScreen() {
 			opener ?? (document.activeElement as HTMLElement | null)
 		setIncomeFor(null)
 		setIncomeFormOpen(false)
+		setEnvelopeFormOpen(false)
 		setReturnToIncomes(false)
 		// Clear in place: going back would land on the entry the details were opened from,
 		// which can be another page than the one the details had stepped to
@@ -211,6 +298,7 @@ export function MonthScreen() {
 			: (opener ?? (document.activeElement as HTMLElement | null))
 		setIncomeFor(null)
 		setFormOpen(false)
+		setEnvelopeFormOpen(false)
 		if (selection) link.clear()
 		setFabMenuOpen(false)
 		setEditingIncome(income ?? null)
@@ -223,6 +311,28 @@ export function MonthScreen() {
 		setIncomeFormOpen(false)
 		if (returnToIncomes && period) setIncomeFor(period.id)
 		setReturnToIncomes(false)
+	}
+	// One panel at a time: the envelope form replaces whatever else is open. Opened from the
+	// envelope's details, the details come back once the budget is saved
+	const openEnvelopeForm = (
+		opener?: HTMLElement | null,
+		envelope?: BudgetEnvelope
+	) => {
+		formOpener.current =
+			opener ?? (document.activeElement as HTMLElement | null)
+		setIncomeFor(null)
+		setFormOpen(false)
+		setIncomeFormOpen(false)
+		setReturnToIncomes(false)
+		if (selection) link.clear()
+		setFabMenuOpen(false)
+		setEditingEnvelope(envelope ?? null)
+		setEnvelopeFormOpen(true)
+	}
+	const closeEnvelopeForm = () => {
+		// A save can finish after the month changed; it must not close a form opened for another month
+		if (monthKeyRef.current !== monthKey) return
+		setEnvelopeFormOpen(false)
 	}
 	// The row is cached under its own id, so the panel opens without asking the API for it
 	const selectExpense = (expense: Expense) => {
@@ -253,6 +363,16 @@ export function MonthScreen() {
 			<MonthHeader
 				onAddExpense={isPhone ? undefined : openForm}
 				onAddIncome={isPhone ? undefined : (opener) => openIncomeForm(opener)}
+				onAddEnvelope={
+					isPhone || !canEditEnvelopes
+						? undefined
+						: (opener) => openEnvelopeForm(opener)
+				}
+				envelopeDisabledReason={
+					noEnvelopeLeft
+						? translations.month.addMenu.envelope.disabled
+						: undefined
+				}
 			/>
 			{state === "loading" && <MonthSkeleton />}
 			{state === "error" && (
@@ -335,6 +455,22 @@ export function MonthScreen() {
 						envelopeId={selection?.kind === "envelope" ? selection.id : null}
 						canEdit={canEditEnvelopes}
 						returnFocusRef={detailsOpener}
+						onEdit={(envelope) => openEnvelopeForm(undefined, envelope)}
+						onDelete={setDeletingEnvelope}
+					/>
+					<EnvelopeFormPanel
+						open={envelopeFormOpen && canEditEnvelopes}
+						onClose={closeEnvelopeForm}
+						periodId={period.id}
+						month={month}
+						envelope={editingEnvelope}
+						onSaved={(saved) => {
+							// Back to the envelope's details, so the new budget shows at once
+							if (saved && monthKeyRef.current === monthKey) {
+								link.show({ kind: "envelope", id: saved.id })
+							}
+						}}
+						returnFocusRef={formOpener}
 					/>
 					<ExpenseFormPanel
 						open={formOpen && canEdit}
@@ -366,12 +502,36 @@ export function MonthScreen() {
 						}
 						isPending={deleteIncome.isPending}
 					/>
+					<ConfirmDeleteModal
+						isOpen={deletingEnvelope !== null && canEditEnvelopes}
+						onClose={() => setDeletingEnvelope(null)}
+						onConfirm={confirmDeleteEnvelope}
+						title={translations.month.envelopes.deleteTitle}
+						description={
+							deletingEnvelope
+								? envelopeDeleteMessage(
+										categoryNameOf(deletingEnvelope.categoryId)
+									)
+								: ""
+						}
+						isPending={deleteEnvelope.isPending}
+					/>
 					{isPhone && canEdit && (
 						<AddFabMenu
 							open={fabMenuOpen}
 							onOpenChange={setFabMenuOpen}
 							onAddExpense={openForm}
 							onAddIncome={(opener) => openIncomeForm(opener)}
+							onAddEnvelope={
+								canEditEnvelopes
+									? (opener) => openEnvelopeForm(opener)
+									: undefined
+							}
+							envelopeDisabledReason={
+								noEnvelopeLeft
+									? translations.month.addMenu.envelope.disabled
+									: undefined
+							}
 						/>
 					)}
 				</>

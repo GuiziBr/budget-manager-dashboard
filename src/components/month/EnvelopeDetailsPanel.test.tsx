@@ -98,11 +98,19 @@ describe("EnvelopeDetailsPanel", () => {
 		expect(onDelete).toHaveBeenCalledWith(expect.objectContaining({ id: "e1" }))
 	})
 
-	it("has no Delete in a closed month", async () => {
+	it("has no Edit budget or Delete in a closed month", async () => {
 		setup(env(), { canEdit: false })
-		expect(
-			(await dialog()).queryByRole("button", { name: "Delete" })
-		).toBeNull()
+		const panel = await dialog()
+		expect(panel.queryByRole("button", { name: "Delete" })).toBeNull()
+		expect(panel.queryByRole("button", { name: "Edit budget" })).toBeNull()
+	})
+
+	it("offers Edit budget when the month can be edited", async () => {
+		const onEdit = vi.fn()
+		const { user } = setup(env(), { onEdit })
+		const panel = await dialog()
+		await user.click(panel.getByRole("button", { name: "Edit budget" }))
+		expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: "e1" }))
 	})
 
 	it("closes with the X button", async () => {

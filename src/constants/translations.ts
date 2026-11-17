@@ -107,7 +107,33 @@ export const translations = {
 			overBudget: "{n} over budget",
 			overBudgetShort: "{n} over",
 			unavailable: "—",
-			ofAllocated: "{spent} / {allocated}"
+			ofAllocated: "{spent} / {allocated}",
+			deleteTitle: "Delete envelope",
+			deleteConfirm:
+				"Are you sure you want to delete the {category} envelope? Its spend will leave this month's totals.",
+			deleted: "{category} envelope deleted",
+			deleteFailed: "Couldn't delete the envelope. Try again.",
+			form: {
+				title: "Add envelope",
+				description: "Add an envelope to {month}",
+				editTitle: "Edit budget",
+				editDescription: "Edit the budget of an envelope of {month}",
+				fields: { category: "Category", budget: "Budget" },
+				placeholders: { category: "Select a category", budget: "0.00" },
+				spentHint: "Spent so far: {amount}",
+				validation: {
+					category: "Choose a category.",
+					amount: "Enter a budget above 0, up to 2 decimals.",
+					amountTooLarge: "The budget can't be more than 99,999,999.99."
+				},
+				loading: "Loading the form",
+				loadError: "Couldn't load the categories",
+				retry: "Retry",
+				save: "Save",
+				cancel: "Cancel",
+				saved: "{category} envelope added to {month}.",
+				savedEdit: "{category} budget updated."
+			}
 		},
 		table: {
 			label: "Expenses",
@@ -182,8 +208,9 @@ export const translations = {
 			expense: { label: "Expense", hint: "A purchase or a bill" },
 			income: { label: "Income", hint: "Salary or other money in" },
 			envelope: {
-				label: "Envelope",
-				hint: "Set aside a budget for a category"
+				label: "Category",
+				hint: "Set aside a budget for a category",
+				disabled: "Every category already has a budget this month."
 			}
 		},
 		form: {
@@ -321,6 +348,7 @@ export const translations = {
 			markPaid: "Mark as paid today",
 			markUnpaid: "Mark as unpaid",
 			edit: "Edit",
+			editBudget: "Edit budget",
 			delete: "Delete"
 		},
 		states: {
@@ -345,6 +373,7 @@ export const translations = {
 		lookupGone: "{field} no longer exists. Choose another.",
 		monthClosed: "Envelopes of past months can't be changed.",
 		planGone: "This plan no longer exists.",
+		envelopeGone: "This envelope no longer exists.",
 		futureDate: "The purchase date can't be in the future.",
 		generic: "Something went wrong. Try again.",
 		fields: {

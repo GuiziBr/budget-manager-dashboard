@@ -139,13 +139,19 @@ export function envelopeStatus(
 	}
 }
 
-// Over-budget envelopes first, the rest in the order given
+// Over-budget envelopes first, then the rest; each group alphabetical by category name.
+// A category that is gone (no name) goes last in its group, in the order given
 export function sortEnvelopes(
 	statuses: readonly EnvelopeStatus[]
 ): EnvelopeStatus[] {
-	return [...statuses].sort(
-		(a, b) => Number(b.overBudget) - Number(a.overBudget)
-	)
+	return [...statuses].sort((a, b) => {
+		if (a.overBudget !== b.overBudget)
+			return Number(b.overBudget) - Number(a.overBudget)
+		if (a.categoryName === b.categoryName) return 0
+		if (a.categoryName === null) return 1
+		if (b.categoryName === null) return -1
+		return a.categoryName.localeCompare(b.categoryName)
+	})
 }
 
 export function totals({
