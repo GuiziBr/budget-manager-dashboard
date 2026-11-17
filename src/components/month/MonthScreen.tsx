@@ -27,6 +27,7 @@ import {
 	useDeleteEnvelope,
 	useMonthEnvelopes
 } from "@/hooks/use-budget-envelopes"
+import { useCreateBudgetPeriod } from "@/hooks/use-budget-periods"
 import { useCategories } from "@/hooks/use-categories"
 import {
 	EXPENSES_QUERY_KEY,
@@ -42,7 +43,11 @@ import { PHONE_QUERY, useMediaQuery } from "@/hooks/use-media-query"
 import { useMonthAccess } from "@/hooks/use-month-access"
 import { useMonthPage } from "@/hooks/use-month-page"
 import { ApiError } from "@/lib/api"
-import { getApiErrorMessage, isMonthClosedError } from "@/lib/api-error-message"
+import {
+	describeApiError,
+	getApiErrorMessage,
+	isMonthClosedError
+} from "@/lib/api-error-message"
 import {
 	availableEnvelopeCategories,
 	envelopeDeleteMessage
@@ -59,6 +64,7 @@ const PAID_TOAST_ID = "paid-update-failed"
 const DELETE_TOAST_ID = "expense-delete-failed"
 const INCOME_DELETE_TOAST_ID = "income-delete-failed"
 const ENVELOPE_DELETE_TOAST_ID = "envelope-delete-failed"
+const OPEN_MONTH_TOAST_ID = "month-open-failed"
 
 export function MonthScreen() {
 	const { month, period, state, canEdit, canEditEnvelopes, error, refetch } =
@@ -127,6 +133,27 @@ export function MonthScreen() {
 		setEditingEnvelope(null)
 		setDeletingEnvelope(null)
 	}
+	const createPeriod = useCreateBudgetPeriod()
+	const openMonth = () =>
+		createPeriod.mutate(
+			{ year: month.year, month: month.month },
+			{
+				onError: (error) => {
+					const described = describeApiError(error, {
+						action: "openMonth",
+						month: label
+					})
+					if (described.kind === "monthExists") {
+						// Opened elsewhere: load the existing month
+						toast.info(described.message, { id: OPEN_MONTH_TOAST_ID })
+						refetch()
+						return
+					}
+					// Anything else is generic: a 422 here would read as the envelope message
+					toast.error(translations.errors.generic, { id: OPEN_MONTH_TOAST_ID })
+				}
+			}
+		)
 	const updateExpense = useUpdateExpense({ optimistic: true })
 	// Ticking records today; unticking clears the date. The change shows at once and rolls back on failure
 	const togglePaid = (expense: Expense) => {
@@ -378,7 +405,13 @@ export function MonthScreen() {
 			{state === "error" && (
 				<MonthError error={error} onRetry={() => refetch()} />
 			)}
-			{state === "not-opened" && <MonthNotOpened label={label} />}
+			{state === "not-opened" && (
+				<MonthNotOpened
+					label={label}
+					onOpen={openMonth}
+					isOpening={createPeriod.isPending}
+				/>
+			)}
 			{state === "not-tracked" && <MonthNotTracked label={label} />}
 			{(state === "open" || state === "past") && period && (
 				<>

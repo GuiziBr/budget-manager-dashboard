@@ -357,6 +357,9 @@ export const translations = {
 			retry: "Retry",
 			notOpenedTitle: "{month} hasn't been opened yet",
 			openMonth: "Open {month}",
+			openConfirmTitle: "Open {month}?",
+			openConfirmDescription:
+				"This creates {month} with its installments, recurring bills and envelopes.",
 			notTracked: "{month} wasn't tracked in the app",
 			pastBadge: "Past month",
 			pastNote:

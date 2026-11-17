@@ -17,7 +17,11 @@ const notify = () => {
 	for (const listener of nav.listeners) listener()
 }
 const toSearch = (href: string) => href.replace(/^\?/, "")
-const toast = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }))
+const toast = vi.hoisted(() => ({
+	error: vi.fn(),
+	success: vi.fn(),
+	info: vi.fn()
+}))
 vi.mock("sonner", () => ({ toast }))
 vi.mock("next/navigation", async () => {
 	const { useSyncExternalStore } = await import("react")
@@ -68,6 +72,7 @@ beforeEach(() => {
 	nav.history = []
 	toast.error.mockClear()
 	toast.success.mockClear()
+	toast.info.mockClear()
 })
 
 afterEach(() => {
@@ -119,7 +124,116 @@ describe("MonthScreen states", () => {
 		).toBeInTheDocument()
 		expect(
 			screen.getByRole("button", { name: "Open November 2026" })
-		).toBeDisabled()
+		).toBeEnabled()
+	})
+
+	describe("opening a month", () => {
+		const openButton = () =>
+			screen.findByRole("button", { name: "Open November 2026" })
+		const openAndConfirm = async (user: ReturnType<typeof setup>) => {
+			await user.click(await openButton())
+			const dialog = await screen.findByRole("dialog")
+			await user.click(
+				within(dialog).getByRole("button", { name: "Open November 2026" })
+			)
+		}
+
+		it("asks for confirmation and sends nothing when cancelled", async () => {
+			vi.spyOn(api, "get").mockResolvedValue([])
+			const post = vi.spyOn(api, "post")
+			const user = setup()
+			await user.click(await openButton())
+			const dialog = await screen.findByRole("dialog", {
+				name: "Open November 2026?"
+			})
+			expect(dialog).toHaveTextContent(
+				"This creates November 2026 with its installments, recurring bills and envelopes."
+			)
+			await user.click(within(dialog).getByRole("button", { name: "Cancel" }))
+			expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+			expect(post).not.toHaveBeenCalled()
+			// Focus goes back to the Open button, not to the page
+			await vi.waitFor(() => expect(openButton()).resolves.toHaveFocus())
+		})
+
+		it("posts the month and shows it once created", async () => {
+			let periods: ReturnType<typeof make>[] = []
+			vi.spyOn(api, "get").mockImplementation(async (endpoint) =>
+				String(endpoint).includes("budget-periods") ? periods : []
+			)
+			vi.spyOn(api, "getPage").mockReturnValue(new Promise(() => {}))
+			const post = vi.spyOn(api, "post").mockImplementation(async () => {
+				periods = [make(2026, 11)]
+				return make(2026, 11)
+			})
+			const user = setup()
+			await openAndConfirm(user)
+			expect(post).toHaveBeenCalledWith("budget-periods", {
+				year: 2026,
+				month: 11
+			})
+			await vi.waitFor(() =>
+				expect(
+					screen.queryByText("November 2026 hasn't been opened yet")
+				).not.toBeInTheDocument()
+			)
+		})
+
+		it("disables the button while the request is pending", async () => {
+			vi.spyOn(api, "get").mockResolvedValue([])
+			const post = vi.spyOn(api, "post").mockReturnValue(new Promise(() => {}))
+			const user = setup()
+			await openAndConfirm(user)
+			expect(await openButton()).toBeDisabled()
+			await user.click(await openButton())
+			expect(post).toHaveBeenCalledTimes(1)
+		})
+
+		it("says the month is already open on a 409 and refetches", async () => {
+			const get = vi.spyOn(api, "get").mockResolvedValue([])
+			vi.spyOn(api, "post").mockRejectedValue(new ApiError("exists", 409))
+			const user = setup()
+			await openAndConfirm(user)
+			await vi.waitFor(() =>
+				expect(toast.info).toHaveBeenCalledWith(
+					"November 2026 is already open.",
+					expect.anything()
+				)
+			)
+			await vi.waitFor(() =>
+				expect(
+					get.mock.calls.filter(([e]) => String(e).includes("budget-periods"))
+						.length
+				).toBeGreaterThan(1)
+			)
+		})
+
+		it("keeps the generic message for a 422, not the envelope one", async () => {
+			vi.spyOn(api, "get").mockResolvedValue([])
+			vi.spyOn(api, "post").mockRejectedValue(new ApiError("nope", 422))
+			const user = setup()
+			await openAndConfirm(user)
+			await vi.waitFor(() =>
+				expect(toast.error).toHaveBeenCalledWith(
+					"Something went wrong. Try again.",
+					expect.anything()
+				)
+			)
+		})
+
+		it("shows the generic message on other failures and allows a retry", async () => {
+			vi.spyOn(api, "get").mockResolvedValue([])
+			vi.spyOn(api, "post").mockRejectedValue(new ApiError("boom", 500))
+			const user = setup()
+			await openAndConfirm(user)
+			await vi.waitFor(() =>
+				expect(toast.error).toHaveBeenCalledWith(
+					"Something went wrong. Try again.",
+					expect.anything()
+				)
+			)
+			expect(await openButton()).toBeEnabled()
+		})
 	})
 
 	it("offers to open a future month that isn't opened", async () => {
