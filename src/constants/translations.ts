@@ -354,9 +354,9 @@ export const translations = {
 		review: {
 			title: "Review",
 			description:
-				"Check what was generated for {month}. Edit the recurring bill amounts before you start the month.",
+				"Check what was generated for {month}. Edit the recurring bill amounts and set the salary before you start the month.",
 			intro:
-				"Check what was generated for the month. You can change the recurring bill amounts now.",
+				"Check what was generated for the month. You can change the recurring bill amounts and set the salary now.",
 			done: "Done",
 			close: "Close",
 			ready: "{month} is ready",
@@ -379,6 +379,19 @@ export const translations = {
 				hint: "You can change a category's budget later from the month screen.",
 				empty: "No categories",
 				loadError: "Couldn't load the categories"
+			},
+			salary: {
+				title: "Income",
+				descriptionLabel: "Description of salary {n}",
+				amountLabel: "Amount of salary {n}",
+				removeLabel: "Remove salary {n}",
+				addSalary: "Add salary",
+				copiedHint: "Salary incomes were copied from last month",
+				descriptionPlaceholder: "Salary description",
+				loadError: "Couldn't load last month's salary",
+				saveFailed:
+					"Couldn't save {names}. Add it later from the income panel or try again.",
+				retry: "Retry"
 			},
 			loading: "Loading"
 		},
