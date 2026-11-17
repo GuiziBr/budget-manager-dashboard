@@ -1,6 +1,6 @@
 # Month Screen — Implementation Plan
 
-Status: draft 9 (T-34 done) · Last updated: 2026-11-16
+Status: draft 10 (T-35 done) · Last updated: 2026-11-16
 
 Breaks the [Month screen spec](../specs/month-screen.md) and the wireframes in `design.pen` into small tasks. Each task is one pull request to `development`, sized to be reviewed in one sitting.
 
@@ -308,6 +308,7 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 - **Includes:** the Open button in the empty state and in the month list; `POST /budget-periods`; a 409 loads the existing month; only current and future months can be opened.
 - **Done when:** opening December shows its generated rows.
 - **Backend:** BE-1 (salary with the month). If adopted, the Open request also carries the salary from T-37.
+- **Status: done (2026-11-16).** `MonthScreen` calls `useCreateBudgetPeriod` and passes `onOpen` / `isOpening` to `MonthNotOpened` (the Open button first asks for confirmation in a dialog, "This creates {month} with its installments, recurring bills and envelopes."; the button is disabled while the request runs). 201 shows the new month through the invalidated periods query; 409 shows "{Month} is already open." (info toast) and refetches so the existing month loads; anything else shows the generic toast and the button stays usable. BE-1 is not adopted, so the request sends `{ year, month }` only (the backend has no other rules: past months and gaps are accepted, so the frontend state is the only guard). No separate "Open {next month}" menu item: the next chevron already reaches the unopened month and its Open button. Checked in the browser against the real API: `POST /budget-periods` `{"year":2027,"month":1}` → 201 with its generated rows; opening a month already created elsewhere → 409, the month loads. Test months were deleted afterwards. Not checked: 390px (the window could not be resized; no horizontal overflow measured at desktop width) and a real 5xx (covered by the component tests).
 
 #### T-36 Open-month review: bills, installments, envelopes (M-02, step 3)
 - **Includes:** the review sheet after opening; recurring bills with editable amounts; installments with `n of N` and a "Last payment" tag; envelopes read-only; Done saves the changed amounts; closing without Done keeps the month as generated; Retry per failed section.
