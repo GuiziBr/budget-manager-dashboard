@@ -51,10 +51,14 @@ export function ReviewSection({
 
 	// A hidden section opens when a problem appears in it, so it can't go unseen. The user can
 	// hide it again afterwards.
-	const needsAttention = isError || attention
+	// Each cause is watched on its own, so a new load error opens the section even while an
+	// invalid amount already had it flagged
 	useEffect(() => {
-		if (needsAttention) setCollapsed(false)
-	}, [needsAttention, setCollapsed])
+		if (isError) setCollapsed(false)
+	}, [isError])
+	useEffect(() => {
+		if (attention) setCollapsed(false)
+	}, [attention])
 
 	return (
 		<section aria-labelledby={headingId} className="flex flex-col gap-2">

@@ -106,7 +106,9 @@ describe("useSaveReviewSalaries", () => {
 		const outcome = await result.current.mutateAsync({
 			periodId: "p1",
 			wanted,
-			recheck: false
+			recheck: false,
+			sent: {},
+			reserved: new Set()
 		})
 
 		expect(get).not.toHaveBeenCalled()
@@ -117,7 +119,7 @@ describe("useSaveReviewSalaries", () => {
 			amount: 6144,
 			isSalary: true
 		})
-		expect(outcome.saved).toEqual(wanted)
+		expect(outcome.saved.map((s) => s.salary)).toEqual(wanted)
 		expect(outcome.failed).toEqual([])
 	})
 
@@ -135,10 +137,12 @@ describe("useSaveReviewSalaries", () => {
 		const outcome = await result.current.mutateAsync({
 			periodId: "p1",
 			wanted,
-			recheck: false
+			recheck: false,
+			sent: {},
+			reserved: new Set()
 		})
 
-		expect(outcome.saved.map((s) => s.key)).toEqual(["a"])
+		expect(outcome.saved.map((s) => s.salary.key)).toEqual(["a"])
 		expect(outcome.failed.map((s) => s.key)).toEqual(["b"])
 	})
 
@@ -153,7 +157,9 @@ describe("useSaveReviewSalaries", () => {
 		const outcome = await result.current.mutateAsync({
 			periodId: "p1",
 			wanted,
-			recheck: true
+			recheck: true,
+			sent: {},
+			reserved: new Set()
 		})
 
 		expect(api.get).toHaveBeenCalledWith("incomes?budgetPeriodId=p1")
@@ -162,7 +168,7 @@ describe("useSaveReviewSalaries", () => {
 			"incomes",
 			expect.objectContaining({ description: "Side job" })
 		)
-		expect(outcome.saved.map((s) => s.key).sort()).toEqual(["a", "b"])
+		expect(outcome.saved.map((s) => s.salary.key).sort()).toEqual(["a", "b"])
 		expect(outcome.failed).toEqual([])
 	})
 
@@ -175,11 +181,116 @@ describe("useSaveReviewSalaries", () => {
 		const outcome = await result.current.mutateAsync({
 			periodId: "p1",
 			wanted,
-			recheck: true
+			recheck: true,
+			sent: {},
+			reserved: new Set()
 		})
 
 		expect(post).not.toHaveBeenCalled()
 		expect(outcome.saved).toEqual([])
 		expect(outcome.failed).toEqual(wanted)
+	})
+
+	it("remembers the payload of a failed row", async () => {
+		vi.spyOn(api, "post").mockRejectedValue(new ApiError("boom", 500))
+		const { wrapper } = createQueryWrapper()
+		const { result } = renderHook(() => useSaveReviewSalaries(), { wrapper })
+
+		const outcome = await result.current.mutateAsync({
+			periodId: "p1",
+			wanted: [wanted[0] as (typeof wanted)[number]],
+			recheck: false,
+			sent: {},
+			reserved: new Set()
+		})
+
+		expect(outcome.sent).toEqual({
+			a: { description: "Salary", amount: 6144 }
+		})
+	})
+
+	it("returns the id of each created income", async () => {
+		vi.spyOn(api, "post").mockResolvedValue({ id: "i1" } as never)
+		const { wrapper } = createQueryWrapper()
+		const { result } = renderHook(() => useSaveReviewSalaries(), { wrapper })
+
+		const outcome = await result.current.mutateAsync({
+			periodId: "p1",
+			wanted: [wanted[0] as (typeof wanted)[number]],
+			recheck: false,
+			sent: {},
+			reserved: new Set()
+		})
+
+		expect(outcome.saved[0]?.incomeId).toBe("i1")
+	})
+
+	it("never matches an income reserved for a confirmed row", async () => {
+		// Two identical rows: one was saved as `i1`, the other failed
+		vi.spyOn(api, "get").mockResolvedValue([
+			{ id: "i1", description: "Salary", amount: 1000, isSalary: true }
+		] as Income[] as never)
+		const post = vi.spyOn(api, "post").mockResolvedValue({ id: "i2" } as never)
+		const { wrapper } = createQueryWrapper()
+		const { result } = renderHook(() => useSaveReviewSalaries(), { wrapper })
+
+		const outcome = await result.current.mutateAsync({
+			periodId: "p1",
+			wanted: [{ key: "b", description: "Salary", amount: 1000 }],
+			recheck: true,
+			sent: {},
+			reserved: new Set(["i1"])
+		})
+
+		expect(post).toHaveBeenCalledTimes(1)
+		expect(outcome.saved[0]?.incomeId).toBe("i2")
+	})
+
+	it("updates the income of a row edited after a lost response instead of creating another", async () => {
+		vi.spyOn(api, "get").mockResolvedValue([
+			{ id: "i1", description: "Job", amount: 3000, isSalary: true }
+		] as Income[] as never)
+		const post = vi.spyOn(api, "post")
+		const patch = vi
+			.spyOn(api, "patch")
+			.mockResolvedValue({ id: "i1" } as never)
+		const { wrapper } = createQueryWrapper()
+		const { result } = renderHook(() => useSaveReviewSalaries(), { wrapper })
+
+		const outcome = await result.current.mutateAsync({
+			periodId: "p1",
+			wanted: [{ key: "a", description: "Job", amount: 3100 }],
+			recheck: true,
+			sent: { a: [{ description: "Job", amount: 3000 }] },
+			reserved: new Set()
+		})
+
+		expect(post).not.toHaveBeenCalled()
+		expect(patch).toHaveBeenCalledWith("incomes/i1", {
+			description: "Job",
+			amount: 3100
+		})
+		expect(outcome.saved[0]?.incomeId).toBe("i1")
+		expect(outcome.failed).toEqual([])
+	})
+
+	it("keeps a row failed when updating its income fails", async () => {
+		vi.spyOn(api, "get").mockResolvedValue([
+			{ id: "i1", description: "Job", amount: 3000, isSalary: true }
+		] as Income[] as never)
+		vi.spyOn(api, "patch").mockRejectedValue(new ApiError("boom", 500))
+		const { wrapper } = createQueryWrapper()
+		const { result } = renderHook(() => useSaveReviewSalaries(), { wrapper })
+
+		const outcome = await result.current.mutateAsync({
+			periodId: "p1",
+			wanted: [{ key: "a", description: "Job", amount: 3100 }],
+			recheck: true,
+			sent: { a: [{ description: "Job", amount: 3000 }] },
+			reserved: new Set()
+		})
+
+		expect(outcome.failed.map((s) => s.key)).toEqual(["a"])
+		expect(outcome.sent.a).toEqual({ description: "Job", amount: 3100 })
 	})
 })

@@ -96,7 +96,8 @@ describe("pendingSalaries", () => {
 		const result = pendingSalaries(wanted, [
 			income("x", { description: "Salary", amount: 1000 })
 		])
-		expect(result.found.map((s) => s.key)).toEqual(["a"])
+		expect(result.found.map((f) => f.salary.key)).toEqual(["a"])
+		expect(result.found[0]?.income.id).toBe("x")
 		expect(result.pending.map((s) => s.key)).toEqual(["b"])
 	})
 
@@ -107,5 +108,20 @@ describe("pendingSalaries", () => {
 		])
 		expect(result.pending).toEqual([])
 		expect(result.found).toHaveLength(2)
+	})
+
+	it("matches a row edited after a lost response to the income it created", () => {
+		const edited = [{ key: "a", description: "Salary", amount: 1100 }]
+		const existing = [income("x", { description: "Salary", amount: 1000 })]
+
+		// Without what the row was sent as, the edit looks like a new salary
+		expect(pendingSalaries(edited, existing).pending).toEqual(edited)
+
+		const result = pendingSalaries(edited, existing, {
+			a: [{ description: "Salary", amount: 1000 }]
+		})
+		expect(result.pending).toEqual([])
+		expect(result.found[0]?.income.id).toBe("x")
+		expect(result.found[0]?.salary.amount).toBe(1100)
 	})
 })

@@ -699,6 +699,125 @@ describe("OpenMonthReview", () => {
 			expect(post).toHaveBeenCalledTimes(1)
 		})
 
+		it("holds Done until last month's salaries have loaded", async () => {
+			let release: (value: Income[]) => void = () => {}
+			const pending = new Promise<Income[]>((resolve) => {
+				release = resolve
+			})
+			mockApi()
+			vi.spyOn(api, "get").mockImplementation((async (endpoint: string) => {
+				if (endpoint.startsWith("budget-envelopes")) return envelopes
+				if (endpoint.startsWith("budget-periods")) return [novemberPeriod]
+				if (endpoint === "incomes?budgetPeriodId=p0") return pending
+				return categories
+			}) as never)
+			const post = vi.spyOn(api, "post").mockResolvedValue({} as never)
+			const { user, onClose } = await setup()
+
+			await screen.findByLabelText("Amount for Hydro")
+			expect(screen.getByRole("button", { name: "Done" })).toBeDisabled()
+			// Close stays available
+			expect(
+				screen.getAllByRole("button", { name: "Close" }).length
+			).toBeGreaterThan(0)
+
+			release(lastMonthSalaries("p0"))
+			await screen.findByLabelText("Amount of salary 1")
+			expect(screen.getByRole("button", { name: "Done" })).toBeEnabled()
+			await done(user)
+
+			await waitFor(() => expect(onClose).toHaveBeenCalled())
+			expect(post).toHaveBeenCalledTimes(2)
+		})
+
+		it("enables Done after a load error so salaries can be added by hand", async () => {
+			mockApi({
+				incomes: () => {
+					throw new ApiError("boom", 500)
+				}
+			})
+			await setup()
+
+			await screen.findByText("Couldn't load last month's salary")
+			expect(screen.getByRole("button", { name: "Done" })).toBeEnabled()
+		})
+
+		it("creates the second of two identical salaries after the first was saved", async () => {
+			const created: Income[] = []
+			mockApi({
+				incomes: (id) => (id === "p0" ? [] : created.map((c) => ({ ...c })))
+			})
+			let nth = 0
+			vi.spyOn(api, "post").mockImplementation((async (
+				_: string,
+				body: { description: string; amount: number }
+			) => {
+				nth++
+				if (nth === 2) throw new ApiError("boom", 500)
+				const made = income(`i${nth}`, { ...body, budgetPeriodId: "p1" })
+				created.push(made)
+				return made
+			}) as never)
+			const { user, onClose } = await setup()
+
+			for (const n of [1, 2]) {
+				await addSalary(user)
+				await user.type(amountOf(n), "100000")
+			}
+			await done(user)
+			const alert = await screen.findByText(/Couldn't save Salary/)
+			expect(onClose).not.toHaveBeenCalled()
+
+			await user.click(
+				within(alert.closest("[role=alert]") as HTMLElement).getByRole(
+					"button",
+					{
+						name: "Retry"
+					}
+				)
+			)
+
+			await waitFor(() => expect(onClose).toHaveBeenCalled())
+			// Two incomes in the month, not one matched twice
+			expect(created).toHaveLength(2)
+		})
+
+		it("updates the income of a row edited after a lost response", async () => {
+			const created: Income[] = []
+			mockApi({
+				incomes: (id) => (id === "p0" ? [] : created.map((c) => ({ ...c })))
+			})
+			// The income is created, but the response never arrives
+			const post = vi.spyOn(api, "post").mockImplementation((async (
+				_: string,
+				body: { description: string; amount: number }
+			) => {
+				created.push(income("i1", { ...body, budgetPeriodId: "p1" }))
+				throw new ApiError("lost response", 500)
+			}) as never)
+			const patch = vi.spyOn(api, "patch").mockResolvedValue({
+				id: "i1"
+			} as never)
+			const { user, onClose } = await setup()
+			await addSalary(user)
+			await user.type(amountOf(1), "100000")
+			await done(user)
+			await screen.findByText(/Couldn't save Salary/)
+
+			const field = amountOf(1)
+			await user.clear(field)
+			await user.type(field, "110000")
+			await user.click(screen.getByRole("button", { name: "Retry" }))
+
+			await waitFor(() => expect(onClose).toHaveBeenCalled())
+			expect(post).toHaveBeenCalledTimes(1)
+			expect(patch).toHaveBeenCalledTimes(1)
+			expect(patch).toHaveBeenCalledWith("incomes/i1", {
+				description: "Salary",
+				amount: 1100
+			})
+		})
+
 		it("keeps Add salary available when last month's incomes can't be read", async () => {
 			mockApi({
 				incomes: () => {

@@ -15,6 +15,7 @@ import { useBudgetPeriods } from "@/hooks/use-budget-periods"
 import { useCategories } from "@/hooks/use-categories"
 import { useMonthIncomes } from "@/hooks/use-incomes"
 import {
+	type SaveSalariesResult,
 	useReviewExpenses,
 	useSaveReviewBills,
 	useSaveReviewSalaries
@@ -31,6 +32,7 @@ import { envelopeStatus, sortEnvelopes } from "@/lib/month-rows"
 import {
 	diffSalaries,
 	type SalaryInput,
+	type SalaryPayload,
 	type SalaryRow,
 	salaryRowsFromIncomes
 } from "@/lib/review-salary"
@@ -80,8 +82,13 @@ export function OpenMonthReview({
 		new Set()
 	)
 	const [failedSalaries, setFailedSalaries] = useState<SalaryInput[]>([])
-	// After the first attempt, a retry re-reads the month's incomes before posting
+	// After the first attempt, a retry re-reads the month's incomes before saving
 	const salaryAttempted = useRef(false)
+	// What each failed row was last sent as, so a row edited after a lost response still
+	// finds the income it created; and the incomes of confirmed rows, which no other row
+	// may match
+	const sentSalaries = useRef<Record<string, SalaryPayload[]>>({})
+	const reservedIncomes = useRef(new Set<Id>())
 
 	const { bills, installments } = useMemo(() => {
 		const split = splitReviewExpenses(expenses.data ?? [])
@@ -124,7 +131,14 @@ export function OpenMonthReview({
 		periods.isPending || (lastMonthId !== undefined && lastMonth.isPending)
 
 	const done = async () => {
-		if (saving || invalidIds.length > 0 || invalidSalaryKeys.size > 0) return
+		// Done waits for last month's salaries, or it could close the review before they appear
+		if (
+			saving ||
+			salaryLoading ||
+			invalidIds.length > 0 ||
+			invalidSalaryKeys.size > 0
+		)
+			return
 		const salaries = salaryDiff.wanted
 		if (changes.length === 0 && salaries.length === 0) {
 			onClose()
@@ -138,9 +152,11 @@ export function OpenMonthReview({
 				? saveSalaries.mutateAsync({
 						periodId,
 						wanted: salaries,
-						recheck: salaryAttempted.current
+						recheck: salaryAttempted.current,
+						sent: sentSalaries.current,
+						reserved: reservedIncomes.current
 					})
-				: { saved: [], failed: [] }
+				: ({ saved: [], failed: [], sent: {} } satisfies SaveSalariesResult)
 		])
 		if (salaries.length > 0) salaryAttempted.current = true
 		if (billResult.saved.length > 0) {
@@ -150,10 +166,20 @@ export function OpenMonthReview({
 			}))
 		}
 		setFailedIds(new Set(billResult.failed.map((c) => c.id)))
+		for (const { salary, incomeId } of salaryResult.saved) {
+			if (incomeId !== undefined) reservedIncomes.current.add(incomeId)
+			delete sentSalaries.current[salary.key]
+		}
+		for (const [key, payload] of Object.entries(salaryResult.sent)) {
+			sentSalaries.current[key] = [
+				...(sentSalaries.current[key] ?? []),
+				payload
+			]
+		}
 		if (salaryResult.saved.length > 0) {
 			setSavedSalaryKeys(
 				(current) =>
-					new Set([...current, ...salaryResult.saved.map((s) => s.key)])
+					new Set([...current, ...salaryResult.saved.map((s) => s.salary.key)])
 			)
 		}
 		setFailedSalaries(salaryResult.failed)
@@ -385,7 +411,10 @@ export function OpenMonthReview({
 						type="button"
 						onClick={done}
 						disabled={
-							saving || invalidIds.length > 0 || invalidSalaryKeys.size > 0
+							saving ||
+							salaryLoading ||
+							invalidIds.length > 0 ||
+							invalidSalaryKeys.size > 0
 						}
 					>
 						{t.done}

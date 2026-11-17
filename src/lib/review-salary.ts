@@ -69,36 +69,57 @@ export function diffSalaries(state: SalaryFormState): SalaryEdits {
 	return { wanted, invalidKeys }
 }
 
+/** What a salary row was sent as: its description and amount. */
+export interface SalaryPayload {
+	description: string
+	amount: number
+}
+
+export interface FoundSalary {
+	salary: SalaryInput
+	/** The income already in the month that this salary row stands for. */
+	income: Income
+}
+
 export interface PendingSalaries {
 	/** Still to create. */
 	pending: SalaryInput[]
 	/** Already in the month (a request that succeeded but whose response was lost). */
-	found: SalaryInput[]
+	found: FoundSalary[]
 }
 
 /**
- * Before a retry: splits the wanted salaries into those the month already has (same
- * description and amount, salary income) and those still missing. Each existing income
- * matches one wanted salary at most, so two identical salaries aren't collapsed.
+ * Before a retry: splits the wanted salaries into those the month already has and those
+ * still missing. A salary row matches an income with the row's current description and
+ * amount, or with any payload it was sent as before (`sent`, keyed by row), so a row edited
+ * after a lost response still finds the income it created. Each existing income matches one
+ * row at most, so two identical salaries aren't collapsed.
  */
 export function pendingSalaries(
 	wanted: readonly SalaryInput[],
-	existing: readonly Income[]
+	existing: readonly Income[],
+	sent: Readonly<Record<string, readonly SalaryPayload[]>> = {}
 ): PendingSalaries {
 	const available = existing.filter((income) => income.isSalary)
 	const pending: SalaryInput[] = []
-	const found: SalaryInput[] = []
+	const found: FoundSalary[] = []
 	for (const salary of wanted) {
-		const index = available.findIndex(
-			(income) =>
-				income.description === salary.description &&
-				income.amount === salary.amount
+		const candidates: readonly SalaryPayload[] = [
+			salary,
+			...(sent[salary.key] ?? [])
+		]
+		const index = available.findIndex((income) =>
+			candidates.some(
+				(c) =>
+					c.description === income.description && c.amount === income.amount
+			)
 		)
-		if (index === -1) {
+		const income = available[index]
+		if (index === -1 || !income) {
 			pending.push(salary)
 		} else {
 			available.splice(index, 1)
-			found.push(salary)
+			found.push({ salary, income })
 		}
 	}
 	return { pending, found }
