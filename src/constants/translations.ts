@@ -296,6 +296,7 @@ export const translations = {
 				interval: "Enter the days between payments.",
 				firstPurchase: "Choose the first purchase date."
 			},
+			finish: "Finish",
 			finishAddAnother: "Finish & add another",
 			cancel: "Cancel",
 			saved: "{item} added to {month}."
