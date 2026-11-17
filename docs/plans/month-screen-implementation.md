@@ -1,6 +1,6 @@
 # Month Screen — Implementation Plan
 
-Status: draft 13 (T-38 built) · Last updated: 2026-11-17
+Status: draft 14 (T-39 built) · Last updated: 2026-11-17
 
 Breaks the [Month screen spec](../specs/month-screen.md) and the wireframes in `design.pen` into small tasks. Each task is one pull request to `development`, sized to be reviewed in one sitting.
 
@@ -331,12 +331,13 @@ One file per entity in `src/hooks/`, following the project rule: `useX` for read
 
 #### T-39 Final pass
 - **Includes:**
-  - every frame of `design.pen` compared in light and dark, desktop and 390px;
+  - (the `design.pen` frame-by-frame comparison was left out of this task on 2026-11-17);
   - keyboard paths: sort headers, checkboxes, panels with focus trap and Escape, the add menu;
   - contrast of dimmed rows;
   - unused translations and the old dashboard strings removed;
   - coverage thresholds raised if they went up.
 - **Done when:** the checklist is complete and `check`, `build` and `test:cov` pass.
+- **Status: built (2026-11-17), browser QA pending.** Dimmed rows: paid rows now use 70% opacity (50% gave 3.4:1 in light and 4.5:1 in dark) and their secondary text uses the foreground colour instead of muted (muted at 70% is 3.0:1 in light), giving at least 4.7:1 in both themes. Removed the unused `month.envelopes.ofAllocated` string, the `/dashboard` test case and the "Dashboard" metadata description. Thresholds raised to 95/93/94/96 (measured 97.5/95.4/96.1/98.2). Keyboard review of the code found sort headers, the item button, the row menu, the panels (Radix focus trap, focus return) and the Add menu already covered; the in-browser tab-through, and the pending browser checks of T-36, T-37 and T-38, are still to do.
 
 ---
 

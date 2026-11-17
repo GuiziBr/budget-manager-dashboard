@@ -41,7 +41,6 @@ describe("navigation", () => {
 		expect(getPageTitle(RECURRING_PATH)).toBe("Recurring")
 		expect(getPageTitle(SETTINGS_PATH)).toBe("Settings")
 		expect(getPageTitle("/unknown")).toBe("Month")
-		expect(getPageTitle("/dashboard")).toBe("Month")
 	})
 
 	it("shows every item as a tab, so no More item is active", () => {

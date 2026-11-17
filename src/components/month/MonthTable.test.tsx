@@ -268,10 +268,10 @@ describe("MonthTable rows", () => {
 			name: "Paid: Expense 1"
 		})
 		expect(checkbox).toBeChecked()
-		expect(checkbox.closest("td")).not.toHaveClass("opacity-50")
+		expect(checkbox.closest("td")).not.toHaveClass("opacity-70")
 		expect(within(row).getAllByText("1 Nov").length).toBeGreaterThan(0)
 		expect(within(row).getByText("$100.00").closest("td")).toHaveClass(
-			"opacity-50"
+			"opacity-70"
 		)
 	})
 

@@ -115,7 +115,6 @@ export const translations = {
 			overBudget: "{n} over budget",
 			overBudgetShort: "{n} over",
 			unavailable: "—",
-			ofAllocated: "{spent} / {allocated}",
 			deleteTitle: "Delete envelope",
 			deleteConfirm:
 				"Are you sure you want to delete the {category} envelope? Its spend will leave this month's totals.",
