@@ -10,13 +10,13 @@ Related: [Month spec](../specs/month-screen.md) (M-02, M-22, §4) · [Budget per
 
 ## 1. Scope
 
-After **Open {Month}** succeeds (T-35), a review sheet opens over the new month with three sections:
+After **Open {Month}** succeeds (T-35), a review sheet opens over the new month with three sections (the third is titled "Categories" on screen):
 
 | Section | Content | Editable | Saved by Done |
 |---|---|---|---|
 | Recurring bills | each generated bill, name and amount | amount | `PATCH /expenses/:id` `{ amount }` per changed row |
 | Installments | each generated payment: name, `n of N`, amount, "Last payment" tag on the final one | no | — |
-| Envelopes | category, budget | no (M-22 edits them later) | — |
+| Categories (the generated envelopes) | category, budget | no (M-22 edits them later) | — |
 
 **Done** saves the changed bill amounts and closes the review. Closing any other way (X, Escape, dimmed page) keeps the month as generated. Each section has its own loading, error and **Retry**.
 
@@ -66,9 +66,9 @@ Pure logic first, then data, then UI.
   - Done is disabled while saving and when any edited amount is invalid. With no edits it just closes (no request).
   - While saving, dismissal is blocked (`onSavingChange`, as the forms do).
   - On full success it closes with a success toast ("{Month} is ready"). On partial failure it **stays open**; the failed rows show a red border and the section shows the error with **Retry**; the saved rows are shown as saved and locked to their new amount.
-- `ReviewBillsSection.tsx`: a row per bill, description + category, amount input (the `$` icon and `formatMoneyInput`, same as the expense form), skeleton while loading, empty line "No recurring bills", error + Retry.
-- `ReviewInstallmentsSection.tsx`: read-only rows with the `n/N` chip (`ExpenseTypeChip`), the **Last payment** `Badge`, amount; empty line "No installments due this month".
-- `ReviewEnvelopesSection.tsx`: read-only rows, category and budget; an envelope with a 0 default budget is shown as is (the backend gives `0` to any category outside its default table). Empty line "No envelopes".
+- Recurring bills (inline in `OpenMonthReview.tsx`, inside a shared `ReviewSection.tsx`): a row per bill, description + category, amount input (the `$` icon and `formatMoneyInput`, same as the expense form), skeleton while loading, empty line "No recurring bills", error + Retry.
+- Installments (inline): read-only rows with the `n/N` badge and the **Last payment** badge to the right of the item name, amount on the right; empty line "No installments due this month".
+- The Categories section (inline in `OpenMonthReview.tsx`): read-only rows, category and budget in `$`; an envelope with a 0 default budget is shown as is (the backend gives `0` to any category outside its default table). Empty line "No envelopes".
 - `MonthScreen.tsx`: state `reviewing` (period id), set in the open mutation's `onSuccess`, cleared on month change and by `onClose`. T-37's Income section slots in below the three.
 - `src/constants/translations.ts`: every string (`month.review.*`), including the aria labels for amount inputs ("Amount for {name}").
 - Components stay thin; the grouping, diffing and parsing live in 3.1.
@@ -82,7 +82,7 @@ Pure logic first, then data, then UI.
 ## 4. Design
 
 - Check the matching frames in `design.pen` first (the spec does not say whether a review frame exists; T-32 and T-33 shipped without frames). If there is none, build it from the expense form's panel (14px labels, 20px title, separator) and add a frame afterwards.
-- Light and dark, desktop and 390px. At 390px the amount inputs go under the description (stacked), nothing scrolls horizontally, and the footer buttons stay reachable (sticky).
+- Light and dark, desktop and 390px. At 390px the amount field stays on the right of the row (the category follows the bill name after a dash), nothing scrolls horizontally, and the footer buttons stay reachable (sticky).
 
 ---
 

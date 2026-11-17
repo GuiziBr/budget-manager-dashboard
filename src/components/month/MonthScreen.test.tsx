@@ -209,6 +209,29 @@ describe("MonthScreen states", () => {
 			)
 		})
 
+		it("opens no review when the month changed while it was being created", async () => {
+			vi.spyOn(api, "get").mockResolvedValue([])
+			let created: (period: ReturnType<typeof make>) => void = () => {}
+			vi.spyOn(api, "post").mockReturnValue(
+				new Promise((resolve) => {
+					created = resolve as typeof created
+				})
+			)
+			const user = setup()
+			await openAndConfirm(user)
+			await vi.waitFor(() => expect(api.post).toHaveBeenCalled())
+
+			act(() => {
+				nav.search = "period=2026-12"
+				notify()
+			})
+			await act(async () => created(make(2026, 11)))
+
+			expect(
+				screen.queryByRole("dialog", { name: "Review" })
+			).not.toBeInTheDocument()
+		})
+
 		it("opens no review on a 409", async () => {
 			vi.spyOn(api, "get").mockResolvedValue([])
 			vi.spyOn(api, "post").mockRejectedValue(new ApiError("exists", 409))

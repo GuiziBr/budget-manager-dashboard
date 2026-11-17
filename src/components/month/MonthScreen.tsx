@@ -138,12 +138,18 @@ export function MonthScreen() {
 		setReviewPeriodId(null)
 	}
 	const createPeriod = useCreateBudgetPeriod()
-	const openMonth = () =>
+	const openMonth = () => {
+		const requestedKey = monthKey
 		createPeriod.mutate(
 			{ year: month.year, month: month.month },
 			{
-				// A new month opens its review; a 409 (already open) doesn't
-				onSuccess: (created) => setReviewPeriodId(created.id),
+				// A new month opens its review; a 409 (already open) doesn't. If the user moved
+				// to another month while the request ran, the review would carry the wrong name
+				onSuccess: (created) => {
+					if (monthKeyRef.current === requestedKey) {
+						setReviewPeriodId(created.id)
+					}
+				},
 				onError: (error) => {
 					const described = describeApiError(error, {
 						action: "openMonth",
@@ -160,6 +166,7 @@ export function MonthScreen() {
 				}
 			}
 		)
+	}
 	const updateExpense = useUpdateExpense({ optimistic: true })
 	// Ticking records today; unticking clears the date. The change shows at once and rolls back on failure
 	const togglePaid = (expense: Expense) => {
