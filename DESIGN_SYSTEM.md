@@ -123,6 +123,7 @@ const roboto = Roboto({ variable: "--font-roboto", subsets: ["latin"], weight: [
 
 Measured with the current token values (WCAG 2.x):
 - Text: every body and secondary text pair is at or above 4.5:1 in both themes. The tightest are `--danger` on `--danger-soft` in light (4.7:1), `--success` on `--success-soft` in light (4.7:1) and muted text on hover fills (4.7:1 in dark, 4.8:1 in light).
+- Text on `bg-primary`: use full `text-primary-foreground`, with no opacity modifier (`/80` fails 4.5:1) and no lightening overlay such as `bg-primary-foreground/12`. Separate nested tiles with a `border-primary-foreground/20` outline instead.
 - Control boundaries: input borders are 3.4:1 on `--card` in light and 3.1:1 in dark. On `--background` they are 3.1:1 in light but 2.6:1 in dark, so inputs, selects and outline buttons use `bg-card`.
 - Focus ring: 7.8:1 in dark, 7.3:1 in light, on `--card`.
 - Charts: `--chart-*` are the same in both themes. Purple is 2.2:1 on the dark card and orange is 2.4:1 on the light card, so slices are also separated by position and the legend, not colour alone. This is accepted as is.

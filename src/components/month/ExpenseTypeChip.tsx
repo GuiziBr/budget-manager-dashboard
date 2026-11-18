@@ -17,8 +17,10 @@ export function ExpenseTypeChip({
 }: ExpenseTypeChipProps) {
 	const t = translations.month.table
 	const small = size === "small"
+	// Paid rows are dimmed by their parent, which drops the primary text below 4.5:1.
 	const className = cn(
-		small ? "px-[7px] py-0.5 text-[11px]" : "px-2 py-[3px] text-xs"
+		small ? "px-[7px] py-0.5 text-[11px]" : "px-2 py-[3px] text-xs",
+		!row.unpaid && "text-foreground"
 	)
 	const iconClass = small ? "size-[11px]" : "size-3"
 
