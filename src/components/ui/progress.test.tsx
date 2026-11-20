@@ -21,7 +21,7 @@ describe("Progress", () => {
 		render(<Progress value={130} aria-label="Over" />)
 
 		expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "100")
-		expect(indicator().style.transform).toBe("translateX(-0%)")
+		expect(indicator().style.transform).toBe("translateX(0%)")
 	})
 
 	it("clamps a negative value to empty", () => {
@@ -57,7 +57,7 @@ describe("Progress", () => {
 	it("clamps a value above a custom max to a full bar", () => {
 		render(<Progress value={999} max={200} aria-label="Over" />)
 
-		expect(indicator().style.transform).toBe("translateX(-0%)")
+		expect(indicator().style.transform).toBe("translateX(0%)")
 	})
 
 	it("uses the accent colour by default and danger on request", () => {
