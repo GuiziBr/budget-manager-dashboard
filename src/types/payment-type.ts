@@ -8,3 +8,13 @@ export interface PaymentType {
 	updatedAt: IsoDate
 	deletedAt: null
 }
+
+export interface CreatePaymentTypeInput {
+	name: string
+	hasStatement: boolean
+}
+
+export interface UpdatePaymentTypeInput {
+	name?: string
+	hasStatement?: boolean
+}

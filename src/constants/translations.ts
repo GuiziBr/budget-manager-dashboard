@@ -28,6 +28,13 @@ export const translations = {
 			more: "More"
 		}
 	},
+	settings: {
+		form: {
+			validation: {
+				name: "Enter a name"
+			}
+		}
+	},
 	comingSoon: {
 		title: "Coming soon",
 		description: "This screen is not available yet."

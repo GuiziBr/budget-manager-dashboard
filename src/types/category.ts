@@ -8,3 +8,13 @@ export interface Category {
 	updatedAt: IsoDate
 	deletedAt: null
 }
+
+export interface CreateCategoryInput {
+	name: string
+	hasBudgetEnvelope: boolean
+}
+
+export interface UpdateCategoryInput {
+	name?: string
+	hasBudgetEnvelope?: boolean
+}
