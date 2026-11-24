@@ -3,6 +3,7 @@ import { ApiError } from "./api"
 import {
 	describeApiError,
 	getApiErrorMessage,
+	isAlreadyDeleted,
 	isMonthClosedError
 } from "./api-error-message"
 
@@ -237,5 +238,83 @@ describe("changing a plan's amount", () => {
 		expect(describeApiError(new TypeError("offline"), change).kind).toBe(
 			"generic"
 		)
+	})
+})
+
+const LOOKUPS = [
+	["category", "category", "A category"],
+	["paymentType", "payment type", "A payment type"],
+	["bank", "bank", "A bank"],
+	["store", "store", "A store"]
+] as const
+
+describe.each(LOOKUPS)("saving a %s", (lookup, item, withArticle) => {
+	const ctx = { action: "saveLookup", lookup, name: "Nubank" } as const
+	const failed = `Couldn't save the ${item}. Try again.`
+
+	it("409 marks the Name field", () => {
+		expect(describeApiError(new ApiError("dup", 409), ctx)).toEqual({
+			kind: "duplicateName",
+			message: `${withArticle} named 'Nubank' already exists.`,
+			field: "name"
+		})
+	})
+
+	it("404 says it no longer exists", () => {
+		expect(describeApiError(new ApiError("gone", 404), ctx)).toEqual({
+			kind: "lookupItemGone",
+			message: `This ${item} no longer exists.`
+		})
+	})
+
+	it.each([400, 422, 500])("%i gives the generic save message", (status) => {
+		expect(
+			describeApiError(new ApiError("raw backend text", status), ctx)
+		).toEqual({ kind: "generic", message: failed })
+	})
+
+	it("a network failure gives the generic save message", () => {
+		expect(describeApiError(new TypeError("fetch failed"), ctx)).toEqual({
+			kind: "generic",
+			message: failed
+		})
+	})
+})
+
+describe.each(LOOKUPS)("deleting a %s", (lookup, item) => {
+	const ctx = { action: "deleteLookup", lookup, name: "Nubank" } as const
+	const failed = `Couldn't delete the ${item}. Try again.`
+
+	it("409 says it is still in use", () => {
+		const envelopes = lookup === "category" ? " or envelope" : ""
+		expect(describeApiError(new ApiError("in use", 409), ctx)).toEqual({
+			kind: "inUse",
+			message: `Nubank is still in use by a recurring bill, or by an expense${envelopes} in the current or a future month. Change or remove those first.`
+		})
+	})
+
+	it("404 counts as deleted, with no message", () => {
+		expect(describeApiError(new ApiError("gone", 404), ctx)).toEqual({
+			kind: "alreadyDeleted",
+			message: ""
+		})
+	})
+
+	it.each([400, 422, 500])("%i gives the generic delete message", (status) => {
+		expect(
+			describeApiError(new ApiError("raw backend text", status), ctx)
+		).toEqual({ kind: "generic", message: failed })
+	})
+
+	it("a network failure gives the generic delete message", () => {
+		expect(getApiErrorMessage(new TypeError("fetch failed"), ctx)).toBe(failed)
+	})
+})
+
+describe("isAlreadyDeleted", () => {
+	it("is true only for a 404", () => {
+		expect(isAlreadyDeleted(new ApiError("gone", 404))).toBe(true)
+		expect(isAlreadyDeleted(new ApiError("boom", 500))).toBe(false)
+		expect(isAlreadyDeleted(new Error("x"))).toBe(false)
 	})
 })
