@@ -148,8 +148,12 @@ export function describeApiError(
 ): DescribedLookupError
 export function describeApiError(
 	error: unknown,
-	context: ApiErrorContext
+	context: Exclude<ApiErrorContext, LookupErrorContext>
 ): DescribedApiError
+export function describeApiError(
+	error: unknown,
+	context: ApiErrorContext
+): DescribedApiError | DescribedLookupError
 export function describeApiError(
 	error: unknown,
 	context: ApiErrorContext
