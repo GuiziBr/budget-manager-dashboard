@@ -432,6 +432,22 @@ export const translations = {
 		envelopeGone: "This envelope no longer exists.",
 		futureDate: "The purchase date can't be in the future.",
 		generic: "Something went wrong. Try again.",
+		lookup: {
+			names: {
+				category: { item: "category", withArticle: "A category" },
+				paymentType: { item: "payment type", withArticle: "A payment type" },
+				bank: { item: "bank", withArticle: "A bank" },
+				store: { item: "store", withArticle: "A store" }
+			},
+			duplicateName: "{aItem} named '{name}' already exists.",
+			itemGone: "This {item} no longer exists.",
+			saveFailed: "Couldn't save the {item}. Try again.",
+			deleteFailed: "Couldn't delete the {item}. Try again.",
+			inUse:
+				"{name} is still in use by a recurring bill, or by an expense in the current or a future month. Change or remove those first.",
+			inUseCategory:
+				"{name} is still in use by a recurring bill, or by an expense or envelope in the current or a future month. Change or remove those first."
+		},
 		fields: {
 			category: "Category",
 			paymentType: "Payment type",

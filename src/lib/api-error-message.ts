@@ -17,9 +17,15 @@ export type ApiErrorContext =
 	| { action: "deleteEnvelope" }
 	| { action: "saveExpense" }
 	| { action: "changePlanAmount" }
+	| { action: "saveLookup"; lookup: LookupField; name: string }
+	| { action: "deleteLookup"; lookup: LookupField; name: string }
 	| { action: "mutate" }
 
 export type ApiErrorKind =
+	| "duplicateName"
+	| "inUse"
+	| "lookupItemGone"
+	| "alreadyDeleted"
 	| "monthExists"
 	| "monthNotEmpty"
 	| "envelopeExists"
@@ -39,8 +45,21 @@ export type ApiErrorField = LookupField | "purchasedAt"
 export interface DescribedApiError {
 	kind: ApiErrorKind
 	message: string
-	/** The form field to attach the message to, for `bankRequired`, `futureDate` and `lookupGone`. */
+	/** The form field to attach the message to, for `bankRequired`, `futureDate`, and `lookupGone`. */
 	field?: ApiErrorField
+}
+
+/** The contexts of the Settings lists. */
+export type LookupErrorContext = Extract<
+	ApiErrorContext,
+	{ action: "saveLookup" | "deleteLookup" }
+>
+
+/** What a Settings error says; `duplicateName` points at the form's Name field. */
+export interface DescribedLookupError {
+	kind: ApiErrorKind
+	message: string
+	field?: "name"
 }
 
 const LOOKUP_ENTITIES: Record<string, LookupField> = {
@@ -70,6 +89,54 @@ export function isMonthClosedError(error: unknown): boolean {
 	return error instanceof ApiError && error.status === 422
 }
 
+/** A 404 on a lookup delete: it is already gone, which counts as deleted. */
+export function isAlreadyDeleted(error: unknown): boolean {
+	return error instanceof ApiError && error.status === 404
+}
+
+function describeLookupError(
+	error: unknown,
+	context: LookupErrorContext
+): DescribedLookupError {
+	const { lookup, name } = context
+	const names = errors.lookup.names[lookup]
+	const status = error instanceof ApiError ? error.status : undefined
+
+	if (context.action === "saveLookup") {
+		if (status === 409) {
+			return {
+				kind: "duplicateName",
+				message: fill(errors.lookup.duplicateName, {
+					aItem: names.withArticle,
+					name
+				}),
+				field: "name"
+			}
+		}
+		if (status === 404) {
+			return {
+				kind: "lookupItemGone",
+				message: fill(errors.lookup.itemGone, { item: names.item })
+			}
+		}
+		return {
+			kind: "generic",
+			message: fill(errors.lookup.saveFailed, { item: names.item })
+		}
+	}
+
+	if (status === 409) {
+		const template =
+			lookup === "category" ? errors.lookup.inUseCategory : errors.lookup.inUse
+		return { kind: "inUse", message: fill(template, { name }) }
+	}
+	if (status === 404) return { kind: "alreadyDeleted", message: "" }
+	return {
+		kind: "generic",
+		message: fill(errors.lookup.deleteFailed, { item: names.item })
+	}
+}
+
 /**
  * Maps a backend error to the message in the Month spec §4, using what the user was
  * doing to tell apart responses that share a status. Anything unmatched, including
@@ -77,8 +144,24 @@ export function isMonthClosedError(error: unknown): boolean {
  */
 export function describeApiError(
 	error: unknown,
+	context: LookupErrorContext
+): DescribedLookupError
+export function describeApiError(
+	error: unknown,
+	context: Exclude<ApiErrorContext, LookupErrorContext>
+): DescribedApiError
+export function describeApiError(
+	error: unknown,
 	context: ApiErrorContext
-): DescribedApiError {
+): DescribedApiError | DescribedLookupError
+export function describeApiError(
+	error: unknown,
+	context: ApiErrorContext
+): DescribedApiError | DescribedLookupError {
+	if (context.action === "saveLookup" || context.action === "deleteLookup") {
+		return describeLookupError(error, context)
+	}
+
 	if (!(error instanceof ApiError)) return generic()
 
 	const { status, message } = error
