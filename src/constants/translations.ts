@@ -28,6 +28,16 @@ export const translations = {
 			more: "More"
 		}
 	},
+	settings: {
+		tabsLabel: "Settings sections",
+		tabs: {
+			categories: "Categories",
+			"payment-types": "Payment types",
+			banks: "Banks",
+			stores: "Stores",
+			appearance: "Appearance"
+		}
+	},
 	comingSoon: {
 		title: "Coming soon",
 		description: "This screen is not available yet."

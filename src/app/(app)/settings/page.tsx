@@ -1,5 +1,10 @@
-import { ComingSoon } from "@/components/ComingSoon"
+import { Suspense } from "react"
+import { SettingsScreen } from "@/components/settings/SettingsScreen"
 
 export default function SettingsPage() {
-	return <ComingSoon />
+	return (
+		<Suspense>
+			<SettingsScreen />
+		</Suspense>
+	)
 }
