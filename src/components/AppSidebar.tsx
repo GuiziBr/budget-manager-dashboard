@@ -113,7 +113,7 @@ function SidebarItem({
 					>
 						<ul
 							aria-label={translations.settings.sectionsLabel}
-							className="min-h-0 space-y-1 overflow-hidden"
+							className="ml-[21px] min-h-0 space-y-1 overflow-hidden border-l border-sidebar-border pl-3"
 						>
 							{item.children.map((child) => {
 								const isChildActive = isNavItemActive(pathname, child.href)
@@ -122,7 +122,7 @@ function SidebarItem({
 										<Link
 											href={child.href}
 											aria-current={isChildActive ? "page" : undefined}
-											className={cn(itemClass(isChildActive), "h-9 pl-10")}
+											className={cn(itemClass(isChildActive), "h-9")}
 										>
 											{child.label}
 										</Link>
