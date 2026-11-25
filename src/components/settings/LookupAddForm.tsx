@@ -104,7 +104,7 @@ export function LookupAddForm({
 				placeholder={t.add.placeholders[lookup]}
 				autoComplete="off"
 				error={error}
-				className="sm:flex-1"
+				className="sm:w-1/2 sm:flex-none"
 				{...register("name")}
 			/>
 			{flagField && (
