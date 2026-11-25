@@ -36,7 +36,12 @@ export const translations = {
 	},
 	settings: {
 		sectionsLabel: "Settings sections",
-		back: "Back to Settings"
+		back: "Back to Settings",
+		form: {
+			validation: {
+				name: "Enter a name"
+			}
+		}
 	},
 	comingSoon: {
 		title: "Coming soon",

@@ -1,8 +1,16 @@
 import { expectTypeOf, test } from "vitest"
-import type { Bank } from "./bank"
-import type { Category } from "./category"
-import type { PaymentType } from "./payment-type"
-import type { Store } from "./store"
+import type { Bank, CreateBankInput, UpdateBankInput } from "./bank"
+import type {
+	Category,
+	CreateCategoryInput,
+	UpdateCategoryInput
+} from "./category"
+import type {
+	CreatePaymentTypeInput,
+	PaymentType,
+	UpdatePaymentTypeInput
+} from "./payment-type"
+import type { CreateStoreInput, Store, UpdateStoreInput } from "./store"
 
 const stamps = { createdAt: "", updatedAt: "" }
 
@@ -38,4 +46,27 @@ test("Bank and Store share one shape", () => {
 	expectTypeOf(shape).toExtend<Bank>()
 	expectTypeOf(shape).toExtend<Store>()
 	expectTypeOf<Bank>().toEqualTypeOf<Store>()
+})
+
+test("the lookup inputs match the API bodies", () => {
+	expectTypeOf<CreateCategoryInput>().toEqualTypeOf<{
+		name: string
+		hasBudgetEnvelope: boolean
+	}>()
+	expectTypeOf<UpdateCategoryInput>().toEqualTypeOf<{
+		name?: string
+		hasBudgetEnvelope?: boolean
+	}>()
+	expectTypeOf<CreatePaymentTypeInput>().toEqualTypeOf<{
+		name: string
+		hasStatement: boolean
+	}>()
+	expectTypeOf<UpdatePaymentTypeInput>().toEqualTypeOf<{
+		name?: string
+		hasStatement?: boolean
+	}>()
+	expectTypeOf<CreateBankInput>().toEqualTypeOf<{ name: string }>()
+	expectTypeOf<UpdateBankInput>().toEqualTypeOf<{ name?: string }>()
+	expectTypeOf<CreateStoreInput>().toEqualTypeOf<{ name: string }>()
+	expectTypeOf<UpdateStoreInput>().toEqualTypeOf<{ name?: string }>()
 })
