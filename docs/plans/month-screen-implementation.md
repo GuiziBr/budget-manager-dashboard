@@ -31,7 +31,7 @@ Related: [Month spec](../specs/month-screen.md) · [Backlog](../specs/todo.md) �
 | T-06 | Sort params for the expenses API (`lib/expense-sort.ts`) | 0 | M-06 | T-01 | S | — |
 | T-07 | API error messages (`lib/api-error-message.ts`) | 0 | §4 | T-02 | S | — |
 | T-08 | UI primitives: Card, Badge, Checkbox, Progress, Skeleton | 0 | — | — | M | — |
-| T-09 | Navigation: Month, Recurring, Settings | 0 | A-01, A-02 | — | S | — |
+| T-09 | Navigation: Month, Recurring, Management | 0 | A-01, A-02 | — | S | — |
 | T-10 | Lookup hooks (categories, payment types, banks, stores) | 1 Data | §5 | T-02 | S | — |
 | T-11 | Budget period hooks | 1 | M-01 | T-02 | S | — |
 | T-12 | Expense hooks (paged, sorted list) | 1 | M-05, M-06 | T-02, T-06 | M | — |
@@ -121,10 +121,10 @@ Size: **S** ≈ half a day, **M** ≈ a day, **L** ≈ two days.
 - **Done when:** each has a small test, and they match `DESIGN_SYSTEM.md` in both themes.
 
 #### T-09 Navigation
-- **Goal:** the shell lists Month, Recurring and Settings (A-01, A-02).
-- **Includes:** `src/lib/navigation.ts` entries and titles; `DEFAULT_PATH` becomes `/month`; Recurring and Settings pages render an empty "Coming soon" state for now; remove the old `/dashboard` page.
+- **Goal:** the shell lists Month, Recurring and Management (A-01, A-02).
+- **Includes:** `src/lib/navigation.ts` entries and titles; `DEFAULT_PATH` becomes `/month`; Recurring and Management pages render an empty "Coming soon" state for now; remove the old `/dashboard` page.
 - **Done when:** the sidebar and tab bar show the three entries, and the navigation tests are updated.
-- **Note:** moving the theme switch to Settings (A-03) waits for the Settings screen; until then it stays where it is.
+- **Note:** moving the theme switch to Management (A-03) was dropped on 2026-11-24; the switch stays where it is.
 
 ### Phase 1 — Data hooks
 

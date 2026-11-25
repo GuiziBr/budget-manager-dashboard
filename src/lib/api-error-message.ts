@@ -49,13 +49,13 @@ export interface DescribedApiError {
 	field?: ApiErrorField
 }
 
-/** The contexts of the Settings lists. */
+/** The contexts of the Management lists. */
 export type LookupErrorContext = Extract<
 	ApiErrorContext,
 	{ action: "saveLookup" | "deleteLookup" }
 >
 
-/** What a Settings error says; `duplicateName` points at the form's Name field. */
+/** What a Management error says; `duplicateName` points at the form's Name field. */
 export interface DescribedLookupError {
 	kind: ApiErrorKind
 	message: string

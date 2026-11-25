@@ -33,6 +33,16 @@ describe("BottomTabBar", () => {
 		expect(screen.getByRole("button", { name: "More" })).toBeVisible()
 	})
 
+	it("keeps the Management tab current on a settings section", () => {
+		pathname.current = "/management/banks"
+		setup()
+
+		expect(screen.getByRole("link", { name: "Management" })).toHaveAttribute(
+			"aria-current",
+			"page"
+		)
+	})
+
 	it("does not mark a tab as current on another page", () => {
 		pathname.current = "/elsewhere"
 		setup()

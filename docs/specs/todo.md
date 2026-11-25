@@ -19,9 +19,9 @@ Needed alongside the Month screen, since the Month screen lives inside it.
 
 | ID | Feature | Priority | Status |
 |---|---|---|---|
-| A-01 | Navigation: sidebar on desktop, tab bar on the phone, with Month, Recurring and Settings | Must | Ready |
+| A-01 | Navigation: sidebar on desktop, tab bar on the phone, with Month, Recurring and Management | Must | Ready |
 | A-02 | Page title in the top bar for each screen | Must | Ready |
-| A-03 | Remove the More sheet; move the theme switch to Settings. Ships with the Settings screen (S-13): until then the theme switch stays where it is | Must | Ready |
+| A-03 | ~~Remove the More sheet; move the theme switch to Management~~ | — | Dropped (2026-11-24): the theme switch stays at the bottom of the sidebar and in the More sheet |
 
 ### 1.2 Recurring screen
 
@@ -38,9 +38,9 @@ Needed alongside the Month screen, since the Month screen lives inside it.
 | R-09 | Add a recurring bill: opens the expense form of the Month screen (M-16) on the current month | Should | Ready |
 | R-10 | Empty, loading and error states | Must | Ready |
 
-### 1.3 Settings screen
+### 1.3 Management screen
 
-One tab per lookup, plus appearance. Lists are short and not paginated. Full spec: [settings-screen.md](settings-screen.md) (draft 1, 2026-11-17).
+One sidebar submenu entry per lookup (one page each). Lists are short and not paginated. Full spec: [settings-screen.md](settings-screen.md) (draft 2, 2026-11-24).
 
 | ID | Feature | Priority | Status |
 |---|---|---|---|
@@ -56,7 +56,7 @@ One tab per lookup, plus appearance. Lists are short and not paginated. Full spe
 | S-10 | Banks: delete, blocked while in use | Must | Ready |
 | S-11 | Stores: list, add, rename | Must | Ready |
 | S-12 | Stores: delete, blocked while in use | Must | Ready |
-| S-13 | Appearance: light or dark theme | Must | Ready |
+| S-13 | ~~Appearance: light or dark theme~~ | — | Dropped (2026-11-24) |
 | S-14 | Duplicate names rejected with a clear message | Must | Ready (see G-7) |
 
 ---

@@ -22,13 +22,21 @@ export const translations = {
 		items: {
 			month: "Month",
 			recurring: "Recurring",
-			settings: "Settings"
+			settings: "Management"
+		},
+		settingsSections: {
+			categories: "Categories",
+			"payment-types": "Payment types",
+			banks: "Banks",
+			stores: "Stores"
 		},
 		tabs: {
 			more: "More"
 		}
 	},
 	settings: {
+		sectionsLabel: "Management sections",
+		back: "Back to Management",
 		form: {
 			validation: {
 				name: "Enter a name"

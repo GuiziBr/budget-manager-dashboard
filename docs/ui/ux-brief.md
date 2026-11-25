@@ -70,7 +70,7 @@ Frequency decides prominence. The more often a task happens, the fewer steps it 
 | Look at a past month | Often | Month switcher; past months open editable, with a Past month pill |
 | Check installment progress and end date | Occasionally | `n of N` on the row, end month in the row details |
 | Change or cancel a recurring bill | Rarely | Recurring screen |
-| Manage categories, payment types, banks, stores | Rarely | Settings screen |
+| Manage categories, payment types, banks, stores | Rarely | Management screen |
 
 ## 6. Design principles
 
@@ -88,12 +88,12 @@ Frequency decides prominence. The more often a task happens, the fewer steps it 
 |---|---|---|
 | **Month** (home) | The spreadsheet tab: every expense, envelope and income of one month, its summary and its total | Primary |
 | **Recurring** | Recurring templates: amount, start, months running, cancel or reactivate | Primary |
-| **Settings** | Categories, payment types, banks, stores (tabs), and the theme | Primary |
+| **Management** | Categories, payment types, banks, stores (a submenu under Management in the sidebar; a list page on the phone) | Primary |
 
 - **Month switcher** in the Month screen header: previous and next arrows (like moving between tabs) and a popover listing every opened month, plus "Open {next month}".
 - The selected month lives in the URL (`?period=2026-11`) and defaults to the current month **in UTC**, the same reference the backend uses.
 - Dialogs, not screens: expense form (one-time, installment, recurring), income form, envelope form, open-month review, installment plan details, delete confirmations.
-- Phone tab bar: Month, Recurring, Settings. The More sheet is not needed; the theme setting moves to Settings.
+- Phone tab bar: Month, Recurring, Management. The More sheet stays: it holds the theme switch, which also stays at the bottom of the sidebar (decided 2026-11-24).
 
 ## 8. Key flows
 

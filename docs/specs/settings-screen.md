@@ -1,10 +1,12 @@
-# Settings Screen — Functional Specification
+# Management Screen — Functional Specification
 
-Status: draft 1 · Last updated: 2026-11-17
+Status: draft 2 · Last updated: 2026-11-24
 
-The Settings screen is where the budget owner maintains the lists the rest of the app draws from (categories, payment types, banks and stores) and chooses the theme. It is used rarely, but without it a new bank or store can't be added from the app.
+The Management screen is where the budget owner maintains the lists the rest of the app draws from (categories, payment types, banks and stores). It is used rarely, but without it a new bank or store can't be added from the app.
 
 The forms and confirmations opened from this screen are specified here, because they are only reachable from it.
+
+The menu entry is titled **Management** (it was "Settings"). The route is `/management` (it was `/settings`); the code and these file names keep the old name.
 
 Related: [UX brief](../ui/ux-brief.md) · [Software specification](../software_specification.md) · [API docs](../APIs/api-reference.md) · [Month spec](month-screen.md) · [Backlog](todo.md) · [Design system](../../DESIGN_SYSTEM.md)
 
@@ -20,7 +22,7 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 | ID | Feature | Priority | Status |
 |---|---|---|---|
 | **Screen** | | | |
-| S-00 | Tabs: Categories, Payment types, Banks, Stores, Appearance | Must | Ready |
+| S-00 | Management submenu: Categories, Payment types, Banks, Stores | Must | Ready |
 | **Categories** | | | |
 | S-01 | List categories, showing which use envelopes | Must | Ready |
 | S-02 | Add and rename a category | Must | Ready |
@@ -38,7 +40,7 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 | S-11 | List, add and rename stores | Must | Ready |
 | S-12 | Delete a store | Must | Ready (see G-13) |
 | **Appearance** | | | |
-| S-13 | Choose light or dark theme (moved from the More sheet, A-03) | Must | Ready |
+| S-13 | ~~Choose light or dark theme in Management~~ | — | Dropped (2026-11-24): the theme switch stays at the bottom of the sidebar, and in the More sheet on the phone |
 | **Rules across the screen** | | | |
 | S-14 | Duplicate names are rejected with a clear message | Must | Ready (see G-7) |
 
@@ -60,19 +62,22 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 
 ### Screen
 
-#### S-00 Tabs
+#### S-00 Management submenu
 
 *As the budget owner, I want one place for every list, so I don't hunt through the app to add a bank.*
 
 **How it works**
-1. The page title is "Settings". Below it, five tabs: **Categories**, **Payment types**, **Banks**, **Stores**, **Appearance**.
-2. The selected tab is kept in the address (`?tab=banks`), so a link or the back button returns to it. Without it, Categories is shown. An unknown value falls back to Categories.
-3. Each lookup tab has the same layout (S-01): a header with the tab's **Add** button and a list below it, inside one card.
-4. On the phone the tabs scroll sideways; nothing else scrolls horizontally.
+1. **Management** in the sidebar has a submenu: **Categories**, **Payment types**, **Banks**, **Stores**. It is shown while any Management page is open and hidden elsewhere. The current section is highlighted.
+2. Each section is its own page, so a link and the back button return to it: `/management/categories`, `/management/payment-types`, `/management/banks`, `/management/stores`. An unknown section is a 404.
+3. Clicking **Management** in the sidebar only shows or hides the submenu (an arrow beside it points up when open, down when closed, and the height animates); it doesn't open a page. The submenu opens by itself when you arrive in a section, and can be collapsed by hand. The page title is the section's name.
+4. The phone has no sidebar. The **Management** tab opens `/management`, a list of the four sections; each section page has a **Back to Management** link at the top (hidden on desktop).
+5. Each section has the same layout (S-01): a header with the section's **Add** button and a list below it, inside one card.
+6. There is no Appearance section: the theme switch stays where it is (S-13 dropped).
 
 **Acceptance criteria**
-- *Given* no `tab` in the address, *when* I open Settings, *then* Categories is shown.
-- *Given* I tap Banks, *then* the address reads `?tab=banks` and Back returns to the previous tab.
+- *Given* I click Management in the sidebar, *then* the submenu opens or closes and the page doesn't change.
+- *Given* I click Banks in the submenu, *then* the address reads `/management/banks` and Back returns to the previous section.
+- *Given* the phone, *when* I tap the Management tab, *then* I see the four sections, and opening one shows a link back to the list.
 
 ### Lookup lists (S-01, S-05, S-09, S-11)
 
@@ -112,7 +117,7 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 **Rules**
 - The name is trimmed and can't be empty. The API documents no maximum length; the form follows the API.
 - Renaming changes the name wherever the item is shown, including past expenses, because expenses show the item's current name.
-- The form closes when the tab changes. Only one panel is open at a time.
+- The form closes when the section changes (it is a different page). Only one panel is open at a time.
 - Finish & add another isn't offered: items are added rarely.
 
 **When something goes wrong**
@@ -176,16 +181,9 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 - *Given* an unused bank, *when* I confirm the delete, *then* it leaves the list and the expense form's bank select.
 - *Given* a category used by a current-month expense, *when* I confirm the delete, *then* the in-use message shows and the category stays.
 
-### Appearance (S-13)
+### Appearance (S-13) — dropped
 
-*As the budget owner, I want to choose light or dark.*
-
-- The **Appearance** tab holds the theme choice, with the same options as the current theme switch, applied at once and remembered on this device as today.
-- Shipping this removes the theme switch from its current place and the **More** sheet with it (A-03): the phone tab bar keeps Month, Recurring and Settings, and `MORE_NAV_ITEMS` and the code that opens the sheet go away.
-
-**Acceptance criteria**
-- *Given* the Appearance tab, *when* I pick dark, *then* the whole app is dark and stays dark after a reload.
-- *Given* the phone, *then* the tab bar shows three tabs and no More button.
+Decided 2026-11-24: the theme switch stays at the bottom of the sidebar, and in the **More** sheet on the phone. There is no Appearance section, and the More sheet stays (A-03 is dropped with it).
 
 ### S-14 Duplicate names
 
@@ -204,7 +202,7 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 - **Editing is always allowed.** There are no read-only states on this screen.
 - **Strings** live in `src/constants/translations.ts`; colours only through tokens.
 - **Cache.** A change invalidates the lookup's query key, so the Month screen's forms show it without a reload. A **rename** also invalidates the expenses (`EXPENSES_QUERY_KEY`), because each expense row carries the names it shows; without that, rows already cached would keep the old name until they were read again. The lists use the existing 10-minute cache otherwise (T-10).
-- **Layout.** Checked in light and dark, on desktop and at 390px, with nothing scrolling sideways except the tab strip.
+- **Layout.** Checked in light and dark, on desktop and at 390px, with nothing scrolling sideways.
 
 ## 5. Backend endpoints used
 
@@ -234,7 +232,8 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 |---|---|
 | Form shell for add and edit | A panel or sheet, like the other forms, rather than editing in the row. Consistent, and room for the switches' hints |
 | Switches in the list | Not inline. A flag with consequences (envelopes, bank rule) changes through the form, where the hint is |
-| Appearance as a tab | A fifth tab, as in the UX brief ("tabs, and the theme"), rather than a separate section above the tabs |
+| Sections as a submenu | **Decided 2026-11-24:** a submenu under Management in the sidebar, one page per section, instead of tabs on one page. On the phone, a list page at `/management` |
+| Appearance | **Decided 2026-11-24:** dropped. The theme switch stays at the bottom of the sidebar and in the More sheet |
 | Name check ignoring case | Yes, before sending (S-14) |
 
 Out-of-scope items and backend gaps for the whole app are tracked in [todo.md](todo.md).
