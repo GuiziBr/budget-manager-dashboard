@@ -1,6 +1,6 @@
 # Settings Screen — Implementation Plan
 
-Status: draft 1 · Last updated: 2026-11-17
+Status: draft 2 · Last updated: 2026-11-24
 
 Breaks the [Settings screen spec](../specs/settings-screen.md) into small tasks. Each task is one pull request to `development`, sized to be reviewed in one sitting. Task IDs start with **ST-** so they don't clash with the Month plan's T- numbers.
 
@@ -28,13 +28,13 @@ Related: [Settings spec](../specs/settings-screen.md) · [Month plan](month-scre
 | ST-01 | Lookup error messages (`lib/api-error-message.ts`) | 0 Foundations | S-02, S-04, S-14 | — | S | G-7, G-13 |
 | ST-02 | Lookup form rules (`lib/lookup-form.ts`) | 0 | S-02, S-14 | — | S | G-7, G-15 |
 | ST-03 | Lookup mutation hooks | 1 Data | S-02 to S-12 | — | M | — |
-| ST-04 | Settings route and tabs | 2 Read-only screen | S-00 | — | S | — |
+| ST-04 | Settings routes and sidebar submenu | 2 Read-only screen | S-00 | — | S | — |
 | ST-05 | Lookup lists | 2 | S-01, S-05, S-09, S-11 | ST-04 | M | — |
 | ST-06 | Lookup form panel: add and rename | 3 Actions | S-02, S-06, S-09, S-11, S-14 | ST-01, ST-02, ST-03, ST-05 | M | G-7, G-15 |
 | ST-07 | Category flag: Uses envelopes | 3 | S-03 | ST-06 | S | G-14 |
 | ST-08 | Payment type flag: Requires a bank | 3 | S-07 | ST-06 | S | — |
 | ST-09 | Delete a lookup | 3 | S-04, S-08, S-10, S-12 | ST-01, ST-03, ST-05 | M | G-13 |
-| ST-10 | Appearance tab, and remove the More sheet | 4 Appearance | S-13, A-03 | ST-04 | M | — |
+| ST-10 | ~~Appearance tab, and remove the More sheet~~ | 4 Appearance | S-13, A-03 | — | — | Dropped 2026-11-24 |
 | ST-11 | Final pass: themes, 390px, accessibility, clean-up | 5 Polish | all | everything | S | G-7 (docs) |
 
 Size: **S** ≈ half a day, **M** ≈ a day.
@@ -77,14 +77,19 @@ Size: **S** ≈ half a day, **M** ≈ a day.
 
 ### Phase 2 — Read-only Settings screen
 
-#### ST-04 Settings route and tabs (S-00)
-- **Includes:** `src/app/(app)/settings/page.tsx` replacing the "Coming soon" state; a `SettingsScreen` with the `tabs.tsx` primitive: **Categories**, **Payment types**, **Banks**, **Stores**, **Appearance**; the selected tab read from and written to `?tab=` (unknown value → Categories; each change adds a history entry); the tab strip scrolls sideways on the phone. The panels of the tabs are empty placeholders until ST-05 and ST-10.
-- **Done when:** the S-00 acceptance criteria pass: no `tab` shows Categories, tapping Banks writes `?tab=banks`, and Back returns to the previous tab.
+#### ST-04 Settings routes and sidebar submenu (S-00)
+- **Status: built (2026-11-24), PR #107.** First built as tabs (`?tab=`), then changed the same day to a sidebar submenu, and Appearance was dropped (see ST-10).
+- **Includes:**
+  - `src/lib/navigation.ts`: `SETTINGS_SECTIONS` (Categories, Payment types, Banks, Stores) as `children` of the Settings item, plus `findSettingsSection`, `isNavItemWithinActive`, `navItemLandingHref`; `getPageTitle` returns the section's name on a section page;
+  - one page per section, `src/app/(app)/settings/[section]/page.tsx` (`generateStaticParams` over the four ids, `dynamicParams = false`, so an unknown section is a 404), rendering an empty `SettingsSection` until ST-05;
+  - `src/app/(app)/settings/page.tsx`: `SettingsIndex`, the list of sections, which is how the phone reaches them;
+  - `AppSidebar`: the Settings entry links to the first section and shows the submenu while any Settings page is open, with the current section highlighted; `BottomTabBar` keeps the Settings tab current on section pages and `SettingsSection` has a **Back to Settings** link on the phone only.
+- **Done when:** the S-00 acceptance criteria pass: Settings opens Categories with the submenu shown, Banks writes `/settings/banks` and Back returns to the previous section, and on the phone the Settings tab lists the sections.
 - **Design:** no `design.pen` frames exist for Settings. Compare with the Month screen's header and cards, and add frames afterwards if wanted.
 
 #### ST-05 Lookup lists (S-01, S-05, S-09, S-11)
-- **Includes:** one `LookupList` used by the four tabs: a card with the tab's **Add** button in the header (does nothing until ST-06), rows sorted with `sortLookups`, the flag **badge** after the name ("Uses envelopes" / "Requires a bank", reusing `badge.tsx`), and a row menu with **Edit** and **Delete** (44px touch target on the phone; the entries do nothing until ST-06 and ST-09). States: skeleton rows while loading, an inline error with **Retry**, and "No {items} yet" with an Add button when the list is empty.
-- **Done when:** the S-01 acceptance criteria pass (Grocery, Hydro, Transport in that order; badge on the category with envelopes), and each tab matches the others in light and dark at 390px.
+- **Includes:** one `LookupList` used by the four sections: a card with the section's **Add** button in the header (does nothing until ST-06), rows sorted with `sortLookups`, the flag **badge** after the name ("Uses envelopes" / "Requires a bank", reusing `badge.tsx`), and a row menu with **Edit** and **Delete** (44px touch target on the phone; the entries do nothing until ST-06 and ST-09). States: skeleton rows while loading, an inline error with **Retry**, and "No {items} yet" with an Add button when the list is empty.
+- **Done when:** the S-01 acceptance criteria pass (Grocery, Hydro, Transport in that order; badge on the category with envelopes), and each section matches the others in light and dark at 390px.
 - **Backend:** none. The lists come whole from `GET /categories`, `/payment-types`, `/banks` and `/stores`.
 
 ### Phase 3 — Actions
@@ -92,11 +97,11 @@ Size: **S** ≈ half a day, **M** ≈ a day.
 #### ST-06 Lookup form panel: add and rename (S-02, S-06, S-09, S-11, S-14)
 - **Includes:**
   - `LookupFormPanel`: the add and edit form on the shell of the income and envelope forms. `DetailsSheet` currently lives in `components/month/`; move it to `components/` in this task, since two screens now use it. Fields per lookup as in the spec (Name\*; the two switches arrive in ST-07 and ST-08). **Save** and **Cancel** only;
-  - add from the tab's Add button (and the empty state); edit from the row menu, prefilled with `lookupToFormValues`; on add every required field is sent (the flags as `false` when off), on edit only the changed fields, and saving with no change closes without a request;
+  - add from the section's Add button (and the empty state); edit from the row menu, prefilled with `lookupToFormValues`; on add every required field is sent (the flags as `false` when off), on edit only the changed fields, and saving with no change closes without a request;
   - success: the panel closes and a toast says "{Name} added" or "{Name} saved";
   - **duplicate names (S-14):** `isDuplicateName` runs only for a new or changed name, never on a flag-only save and never against the item being edited. On a match the form first re-reads the list (the cache may be stale) and marks the Name field red only if the match is still there; otherwise it sends the request. A 409 marks the field too and shows the toast from ST-01. The form keeps what was typed;
   - a 404 on edit shows "This {item} no longer exists.", closes the form and refreshes the list; other failures show the generic toast and keep the form open;
-  - the form closes when the tab changes; one panel at a time.
+  - the form closes when the section changes; one panel at a time.
 - **Done when:** the S-02 and S-14 acceptance criteria pass: adding "Nubank" shows it in the list and in the expense form's bank select, a duplicate marks the field and adds nothing (also for " grocery "), and saving an unchanged item sends no request.
 - **Backend:**
   - **G-7** (name uniqueness, see ST-01): the pre-send check and the 409 handling are both in this task. *To address when reached:* the answer decides whether the pre-send check is stricter than the server (exact-match) or the same (ignoring case); the behaviour on screen stays the same either way, so only the spec's wording changes.
@@ -121,21 +126,15 @@ Size: **S** ≈ half a day, **M** ≈ a day.
 
 ### Phase 4 — Appearance
 
-#### ST-10 Appearance tab, and remove the More sheet (S-13, A-03)
-- **Includes:**
-  - the **Appearance** tab with the light / dark choice, using `useTheme` (`theme`, `toggleTheme`) and the existing storage in `lib/theme.ts`; applied at once and kept across reloads as today;
-  - remove the theme toggles from `AppSidebar` (`ThemeToggle`) and from `BottomTabBar` (the More sheet and its button);
-  - clean up the navigation: `MORE_NAV_ITEMS` and `isMoreTabActive` in `src/lib/navigation.ts`, the `navigation.tabs.more` and `theme.switchTo*` strings that no longer have a user (keep what the Appearance tab uses), and the tests that covered them.
-- **Done when:** the S-13 acceptance criteria pass: picking dark makes the whole app dark and it stays dark after a reload; the phone's tab bar shows three tabs and no More button; the sidebar has no theme toggle. The navigation and tab bar tests are updated.
-- **Note:** the theme is only two values (`light` | `dark`, default dark), so the tab offers two choices, not "system". Adding a system option would be a separate decision.
-- **Backend:** none.
+#### ST-10 Appearance — dropped (S-13, A-03)
+- **Decided 2026-11-24:** no Appearance section. The theme switch stays at the bottom of the sidebar (`ThemeToggle`) and in the phone's More sheet, so nothing in `AppSidebar`, `BottomTabBar`, `MORE_NAV_ITEMS` or the theme strings is removed. Phase 4 is empty.
 
 ### Phase 5 — Polish
 
 #### ST-11 Final pass
 - **Includes:**
-  - keyboard paths: the tabs (arrow keys), the row menu, the form panel with focus trap, Escape and focus return, the delete modal;
-  - the empty, loading and error states of the four tabs in light and dark at 390px, with nothing scrolling sideways except the tab strip;
+  - keyboard paths: the sidebar submenu, the row menu, the form panel with focus trap, Escape and focus return, the delete modal;
+  - the empty, loading and error states of the four sections in light and dark at 390px, with nothing scrolling sideways;
   - unused translations removed;
   - docs aligned: `docs/software_specification.md` line 141 still says an expense can't be updated in a past month (resolved 2026-11-10, BE-3); the case-sensitivity of lookup names (G-7) stated the same way in the software specification and the API docs; todo.md's feature map statuses updated, and the plan and spec statuses set to done;
   - coverage thresholds raised if they went up.
@@ -157,4 +156,4 @@ These don't block any task, but each needs follow-up work once resolved. Each af
 
 ## 5. Open questions
 
-The four decisions in section 7 of the [spec](../specs/settings-screen.md) (panel for add and edit, flags in the form only, Appearance as a fifth tab, case-insensitive name check) are proposals until confirmed. The plan follows them as written; if one changes, ST-05, ST-06 or ST-10 are the tasks that move.
+Three decisions in section 7 of the [spec](../specs/settings-screen.md) (panel for add and edit, flags in the form only, case-insensitive name check) are proposals until confirmed. The plan follows them as written; if one changes, ST-05 or ST-06 move. Two were decided on 2026-11-24: sections are a sidebar submenu with one page each, and there is no Appearance section.

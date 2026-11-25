@@ -124,7 +124,7 @@ Size: **S** ≈ half a day, **M** ≈ a day, **L** ≈ two days.
 - **Goal:** the shell lists Month, Recurring and Settings (A-01, A-02).
 - **Includes:** `src/lib/navigation.ts` entries and titles; `DEFAULT_PATH` becomes `/month`; Recurring and Settings pages render an empty "Coming soon" state for now; remove the old `/dashboard` page.
 - **Done when:** the sidebar and tab bar show the three entries, and the navigation tests are updated.
-- **Note:** moving the theme switch to Settings (A-03) waits for the Settings screen; until then it stays where it is.
+- **Note:** moving the theme switch to Settings (A-03) was dropped on 2026-11-24; the switch stays where it is.
 
 ### Phase 1 — Data hooks
 
