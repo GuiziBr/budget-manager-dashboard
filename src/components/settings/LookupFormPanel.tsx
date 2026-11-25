@@ -39,6 +39,8 @@ interface LookupFormPanelProps {
 	/** Sends the changed fields; resolves when the list has been refreshed. */
 	update: (item: LookupItem, changes: object) => Promise<unknown>
 	returnFocusRef?: RefObject<HTMLElement | null>
+	/** Gets the focus on close when the row's menu button is gone (the rename moved it off the page). */
+	fallbackFocusRef?: RefObject<HTMLElement | null>
 }
 
 /**
@@ -53,7 +55,8 @@ export function LookupFormPanel({
 	items,
 	reload,
 	update,
-	returnFocusRef
+	returnFocusRef,
+	fallbackFocusRef
 }: LookupFormPanelProps) {
 	// While a save is in flight the panel stays, so the user sees whether it worked
 	const [saving, setSaving] = useState(false)
@@ -74,6 +77,7 @@ export function LookupFormPanel({
 			separated
 			description={t.description.replace("{name}", shown?.name ?? "")}
 			returnFocusRef={returnFocusRef}
+			fallbackFocusRef={fallbackFocusRef}
 			fullHeight
 			initialFocus="#lookup-name"
 		>

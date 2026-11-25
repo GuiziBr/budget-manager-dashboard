@@ -33,8 +33,10 @@ function LookupSection({ lookup, query, create, update }: LookupSectionProps) {
 	const [editing, setEditing] = useState<LookupItem | null>(null)
 	const [open, setOpen] = useState(false)
 	const openerRef = useRef<HTMLElement | null>(null)
+	// The list's own container: where focus lands if the renamed row left the page
+	const listRef = useRef<HTMLDivElement>(null)
 	return (
-		<>
+		<div ref={listRef} tabIndex={-1} className="outline-none">
 			<LookupList
 				lookup={lookup}
 				query={query}
@@ -56,8 +58,9 @@ function LookupSection({ lookup, query, create, update }: LookupSectionProps) {
 				reload={async () => (await query.refetch()).data}
 				update={(item, changes) => update({ id: item.id, ...changes })}
 				returnFocusRef={openerRef}
+				fallbackFocusRef={listRef}
 			/>
-		</>
+		</div>
 	)
 }
 

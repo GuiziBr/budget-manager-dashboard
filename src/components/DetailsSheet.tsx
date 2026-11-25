@@ -33,6 +33,8 @@ interface DetailsSheetProps {
 	description: string
 	/** The row or tile that opened the sheet; it gets the focus back on close. */
 	returnFocusRef?: RefObject<HTMLElement | null>
+	/** Takes the focus on close when the opener is gone (its row left the page). */
+	fallbackFocusRef?: RefObject<HTMLElement | null>
 	/** On the phone, fill the screen (a form) instead of stopping at 85% of its height. */
 	fullHeight?: boolean
 	/** A selector inside the panel to focus when it opens, instead of the panel itself (a form's first field). */
@@ -55,6 +57,7 @@ export function DetailsSheet({
 	title,
 	description,
 	returnFocusRef,
+	fallbackFocusRef,
 	fullHeight,
 	initialFocus,
 	children
@@ -76,9 +79,12 @@ export function DetailsSheet({
 				}}
 				onCloseAutoFocus={(event) => {
 					const opener = returnFocusRef?.current
-					if (!opener?.isConnected) return
+					const target = opener?.isConnected
+						? opener
+						: fallbackFocusRef?.current
+					if (!target?.isConnected) return
 					event.preventDefault()
-					opener.focus()
+					target.focus()
 				}}
 				showCloseButton={false}
 				className={cn(
