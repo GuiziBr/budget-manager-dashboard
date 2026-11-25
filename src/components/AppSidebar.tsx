@@ -117,6 +117,7 @@ function SidebarItem({
 						>
 							{item.children.map((child) => {
 								const isChildActive = isNavItemActive(pathname, child.href)
+								const ChildIcon = child.icon
 								return (
 									<li key={child.href} className="first:mt-1">
 										<Link
@@ -124,6 +125,10 @@ function SidebarItem({
 											aria-current={isChildActive ? "page" : undefined}
 											className={cn(itemClass(isChildActive), "h-9")}
 										>
+											<ChildIcon
+												className="size-4 shrink-0"
+												aria-hidden="true"
+											/>
 											{child.label}
 										</Link>
 									</li>

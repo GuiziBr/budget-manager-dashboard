@@ -1,4 +1,13 @@
-import { CalendarDays, type LucideIcon, Repeat, Settings } from "lucide-react"
+import {
+	CalendarDays,
+	CreditCard,
+	Landmark,
+	type LucideIcon,
+	Repeat,
+	Settings,
+	Store,
+	Tags
+} from "lucide-react"
 import { translations } from "@/constants/translations"
 import { formatMonth, type Month } from "@/lib/month"
 
@@ -13,6 +22,7 @@ export interface NavItem {
 export interface SubNavItem {
 	label: string
 	href: string
+	icon: LucideIcon
 }
 
 export interface NavGroup {
@@ -37,11 +47,19 @@ export type SettingsSectionId = (typeof SETTINGS_SECTION_IDS)[number]
 export const settingsSectionHref = (id: SettingsSectionId) =>
 	`${SETTINGS_PATH}/${id}`
 
+const SETTINGS_SECTION_ICONS: Record<SettingsSectionId, LucideIcon> = {
+	categories: Tags,
+	"payment-types": CreditCard,
+	banks: Landmark,
+	stores: Store
+}
+
 export const SETTINGS_SECTIONS: (SubNavItem & { id: SettingsSectionId })[] =
 	SETTINGS_SECTION_IDS.map((id) => ({
 		id,
 		label: translations.navigation.settingsSections[id],
-		href: settingsSectionHref(id)
+		href: settingsSectionHref(id),
+		icon: SETTINGS_SECTION_ICONS[id]
 	}))
 
 export const findSettingsSection = (id: string) =>

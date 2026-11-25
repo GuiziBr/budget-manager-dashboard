@@ -9,20 +9,29 @@ export function SettingsIndex() {
 		<main className="mx-auto flex max-w-[1120px] flex-col gap-3 px-5 lg:h-full">
 			<nav aria-label={translations.settings.sectionsLabel}>
 				<ul className="divide-y divide-border rounded-xl border border-border bg-card">
-					{SETTINGS_SECTIONS.map((section) => (
-						<li key={section.id}>
-							<Link
-								href={section.href}
-								className="flex min-h-12 items-center justify-between px-4 text-sm font-medium text-foreground no-underline outline-none focus-visible:ring-2 focus-visible:ring-ring"
-							>
-								{section.label}
-								<ChevronRight
-									className="size-4 text-muted-foreground"
-									aria-hidden="true"
-								/>
-							</Link>
-						</li>
-					))}
+					{SETTINGS_SECTIONS.map((section) => {
+						const Icon = section.icon
+						return (
+							<li key={section.id}>
+								<Link
+									href={section.href}
+									className="flex min-h-12 items-center justify-between px-4 text-sm font-medium text-foreground no-underline outline-none focus-visible:ring-2 focus-visible:ring-ring"
+								>
+									<span className="flex items-center gap-3">
+										<Icon
+											className="size-4 text-muted-foreground"
+											aria-hidden="true"
+										/>
+										{section.label}
+									</span>
+									<ChevronRight
+										className="size-4 text-muted-foreground"
+										aria-hidden="true"
+									/>
+								</Link>
+							</li>
+						)
+					})}
 				</ul>
 			</nav>
 		</main>

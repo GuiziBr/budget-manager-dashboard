@@ -1,3 +1,4 @@
+import { CreditCard, Landmark, Store, Tags } from "lucide-react"
 import { describe, expect, it } from "vitest"
 import {
 	DEFAULT_PATH,
@@ -60,6 +61,18 @@ describe("navigation", () => {
 			"Stores"
 		])
 		expect(MAIN_NAV_ITEMS[2].children).toBe(SETTINGS_SECTIONS)
+	})
+
+	it("gives each section its icon", () => {
+		const names = Object.fromEntries(
+			SETTINGS_SECTIONS.map((s) => [s.id, s.icon.displayName])
+		)
+		expect(names).toEqual({
+			categories: Tags.displayName,
+			"payment-types": CreditCard.displayName,
+			banks: Landmark.displayName,
+			stores: Store.displayName
+		})
 	})
 
 	it("finds a section by id and rejects an unknown one", () => {
