@@ -3,7 +3,7 @@
 import { DollarSign, Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
-import { DetailsField, DetailsSection } from "@/components/month/DetailsSheet"
+import { DetailsField, DetailsSection } from "@/components/DetailsSheet"
 import { Button } from "@/components/ui/button"
 import {
 	Dialog,

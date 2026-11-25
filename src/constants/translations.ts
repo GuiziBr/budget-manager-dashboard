@@ -76,6 +76,14 @@ export const translations = {
 			},
 			nameLabel: "Name"
 		},
+		edit: {
+			title: "Edit {item}",
+			description: "Change the name of {name}.",
+			nameLabel: "Name",
+			saved: "{name} saved",
+			save: "Save",
+			cancel: "Cancel"
+		},
 		form: {
 			validation: {
 				name: "Enter a name"

@@ -3,7 +3,7 @@
 import { DollarSign, Layers } from "lucide-react"
 import { useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
-import { DetailsSheet } from "@/components/month/DetailsSheet"
+import { DetailsSheet } from "@/components/DetailsSheet"
 import { ReviewSalarySection } from "@/components/month/ReviewSalarySection"
 import { ReviewSection } from "@/components/month/ReviewSection"
 import { Badge } from "@/components/ui/badge"

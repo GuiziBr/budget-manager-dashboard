@@ -1,7 +1,7 @@
 "use client"
 
 import { Check, EllipsisVertical, Minus } from "lucide-react"
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { Pagination } from "@/components/Pagination"
 import { SortableHeader } from "@/components/SortableHeader"
 import { Button } from "@/components/ui/button"
@@ -43,8 +43,9 @@ interface LookupListProps {
 	query: LookupQuery
 	/** Sends a new item and resolves once the list is refreshed. */
 	create: (values: LookupFormValues) => Promise<unknown>
-	/** Wired up by the edit (ST-06) and delete (ST-09) tasks. */
-	onEdit?: (item: LookupItem) => void
+	/** Gets the row menu's button too, to hand the focus back when the panel closes. */
+	onEdit?: (item: LookupItem, opener: HTMLElement | null) => void
+	/** Wired up by the delete task (ST-09). */
 	onDelete?: (item: LookupItem) => void
 }
 
@@ -73,9 +74,10 @@ function LookupRow({
 }: {
 	item: LookupItem
 	hasFlag: boolean
-	onEdit?: (item: LookupItem) => void
+	onEdit?: (item: LookupItem, opener: HTMLElement | null) => void
 	onDelete?: (item: LookupItem) => void
 }) {
+	const triggerRef = useRef<HTMLButtonElement>(null)
 	return (
 		<tr className="border-border border-b last:border-b-0">
 			<td className={`${cell} truncate font-medium`}>{item.name}</td>
@@ -94,6 +96,7 @@ function LookupRow({
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
 						<button
+							ref={triggerRef}
 							type="button"
 							aria-label={t.rowActions.replace("{name}", item.name)}
 							className="inline-flex size-11 cursor-pointer items-center justify-center rounded text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:size-8"
@@ -102,7 +105,9 @@ function LookupRow({
 						</button>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent align="end">
-						<DropdownMenuItem onSelect={() => onEdit?.(item)}>
+						<DropdownMenuItem
+							onSelect={() => onEdit?.(item, triggerRef.current)}
+						>
 							{t.edit}
 						</DropdownMenuItem>
 						<DropdownMenuItem
