@@ -1,10 +1,5 @@
-import { Suspense } from "react"
-import { SettingsScreen } from "@/components/settings/SettingsScreen"
+import { SettingsIndex } from "@/components/settings/SettingsIndex"
 
 export default function SettingsPage() {
-	return (
-		<Suspense>
-			<SettingsScreen />
-		</Suspense>
-	)
+	return <SettingsIndex />
 }

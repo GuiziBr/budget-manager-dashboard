@@ -24,19 +24,19 @@ export const translations = {
 			recurring: "Recurring",
 			settings: "Settings"
 		},
+		settingsSections: {
+			categories: "Categories",
+			"payment-types": "Payment types",
+			banks: "Banks",
+			stores: "Stores"
+		},
 		tabs: {
 			more: "More"
 		}
 	},
 	settings: {
-		tabsLabel: "Settings sections",
-		tabs: {
-			categories: "Categories",
-			"payment-types": "Payment types",
-			banks: "Banks",
-			stores: "Stores",
-			appearance: "Appearance"
-		}
+		sectionsLabel: "Settings sections",
+		back: "Back to Settings"
 	},
 	comingSoon: {
 		title: "Coming soon",

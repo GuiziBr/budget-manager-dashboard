@@ -15,6 +15,7 @@ import { translations } from "@/constants/translations"
 import {
 	isMoreTabActive,
 	isNavItemActive,
+	isNavItemWithinActive,
 	MOBILE_TAB_ITEMS,
 	MORE_NAV_ITEMS,
 	type NavItem
@@ -84,7 +85,7 @@ export function BottomTabBar({ className }: { className?: string }) {
 		>
 			{MOBILE_TAB_ITEMS.map((item) => {
 				const Icon = item.icon
-				const isActive = isNavItemActive(pathname, item.href)
+				const isActive = isNavItemWithinActive(pathname, item.href)
 				return (
 					<Link
 						key={item.href}

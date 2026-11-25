@@ -5,7 +5,12 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useId } from "react"
 import { translations } from "@/constants/translations"
-import { isNavItemActive, NAV_GROUPS } from "@/lib/navigation"
+import {
+	isNavItemActive,
+	isNavItemWithinActive,
+	NAV_GROUPS,
+	navItemLandingHref
+} from "@/lib/navigation"
 import { cn } from "@/lib/utils"
 import { useTheme } from "@/providers/theme-provider"
 
@@ -80,12 +85,18 @@ export function AppSidebar({ className }: { className?: string }) {
 								{group.items.map((item) => {
 									const Icon = item.icon
 									const isActive = isNavItemActive(pathname, item.href)
+									const isOpen =
+										!!item.children &&
+										isNavItemWithinActive(pathname, item.href)
 									return (
 										<li key={item.href}>
 											<Link
-												href={item.href}
+												href={navItemLandingHref(item)}
 												aria-current={isActive ? "page" : undefined}
-												className={itemClass(isActive)}
+												className={cn(
+													itemClass(isActive),
+													isOpen && !isActive && "text-sidebar-foreground"
+												)}
 											>
 												<Icon
 													className="size-[18px] shrink-0"
@@ -93,6 +104,35 @@ export function AppSidebar({ className }: { className?: string }) {
 												/>
 												{item.label}
 											</Link>
+											{isOpen && item.children && (
+												<ul
+													aria-label={translations.settings.sectionsLabel}
+													className="mt-1 space-y-1"
+												>
+													{item.children.map((child) => {
+														const isChildActive = isNavItemActive(
+															pathname,
+															child.href
+														)
+														return (
+															<li key={child.href}>
+																<Link
+																	href={child.href}
+																	aria-current={
+																		isChildActive ? "page" : undefined
+																	}
+																	className={cn(
+																		itemClass(isChildActive),
+																		"h-9 pl-10"
+																	)}
+																>
+																	{child.label}
+																</Link>
+															</li>
+														)
+													})}
+												</ul>
+											)}
 										</li>
 									)
 								})}

@@ -42,7 +42,32 @@ describe("AppSidebar", () => {
 		)
 		expect(screen.getByRole("link", { name: "Settings" })).toHaveAttribute(
 			"href",
-			"/settings"
+			"/settings/categories"
+		)
+	})
+
+	it("hides the settings submenu outside Settings", () => {
+		setup()
+
+		expect(
+			screen.queryByRole("link", { name: "Banks" })
+		).not.toBeInTheDocument()
+	})
+
+	it("shows the settings submenu under Settings and marks the section", () => {
+		pathname.current = "/settings/banks"
+		setup()
+
+		expect(screen.getAllByRole("link").map((l) => l.textContent)).toEqual(
+			expect.arrayContaining(["Categories", "Payment types", "Banks", "Stores"])
+		)
+		expect(screen.queryByText("Appearance")).not.toBeInTheDocument()
+		expect(screen.getByRole("link", { name: "Banks" })).toHaveAttribute(
+			"aria-current",
+			"page"
+		)
+		expect(screen.getByRole("link", { name: "Stores" })).not.toHaveAttribute(
+			"aria-current"
 		)
 	})
 
