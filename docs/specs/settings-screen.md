@@ -29,9 +29,9 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 | S-03 | Turn "Uses envelopes" on or off | Must | Ready |
 | S-04 | Delete a category | Must | Ready (see G-13) |
 | **Payment types** | | | |
-| S-05 | List payment types, showing which require a bank | Must | Ready |
+| S-05 | List payment types, showing which have a statement | Must | Ready |
 | S-06 | Add and rename a payment type | Must | Ready |
-| S-07 | Turn "Requires a bank" on or off | Must | Ready |
+| S-07 | Turn "Has statement" on or off | Must | Ready |
 | S-08 | Delete a payment type | Must | Ready (see G-13) |
 | **Banks** | | | |
 | S-09 | List, add and rename banks | Must | Ready |
@@ -50,9 +50,9 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 
 | Term | Meaning |
 |---|---|
-| **Lookup** | One of the four lists: category, payment type, bank, store. Each item has a name; categories also have **Uses envelopes** and payment types also have **Requires a bank** |
+| **Lookup** | One of the four lists: category, payment type, bank, store. Each item has a name; categories also have **Uses envelopes** and payment types also have **Has statement** |
 | **Uses envelopes** | The category's `hasBudgetEnvelope`. Months opened from now on get an envelope for it, and envelopes can be added for it (M-23) |
-| **Requires a bank** | The payment type's `hasStatement`. An expense with this payment type must have a bank (M-14) |
+| **Has statement** | The payment type's `hasStatement` (it was labelled "Requires a bank"). An expense with this payment type must have a bank (M-14) |
 | **Actively referenced** | What the backend checks before a delete: a recurring bill that isn't cancelled (or is cancelled on or after the first day of the current UTC month), or an expense in the current or a future month. For categories, also an envelope in the current or a future month. References from past months **don't** block a delete |
 | **Deleted lookup** | A lookup that was deleted. It stays on the past expenses that used it, shown as "Name (deleted)" (M-05, M-17), but can't be picked for new ones |
 
@@ -69,7 +69,7 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 **How it works**
 1. **Management** in the sidebar has a submenu: **Categories**, **Payment types**, **Banks**, **Stores**. It is shown while any Management page is open and hidden elsewhere. The current section is highlighted.
 2. Each section is its own page, so a link and the back button return to it: `/management/categories`, `/management/payment-types`, `/management/banks`, `/management/stores`. An unknown section is a 404.
-3. Clicking **Management** in the sidebar only shows or hides the submenu (an arrow beside it points up when open, down when closed, and the height animates); it doesn't open a page. The submenu opens by itself when you arrive in a section, and can be collapsed by hand. The page title is the section's name.
+3. Clicking **Management** in the sidebar only shows or hides the submenu (an arrow beside it points up when open, down when closed, and the height animates); it doesn't open a page. The submenu opens by itself when you arrive in a section, and can be collapsed by hand. The page title stays "Management" on every section; the section's name is the heading of its add card.
 4. The phone has no sidebar. The **Management** tab opens `/management`, a list of the four sections; each section page has a **Back to Management** link at the top (hidden on desktop).
 5. Each section has the same layout (S-01): a header with the section's **Add** button and a list below it, inside one card.
 6. There is no Appearance section: the theme switch stays where it is (S-13 dropped).
@@ -86,8 +86,8 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 *As the budget owner, I want to see every item of a list at a glance.*
 
 **How it works**
-- Rows are sorted alphabetically (ignoring case). The lists are short and **not paginated** (the API returns them whole).
-- Each row shows the name, and for categories and payment types a **badge** after it: "Uses envelopes" on a category that has them, "Requires a bank" on a payment type that does. Items without the flag show no badge.
+- Rows are sorted alphabetically (ignoring case). The API returns each list whole, and the table paginates it at 8 rows per page.
+- Each row shows the name, and for categories and payment types a flag column ("Uses envelopes", "Has statement") with a check when it is on and a dash when not. Rows also show **Created at** and **Updated at** (blank if never changed). Headers sort; the table shows 8 rows per page.
 - Each row has a menu with **Edit** and **Delete**. On the phone the whole row isn't tappable; the menu button has a 44px touch target.
 - Loading shows skeleton rows. A failed load shows an inline error with **Retry**. An empty list shows "No {items} yet" with an Add button.
 
@@ -100,14 +100,14 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 *As the budget owner, I want to add an item or fix its name.*
 
 **How it works**
-1. **Add** opens a form: a side panel on desktop and a full-height sheet on the phone, the same shell as the income and envelope forms (react-hook-form + Zod, red borders with the reason kept for screen readers, **Save** and **Cancel**).
-2. **Edit** opens the same form prefilled, titled "Edit {item}". Only the changed fields are sent; saving with no change closes without a request.
+1. **Add** is the inline card above the table: the name, the flag checkbox for categories and payment types, and **Save** (react-hook-form + Zod, a red border with the reason kept for screen readers). It clears after a successful save, unless the fields were edited while the save was pending.
+2. **Edit** opens a form in a side panel on desktop and a full-height sheet on the phone, the same shell as the income and envelope forms, with **Save** and **Cancel**, prefilled and titled "Edit {item}". Only the changed fields are sent; saving with no change closes without a request.
 3. Fields:
 
 | Lookup | Fields |
 |---|---|
 | Category | Name\*, **Uses envelopes** (switch, off by default) |
-| Payment type | Name\*, **Requires a bank** (switch, off by default) |
+| Payment type | Name\*, **Has statement** (checkbox in the add card, off by default) |
 | Bank | Name\* |
 | Store | Name\* |
 
@@ -117,7 +117,7 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 **Rules**
 - The name is trimmed and can't be empty. The API documents no maximum length; the form follows the API.
 - Renaming changes the name wherever the item is shown, including past expenses, because expenses show the item's current name.
-- The form closes when the section changes (it is a different page). Only one panel is open at a time.
+- The edit panel closes when the section changes (it is a different page). Only one panel is open at a time.
 - Finish & add another isn't offered: items are added rarely.
 
 **When something goes wrong**
@@ -147,7 +147,7 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 **Acceptance criteria**
 - *Given* a category without envelopes, *when* I turn the switch on and save, *then* its row shows the "Uses envelopes" badge and the category is offered in + Add → Category.
 
-#### S-07 Requires a bank
+#### S-07 Has statement
 
 *As the budget owner, I want payment types like credit cards to demand a bank.*
 
@@ -155,7 +155,7 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 - The expense form uses the new setting as soon as the list is refreshed (the Bank field's asterisk follows the chosen payment type, M-14).
 
 **Acceptance criteria**
-- *Given* "Debit" doesn't require a bank, *when* I turn the switch on, *then* adding an expense paid with Debit marks Bank as required.
+- *Given* "Debit" doesn't have a statement, *when* I turn the switch on, *then* adding an expense paid with Debit marks Bank as required.
 
 ### Delete (S-04, S-08, S-10, S-12)
 
@@ -230,7 +230,7 @@ Decided 2026-11-24: the theme switch stays at the bottom of the sidebar, and in 
 
 | Question | Proposal |
 |---|---|
-| Form shell for add and edit | A panel or sheet, like the other forms, rather than editing in the row. Consistent, and room for the switches' hints |
+| Form shell | **Add:** inline card above the table (changed 2026-11-24, from a reference design). **Edit:** a panel or sheet, like the other forms, rather than editing in the row. Consistent, and room for the flags' hints |
 | Switches in the list | Not inline. A flag with consequences (envelopes, bank rule) changes through the form, where the hint is |
 | Sections as a submenu | **Decided 2026-11-24:** a submenu under Management in the sidebar, one page per section, instead of tabs on one page. On the phone, a list page at `/management` |
 | Appearance | **Decided 2026-11-24:** dropped. The theme switch stays at the bottom of the sidebar and in the More sheet |

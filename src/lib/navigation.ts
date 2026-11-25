@@ -117,9 +117,7 @@ export const isNavItemWithinActive = (pathname: string | null, href: string) =>
 export const isMoreTabActive = (pathname: string | null) =>
 	MORE_NAV_ITEMS.some((item) => isNavItemActive(pathname, item.href))
 
+/** A section page keeps its parent's title: "Management", not the section's name. */
 export const getPageTitle = (pathname: string | null) =>
-	MAIN_NAV_ITEMS.flatMap((item) => item.children ?? []).find(
-		(child) => child.href === pathname
-	)?.label ??
-	MAIN_NAV_ITEMS.find((item) => item.href === pathname)?.label ??
-	translations.navigation.items.month
+	MAIN_NAV_ITEMS.find((item) => isNavItemWithinActive(pathname, item.href))
+		?.label ?? translations.navigation.items.month

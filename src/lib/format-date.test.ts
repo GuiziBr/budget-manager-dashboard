@@ -3,6 +3,7 @@ import {
 	formatDayMonth,
 	formatFullDate,
 	formatMonthYear,
+	formatNumericDate,
 	todayIso
 } from "./format-date"
 
@@ -58,5 +59,18 @@ describe("todayIso", () => {
 	it("stays on the UTC day at the end of the month", () => {
 		expect(todayIso(new Date("2026-11-30T23:59:59Z"))).toBe("2026-11-30")
 		expect(todayIso(new Date("2026-12-01T00:00:00Z"))).toBe("2026-12-01")
+	})
+})
+
+describe("formatNumericDate", () => {
+	it("formats month/day/year in UTC", () => {
+		expect(formatNumericDate("2022-07-06")).toBe("07/06/2022")
+		expect(formatNumericDate("2026-03-05T23:59:59.000Z")).toBe("03/05/2026")
+	})
+
+	it("returns null for a missing or unreadable value", () => {
+		expect(formatNumericDate(null)).toBeNull()
+		expect(formatNumericDate("")).toBeNull()
+		expect(formatNumericDate("nope")).toBeNull()
 	})
 })

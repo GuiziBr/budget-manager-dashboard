@@ -52,3 +52,17 @@ export function formatMonthYear(
 export function todayIso(now: Date = new Date()): string {
 	return now.toISOString().slice(0, 10)
 }
+
+/**
+ * "07/06/2022" (month/day/year) for an ISO date or timestamp, read in UTC. Returns
+ * null for a missing or unreadable value.
+ */
+export function formatNumericDate(
+	value: string | null | undefined
+): string | null {
+	if (!value) return null
+	const date = new Date(value)
+	if (Number.isNaN(date.getTime())) return null
+	const pad = (n: number) => String(n).padStart(2, "0")
+	return `${pad(date.getUTCMonth() + 1)}/${pad(date.getUTCDate())}/${date.getUTCFullYear()}`
+}

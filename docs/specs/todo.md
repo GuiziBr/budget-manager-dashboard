@@ -48,9 +48,9 @@ One sidebar submenu entry per lookup (one page each). Lists are short and not pa
 | S-02 | Categories: add and rename | Must | Ready |
 | S-03 | Categories: turn envelopes on or off (affects months opened afterwards) | Must | Ready |
 | S-04 | Categories: delete, blocked while in use with the reason shown | Must | Ready |
-| S-05 | Payment types: list, with "Requires a bank" shown per type | Must | Ready |
+| S-05 | Payment types: list, with "Has statement" shown per type | Must | Ready |
 | S-06 | Payment types: add and rename | Must | Ready |
-| S-07 | Payment types: turn "Requires a bank" on or off | Must | Ready |
+| S-07 | Payment types: turn "Has statement" on or off | Must | Ready |
 | S-08 | Payment types: delete, blocked while in use | Must | Ready |
 | S-09 | Banks: list, add, rename | Must | Ready |
 | S-10 | Banks: delete, blocked while in use | Must | Ready |

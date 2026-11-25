@@ -32,9 +32,9 @@ Related: [Management spec](../specs/settings-screen.md) · [Month plan](month-sc
 | ST-03 | Lookup mutation hooks | 1 Data | S-02 to S-12 | — | M | — |
 | ST-04 | Management routes and sidebar submenu | 2 Read-only screen | S-00 | — | S | — |
 | ST-05 | Lookup lists | 2 | S-01, S-05, S-09, S-11 | ST-04 | M | — |
-| ST-06 | Lookup form panel: add and rename | 3 Actions | S-02, S-06, S-09, S-11, S-14 | ST-01, ST-02, ST-03, ST-05 | M | G-7, G-15 |
+| ST-06 | Lookup form panel: rename (Edit) | 3 Actions | S-02, S-06, S-09, S-11, S-14 | ST-01, ST-02, ST-03, ST-05 | M | G-7, G-15 |
 | ST-07 | Category flag: Uses envelopes | 3 | S-03 | ST-06 | S | G-14 |
-| ST-08 | Payment type flag: Requires a bank | 3 | S-07 | ST-06 | S | — |
+| ST-08 | Payment type flag: Has statement | 3 | S-07 | ST-06 | S | — |
 | ST-09 | Delete a lookup | 3 | S-04, S-08, S-10, S-12 | ST-01, ST-03, ST-05 | M | G-13 |
 | ST-10 | ~~Appearance tab, and remove the More sheet~~ | 4 Appearance | S-13, A-03 | — | — | Dropped 2026-11-24 |
 | ST-11 | Final pass: themes, 390px, accessibility, clean-up | 5 Polish | all | everything | S | G-7 (docs) |
@@ -82,7 +82,7 @@ Size: **S** ≈ half a day, **M** ≈ a day.
 #### ST-04 Management routes and sidebar submenu (S-00)
 - **Status: built (2026-11-24), PR #107.** First built as tabs (`?tab=`), then changed the same day to a sidebar submenu, and Appearance was dropped (see ST-10).
 - **Includes:**
-  - `src/lib/navigation.ts`: `SETTINGS_SECTIONS` (Categories, Payment types, Banks, Stores) as `children` of the Management item, plus `findSettingsSection`, `isNavItemWithinActive`; `getPageTitle` returns the section's name on a section page;
+  - `src/lib/navigation.ts`: `SETTINGS_SECTIONS` (Categories, Payment types, Banks, Stores) as `children` of the Management item, plus `findSettingsSection`, `isNavItemWithinActive`; `getPageTitle` returns "Management" on a section page too (changed after the first build, which showed the section's name);
   - one page per section, `src/app/(app)/management/[section]/page.tsx` (`generateStaticParams` over the four ids, `dynamicParams = false`, so an unknown section is a 404), rendering an empty `SettingsSection` until ST-05;
   - `src/app/(app)/management/page.tsx`: `SettingsIndex`, the list of sections, which is how the phone reaches them;
   - `AppSidebar`: the Management entry is a button that only shows or hides the submenu (arrow, animated height; no navigation). The submenu opens on arriving in a section, and the current section is highlighted; `BottomTabBar` keeps the Management tab current on section pages and `SettingsSection` has a **Back to Management** link on the phone only.
@@ -90,17 +90,18 @@ Size: **S** ≈ half a day, **M** ≈ a day.
 - **Design:** no `design.pen` frames exist for Management. Compare with the Month screen's header and cards, and add frames afterwards if wanted.
 
 #### ST-05 Lookup lists (S-01, S-05, S-09, S-11)
-- **Includes:** one `LookupList` used by the four sections: a card with the section's **Add** button in the header (does nothing until ST-06), rows sorted with `sortLookups`, the flag **badge** after the name ("Uses envelopes" / "Requires a bank", reusing `badge.tsx`), and a row menu with **Edit** and **Delete** (44px touch target on the phone; the entries do nothing until ST-06 and ST-09). States: skeleton rows while loading, an inline error with **Retry**, and "No {items} yet" with an Add button when the list is empty.
+- **Status: built (2026-11-24), PR #108.** Changed after review of a reference design: each section is an **add card** (name, the flag checkbox for categories and payment types, Save; add is already working, using the ST-03 hook, `isDuplicateName` and the 409 message) above a **table** (Name, flag, Created at, Updated at, row menu) with sortable headers and the Month screen's `Pagination`, 8 rows per page, sorted and paged on the client because the API returns the lists whole (`lib/lookup-table.ts`). This replaces the side panel for **add** planned in ST-06; ST-06 now covers rename only (Edit), and ST-07/ST-08's switches become the checkboxes of the add card (still to add to Edit). The flag shows as a check or dash instead of a badge; `Updated at` is empty when it equals `Created at`.
+- **Includes (original scope, see Status):** one `LookupList` used by the four sections: a card with the section's **Add** button in the header (does nothing until ST-06), rows sorted with `sortLookups`, the flag **badge** after the name ("Uses envelopes" / "Has statement", reusing `badge.tsx`), and a row menu with **Edit** and **Delete** (44px touch target on the phone; the entries do nothing until ST-06 and ST-09). States: skeleton rows while loading, an inline error with **Retry**, and "No {items} yet" with an Add button when the list is empty.
 - **Done when:** the S-01 acceptance criteria pass (Grocery, Hydro, Transport in that order; badge on the category with envelopes), and each section matches the others in light and dark at 390px.
 - **Backend:** none. The lists come whole from `GET /categories`, `/payment-types`, `/banks` and `/stores`.
 
 ### Phase 3 — Actions
 
-#### ST-06 Lookup form panel: add and rename (S-02, S-06, S-09, S-11, S-14)
+#### ST-06 Lookup form panel: rename (S-02, S-06, S-09, S-11, S-14)
 - **Includes:**
-  - `LookupFormPanel`: the add and edit form on the shell of the income and envelope forms. `DetailsSheet` currently lives in `components/month/`; move it to `components/` in this task, since two screens now use it. Fields per lookup as in the spec (Name\*; the two switches arrive in ST-07 and ST-08). **Save** and **Cancel** only;
-  - add from the section's Add button (and the empty state); edit from the row menu, prefilled with `lookupToFormValues`; on add every required field is sent (the flags as `false` when off), on edit only the changed fields, and saving with no change closes without a request;
-  - success: the panel closes and a toast says "{Name} added" or "{Name} saved";
+  - `LookupFormPanel`: the edit form (Add is the inline card above the table, built in ST-05) on the shell of the income and envelope forms. `DetailsSheet` currently lives in `components/month/`; move it to `components/` in this task, since two screens now use it. Fields per lookup as in the spec (Name\*; the two flags arrive in ST-07 and ST-08). **Save** and **Cancel** only;
+  - edit from the row menu, prefilled with `lookupToFormValues`; on edit only the changed fields are sent, and saving with no change closes without a request (add already sends every required field, the flags as `false` when off, from the inline card);
+  - success: the panel closes and a toast says "{Name} saved" (the add card toasts "{Name} added" itself);
   - **duplicate names (S-14):** `isDuplicateName` runs only for a new or changed name, never on a flag-only save and never against the item being edited. On a match the form first re-reads the list (the cache may be stale) and marks the Name field red only if the match is still there; otherwise it sends the request. A 409 marks the field too and shows the toast from ST-01. The form keeps what was typed;
   - a 404 on edit shows "This {item} no longer exists.", closes the form and refreshes the list; other failures show the generic toast and keep the form open;
   - the form closes when the section changes; one panel at a time.
@@ -115,8 +116,8 @@ Size: **S** ≈ half a day, **M** ≈ a day.
 - **Backend:**
   - **G-14** (existing envelopes when turned off): the API docs only say that creating an envelope for a category without the flag returns 400; they don't say what happens to envelopes that already exist, nor whether the flag also affects months already open. The hint above assumes existing envelopes are left alone. *To address when reached:* check against the real API (turn the flag off on a category that has an envelope in the current month, then read the envelopes and try the Month screen's Edit budget and Delete on it). If anything differs, reword the hint and the spec's S-03, and if the envelope becomes unusable add a note in the Month screen's envelope details.
 
-#### ST-08 Payment type flag: Requires a bank (S-07)
-- **Includes:** the **Requires a bank** switch in the payment type form, off by default on Add, with the hint "Expenses paid this way must have a bank. Existing expenses aren't checked again."; on add `hasStatement` is always sent (`false` when off, because the API requires it), on edit only when changed; the expense form's Bank asterisk follows the new setting once the list refreshes (M-14).
+#### ST-08 Payment type flag: Has statement (S-07)
+- **Includes:** the **Has statement** switch in the payment type form, off by default on Add, with the hint "Expenses paid this way must have a bank. Existing expenses aren't checked again."; on add `hasStatement` is always sent (`false` when off, because the API requires it), on edit only when changed; the expense form's Bank asterisk follows the new setting once the list refreshes (M-14).
 - **Done when:** the S-07 acceptance criteria pass: after turning it on for Debit, adding an expense paid with Debit marks Bank as required.
 - **Backend:** none. `PATCH /payment-types/:id` takes `hasStatement` and, per the API docs, doesn't re-validate existing expenses (which the hint says). An edit form for an existing expense whose payment type now requires a bank is answered by the server's 400 (the Month screen already maps it, T-29).
 
@@ -158,4 +159,4 @@ These don't block any task, but each needs follow-up work once resolved. Each af
 
 ## 5. Open questions
 
-Three decisions in section 7 of the [spec](../specs/settings-screen.md) (panel for add and edit, flags in the form only, case-insensitive name check) are proposals until confirmed. The plan follows them as written; if one changes, ST-05 or ST-06 move. Two were decided on 2026-11-24: sections are a sidebar submenu with one page each, and there is no Appearance section.
+Three decisions in section 7 of the [spec](../specs/settings-screen.md) (panel for edit, add inline above the table, flags in the form only, case-insensitive name check) are proposals until confirmed. The plan follows them as written; if one changes, ST-05 or ST-06 move. Two were decided on 2026-11-24: sections are a sidebar submenu with one page each, and there is no Appearance section.

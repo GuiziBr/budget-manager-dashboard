@@ -1,6 +1,10 @@
 import { notFound } from "next/navigation"
 import { SettingsSection } from "@/components/settings/SettingsSection"
-import { findSettingsSection, SETTINGS_SECTION_IDS } from "@/lib/navigation"
+import {
+	findSettingsSection,
+	SETTINGS_SECTION_IDS,
+	type SettingsSectionId
+} from "@/lib/navigation"
 
 export const dynamicParams = false
 
@@ -14,5 +18,5 @@ export default async function SettingsSectionPage({
 }) {
 	const { section } = await params
 	if (!findSettingsSection(section)) notFound()
-	return <SettingsSection />
+	return <SettingsSection section={section as SettingsSectionId} />
 }
