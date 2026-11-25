@@ -3,25 +3,67 @@
 import { ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import { translations } from "@/constants/translations"
-import { useBanks } from "@/hooks/use-banks"
-import { useCategories } from "@/hooks/use-categories"
-import { usePaymentTypes } from "@/hooks/use-payment-types"
-import { useStores } from "@/hooks/use-stores"
+import { useBanks, useCreateBank } from "@/hooks/use-banks"
+import { useCategories, useCreateCategory } from "@/hooks/use-categories"
+import {
+	useCreatePaymentType,
+	usePaymentTypes
+} from "@/hooks/use-payment-types"
+import { useCreateStore, useStores } from "@/hooks/use-stores"
+import { buildCreateLookupInput } from "@/lib/lookup-form"
 import { SETTINGS_PATH, type SettingsSectionId } from "@/lib/navigation"
 import { LookupList } from "./LookupList"
 
-// One component per lookup, so each calls its own hook unconditionally
+// One component per lookup, so each calls its own hooks unconditionally
 function Categories() {
-	return <LookupList lookup="category" query={useCategories()} />
+	const create = useCreateCategory()
+	return (
+		<LookupList
+			lookup="category"
+			query={useCategories()}
+			create={(values) =>
+				create.mutateAsync(buildCreateLookupInput("category", values) as never)
+			}
+		/>
+	)
 }
 function PaymentTypes() {
-	return <LookupList lookup="paymentType" query={usePaymentTypes()} />
+	const create = useCreatePaymentType()
+	return (
+		<LookupList
+			lookup="paymentType"
+			query={usePaymentTypes()}
+			create={(values) =>
+				create.mutateAsync(
+					buildCreateLookupInput("paymentType", values) as never
+				)
+			}
+		/>
+	)
 }
 function Banks() {
-	return <LookupList lookup="bank" query={useBanks()} />
+	const create = useCreateBank()
+	return (
+		<LookupList
+			lookup="bank"
+			query={useBanks()}
+			create={(values) =>
+				create.mutateAsync(buildCreateLookupInput("bank", values) as never)
+			}
+		/>
+	)
 }
 function Stores() {
-	return <LookupList lookup="store" query={useStores()} />
+	const create = useCreateStore()
+	return (
+		<LookupList
+			lookup="store"
+			query={useStores()}
+			create={(values) =>
+				create.mutateAsync(buildCreateLookupInput("store", values) as never)
+			}
+		/>
+	)
 }
 
 const SECTION_LISTS: Record<SettingsSectionId, () => React.JSX.Element> = {

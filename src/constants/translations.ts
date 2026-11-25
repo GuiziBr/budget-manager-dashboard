@@ -38,7 +38,6 @@ export const translations = {
 		sectionsLabel: "Management sections",
 		back: "Back to Management",
 		list: {
-			add: "Add",
 			edit: "Edit",
 			delete: "Delete",
 			retry: "Retry",
@@ -46,16 +45,36 @@ export const translations = {
 			loadError: "Couldn't load the {items}",
 			empty: "No {items} yet",
 			rowActions: "Actions for {name}",
-			badges: {
+			summary: "Showing {from}–{to} of {total} {items}",
+			columns: {
+				name: "Name",
+				createdAt: "Created at",
+				updatedAt: "Updated at"
+			},
+			// Column header and checkbox label of each lookup's flag
+			flags: {
 				category: "Uses envelopes",
 				paymentType: "Requires a bank"
 			},
+			yes: "Yes",
+			no: "No",
 			items: {
 				category: { plural: "categories", title: "Categories" },
 				paymentType: { plural: "payment types", title: "Payment types" },
 				bank: { plural: "banks", title: "Banks" },
 				store: { plural: "stores", title: "Stores" }
 			}
+		},
+		add: {
+			save: "Save",
+			added: "{name} added",
+			placeholders: {
+				category: "Category name",
+				paymentType: "Payment type name",
+				bank: "Bank name",
+				store: "Store name"
+			},
+			nameLabel: "Name"
 		},
 		form: {
 			validation: {

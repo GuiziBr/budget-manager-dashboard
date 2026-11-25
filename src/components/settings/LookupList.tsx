@@ -1,10 +1,10 @@
 "use client"
 
-import { EllipsisVertical, Plus } from "lucide-react"
-import { useMemo } from "react"
-import { Badge } from "@/components/ui/badge"
+import { Check, EllipsisVertical, Minus } from "lucide-react"
+import { useMemo, useState } from "react"
+import { Pagination } from "@/components/Pagination"
+import { SortableHeader } from "@/components/SortableHeader"
 import { Button } from "@/components/ui/button"
-import { Card, CardHeader, CardTitle } from "@/components/ui/card"
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -14,7 +14,19 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { translations } from "@/constants/translations"
 import { getApiErrorMessage } from "@/lib/api-error-message"
-import { type LookupItem, sortLookups } from "@/lib/lookup-form"
+import { formatNumericDate } from "@/lib/format-date"
+import type { LookupFormValues, LookupItem } from "@/lib/lookup-form"
+import {
+	changedAt,
+	DEFAULT_LOOKUP_SORT,
+	type LookupColumn,
+	type LookupSort,
+	lookupFlag,
+	nextLookupSort,
+	pageOf,
+	sortLookupRows
+} from "@/lib/lookup-table"
+import { LookupAddForm } from "./LookupAddForm"
 
 export type LookupKind = keyof typeof translations.settings.list.items
 
@@ -23,95 +35,119 @@ export interface LookupQuery {
 	data?: LookupItem[]
 	isError: boolean
 	error: unknown
-	refetch: () => unknown
+	refetch: () => Promise<{ data?: LookupItem[] }>
 }
 
 interface LookupListProps {
 	lookup: LookupKind
 	query: LookupQuery
-	/** Wired up by the form (ST-06) and delete (ST-09) tasks. */
-	onAdd?: () => void
+	/** Sends a new item and resolves once the list is refreshed. */
+	create: (values: LookupFormValues) => Promise<unknown>
+	/** Wired up by the edit (ST-06) and delete (ST-09) tasks. */
 	onEdit?: (item: LookupItem) => void
 	onDelete?: (item: LookupItem) => void
 }
 
 const t = translations.settings.list
+const cell = "px-3 py-3 text-sm text-foreground md:px-4"
 
-function badgeLabel(item: LookupItem): string | null {
-	if ("hasBudgetEnvelope" in item && item.hasBudgetEnvelope) {
-		return t.badges.category
-	}
-	if ("hasStatement" in item && item.hasStatement) return t.badges.paymentType
-	return null
+function FlagCell({ on }: { on: boolean }) {
+	return on ? (
+		<>
+			<Check className="size-4 text-success" aria-hidden="true" />
+			<span className="sr-only">{t.yes}</span>
+		</>
+	) : (
+		<>
+			<Minus className="size-4 text-muted-foreground" aria-hidden="true" />
+			<span className="sr-only">{t.no}</span>
+		</>
+	)
 }
 
 function LookupRow({
 	item,
+	hasFlag,
 	onEdit,
 	onDelete
 }: {
 	item: LookupItem
+	hasFlag: boolean
 	onEdit?: (item: LookupItem) => void
 	onDelete?: (item: LookupItem) => void
 }) {
-	const badge = badgeLabel(item)
-
 	return (
-		<li className="flex items-center gap-3 border-border border-b px-5 py-2 last:border-b-0">
-			<span className="flex min-w-0 flex-1 items-center gap-2">
-				<span className="truncate font-medium text-[15px] text-foreground">
-					{item.name}
-				</span>
-				{badge && <Badge variant="primary">{badge}</Badge>}
-			</span>
-			<DropdownMenu>
-				<DropdownMenuTrigger asChild>
-					<button
-						type="button"
-						aria-label={t.rowActions.replace("{name}", item.name)}
-						className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:size-8"
-					>
-						<EllipsisVertical className="size-4" aria-hidden="true" />
-					</button>
-				</DropdownMenuTrigger>
-				<DropdownMenuContent align="end">
-					<DropdownMenuItem onSelect={() => onEdit?.(item)}>
-						{t.edit}
-					</DropdownMenuItem>
-					<DropdownMenuItem
-						variant="destructive"
-						onSelect={() => onDelete?.(item)}
-					>
-						{t.delete}
-					</DropdownMenuItem>
-				</DropdownMenuContent>
-			</DropdownMenu>
-		</li>
+		<tr className="border-border border-b last:border-b-0">
+			<td className={`${cell} truncate font-medium`}>{item.name}</td>
+			{hasFlag && (
+				<td className={cell}>
+					<FlagCell on={lookupFlag(item)} />
+				</td>
+			)}
+			<td className={`${cell} text-muted-foreground`}>
+				{formatNumericDate(item.createdAt)}
+			</td>
+			<td className={`${cell} text-muted-foreground`}>
+				{formatNumericDate(changedAt(item))}
+			</td>
+			<td className="w-14 px-2 text-right">
+				<DropdownMenu>
+					<DropdownMenuTrigger asChild>
+						<button
+							type="button"
+							aria-label={t.rowActions.replace("{name}", item.name)}
+							className="inline-flex size-11 cursor-pointer items-center justify-center rounded text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:size-8"
+						>
+							<EllipsisVertical className="size-4" aria-hidden="true" />
+						</button>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent align="end">
+						<DropdownMenuItem onSelect={() => onEdit?.(item)}>
+							{t.edit}
+						</DropdownMenuItem>
+						<DropdownMenuItem
+							variant="destructive"
+							onSelect={() => onDelete?.(item)}
+						>
+							{t.delete}
+						</DropdownMenuItem>
+					</DropdownMenuContent>
+				</DropdownMenu>
+			</td>
+		</tr>
 	)
 }
 
-function AddButton({ onAdd }: { onAdd?: () => void }) {
-	return (
-		<Button variant="outline" className="gap-2" onClick={onAdd}>
-			<Plus className="size-4" aria-hidden="true" />
-			{t.add}
-		</Button>
-	)
-}
-
-/** One lookup (category, payment type, bank or store) as a card with its rows. */
+/**
+ * One lookup (category, payment type, bank or store): a card to add an item, and a card
+ * with the sortable table of items, 8 to a page. The API returns the lists whole, so
+ * sorting and paging happen here.
+ */
 export function LookupList({
 	lookup,
 	query,
-	onAdd,
+	create,
 	onEdit,
 	onDelete
 }: LookupListProps) {
 	const { title, plural } = t.items[lookup]
-	const items = useMemo(
-		() => (query.data ? sortLookups(query.data) : []),
-		[query.data]
+	const hasFlag = lookup === "category" || lookup === "paymentType"
+	const flagLabel = hasFlag ? t.flags[lookup] : ""
+	const [sort, setSort] = useState<LookupSort>(DEFAULT_LOOKUP_SORT)
+	const [requestedPage, setRequestedPage] = useState(1)
+
+	const sorted = useMemo(
+		() => (query.data ? sortLookupRows(query.data, sort) : []),
+		[query.data, sort]
 	)
+	const { rows, page, pages, from, to, total } = pageOf(sorted, requestedPage)
+
+	const toggleSort = (column: string) => {
+		setSort((current) => nextLookupSort(current, column as LookupColumn))
+		setRequestedPage(1)
+	}
+	const indicator = (column: LookupColumn) =>
+		sort.column !== column ? "" : sort.direction === "asc" ? "↑" : "↓"
 
 	let body: React.ReactNode
 	if (query.isError) {
@@ -142,37 +178,96 @@ export function LookupList({
 				<Skeleton className="h-10" />
 			</div>
 		)
-	} else if (items.length === 0) {
+	} else if (total === 0) {
 		body = (
-			<div className="flex flex-col items-center gap-3 px-5 py-8">
-				<p className="text-muted-foreground text-sm">
-					{t.empty.replace("{items}", plural)}
-				</p>
-				<AddButton onAdd={onAdd} />
-			</div>
+			<p className="px-5 py-8 text-center text-muted-foreground text-sm">
+				{t.empty.replace("{items}", plural)}
+			</p>
 		)
 	} else {
 		body = (
-			<ul aria-label={title}>
-				{items.map((item) => (
-					<LookupRow
-						key={item.id}
-						item={item}
-						onEdit={onEdit}
-						onDelete={onDelete}
-					/>
-				))}
-			</ul>
+			<>
+				<div className="overflow-x-auto">
+					<table aria-label={title} className="w-full min-w-[34rem]">
+						<thead>
+							<tr className="border-border border-b bg-background">
+								<SortableHeader
+									column="name"
+									label={t.columns.name}
+									indicator={indicator("name")}
+									onSort={toggleSort}
+								/>
+								{hasFlag && (
+									<SortableHeader
+										column="flag"
+										label={flagLabel}
+										indicator={indicator("flag")}
+										onSort={toggleSort}
+									/>
+								)}
+								<SortableHeader
+									column="createdAt"
+									label={t.columns.createdAt}
+									indicator={indicator("createdAt")}
+									onSort={toggleSort}
+								/>
+								<th
+									scope="col"
+									className="bg-background/60 px-3 py-3 text-left font-semibold text-[13px] text-muted-foreground md:px-4"
+								>
+									{t.columns.updatedAt}
+								</th>
+								<th scope="col" className="w-14 bg-background/60">
+									<span className="sr-only">
+										{t.rowActions.replace("{name}", "")}
+									</span>
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							{rows.map((item) => (
+								<LookupRow
+									key={item.id}
+									item={item}
+									hasFlag={hasFlag}
+									onEdit={onEdit}
+									onDelete={onDelete}
+								/>
+							))}
+						</tbody>
+					</table>
+				</div>
+				<Pagination
+					currentPage={page}
+					setCurrentPage={setRequestedPage}
+					pages={pages}
+					summary={t.summary
+						.replace("{from}", String(from))
+						.replace("{to}", String(to))
+						.replace("{total}", String(total))
+						.replace("{items}", plural)}
+				/>
+			</>
 		)
 	}
 
 	return (
-		<Card>
-			<CardHeader className="border-border border-b px-5 py-3">
-				<CardTitle>{title}</CardTitle>
-				<AddButton onAdd={onAdd} />
-			</CardHeader>
-			{body}
-		</Card>
+		<div className="flex flex-col gap-4">
+			<section className="rounded-xl border border-border bg-card p-5">
+				<h2 className="mb-4 font-semibold text-foreground text-xl">{title}</h2>
+				<LookupAddForm
+					lookup={lookup}
+					items={query.data ?? []}
+					reload={async () => (await query.refetch()).data}
+					create={create}
+				/>
+			</section>
+			<section
+				aria-label={title}
+				className="overflow-hidden rounded-xl border border-border bg-card"
+			>
+				{body}
+			</section>
+		</div>
 	)
 }

@@ -30,12 +30,14 @@ describe("SettingsSection", () => {
 		async (section, path, title) => {
 			const get = vi
 				.spyOn(api, "get")
-				.mockResolvedValue([{ id: "1", name: "Alpha" }])
+				.mockResolvedValue([
+					{ id: "1", name: "Alpha", createdAt: "2022-07-06" }
+				])
 			const { wrapper } = createQueryWrapper()
 			render(<SettingsSection section={section} />, { wrapper })
 			await waitFor(() => expect(screen.getByText("Alpha")).toBeTruthy())
 			expect(get).toHaveBeenCalledWith(path)
-			expect(screen.getByRole("list", { name: title })).toBeTruthy()
+			expect(screen.getByRole("table", { name: title })).toBeTruthy()
 		}
 	)
 })
