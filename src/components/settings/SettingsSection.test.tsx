@@ -7,7 +7,7 @@ describe("SettingsSection", () => {
 	it("links back to the settings list", () => {
 		render(<SettingsSection />)
 		expect(
-			screen.getByRole("link", { name: "Back to Settings" })
+			screen.getByRole("link", { name: "Back to Management" })
 		).toHaveAttribute("href", "/settings")
 	})
 })

@@ -29,7 +29,7 @@ describe("AppSidebar", () => {
 		expect(screen.getByRole("navigation", { name: "Main" })).toBeVisible()
 	})
 
-	it("links to Month, Recurring and Settings", () => {
+	it("links to Month, Recurring and Management", () => {
 		setup()
 
 		expect(screen.getByRole("link", { name: "Month" })).toHaveAttribute(
@@ -40,20 +40,22 @@ describe("AppSidebar", () => {
 			"href",
 			"/recurring"
 		)
-		expect(screen.getByRole("link", { name: "Settings" })).toHaveAttribute(
+		expect(screen.getByRole("link", { name: "Management" })).toHaveAttribute(
 			"href",
 			"/settings/categories"
 		)
 	})
 
-	it("collapses the settings submenu outside Settings", () => {
+	it("collapses the settings submenu outside Management", () => {
 		setup()
 
 		expect(
 			screen.queryByRole("link", { name: "Banks" })
 		).not.toBeInTheDocument()
 		expect(
-			screen.getByRole("button", { name: "Show or hide the Settings submenu" })
+			screen.getByRole("button", {
+				name: "Show or hide the Management submenu"
+			})
 		).toHaveAttribute("aria-expanded", "false")
 	})
 
@@ -61,7 +63,7 @@ describe("AppSidebar", () => {
 		const user = userEvent.setup()
 		setup()
 		const toggle = screen.getByRole("button", {
-			name: "Show or hide the Settings submenu"
+			name: "Show or hide the Management submenu"
 		})
 
 		await user.click(toggle)
@@ -81,14 +83,16 @@ describe("AppSidebar", () => {
 		setup()
 
 		await user.click(
-			screen.getByRole("button", { name: "Show or hide the Settings submenu" })
+			screen.getByRole("button", {
+				name: "Show or hide the Management submenu"
+			})
 		)
 		expect(
 			screen.queryByRole("link", { name: "Banks" })
 		).not.toBeInTheDocument()
 	})
 
-	it("opens the submenu when navigating into Settings", () => {
+	it("opens the submenu when navigating into Management", () => {
 		const view = setup()
 		expect(
 			screen.queryByRole("link", { name: "Banks" })
@@ -103,7 +107,7 @@ describe("AppSidebar", () => {
 		expect(screen.getByRole("link", { name: "Banks" })).toBeVisible()
 	})
 
-	it("shows the settings submenu under Settings and marks the section", () => {
+	it("shows the settings submenu under Management and marks the section", () => {
 		pathname.current = "/settings/banks"
 		setup()
 

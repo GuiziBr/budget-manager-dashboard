@@ -33,11 +33,11 @@ describe("BottomTabBar", () => {
 		expect(screen.getByRole("button", { name: "More" })).toBeVisible()
 	})
 
-	it("keeps the Settings tab current on a settings section", () => {
+	it("keeps the Management tab current on a settings section", () => {
 		pathname.current = "/settings/banks"
 		setup()
 
-		expect(screen.getByRole("link", { name: "Settings" })).toHaveAttribute(
+		expect(screen.getByRole("link", { name: "Management" })).toHaveAttribute(
 			"aria-current",
 			"page"
 		)

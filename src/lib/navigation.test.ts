@@ -22,7 +22,7 @@ describe("navigation", () => {
 		expect(DEFAULT_PATH).toBe("/month")
 	})
 
-	it("lists Month, Recurring and Settings in order", () => {
+	it("lists Month, Recurring and Management in order", () => {
 		expect(MAIN_NAV_ITEMS.map((item) => item.href)).toEqual([
 			MONTH_PATH,
 			RECURRING_PATH,
@@ -31,7 +31,7 @@ describe("navigation", () => {
 		expect(MAIN_NAV_ITEMS.map((item) => item.label)).toEqual([
 			"Month",
 			"Recurring",
-			"Settings"
+			"Management"
 		])
 	})
 
@@ -44,7 +44,7 @@ describe("navigation", () => {
 	it("resolves the page title and falls back to the Month title", () => {
 		expect(getPageTitle(MONTH_PATH)).toBe("Month")
 		expect(getPageTitle(RECURRING_PATH)).toBe("Recurring")
-		expect(getPageTitle(SETTINGS_PATH)).toBe("Settings")
+		expect(getPageTitle(SETTINGS_PATH)).toBe("Management")
 		expect(getPageTitle("/unknown")).toBe("Month")
 	})
 
@@ -53,7 +53,7 @@ describe("navigation", () => {
 		expect(getPageTitle("/settings/payment-types")).toBe("Payment types")
 	})
 
-	it("lists the four settings sections under Settings, without Appearance", () => {
+	it("lists the four settings sections under Management, without Appearance", () => {
 		expect(SETTINGS_SECTIONS.map((s) => s.label)).toEqual([
 			"Categories",
 			"Payment types",

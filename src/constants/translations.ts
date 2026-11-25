@@ -22,7 +22,7 @@ export const translations = {
 		items: {
 			month: "Month",
 			recurring: "Recurring",
-			settings: "Settings"
+			settings: "Management"
 		},
 		toggleSubmenu: "Show or hide the {item} submenu",
 		settingsSections: {
@@ -36,8 +36,8 @@ export const translations = {
 		}
 	},
 	settings: {
-		sectionsLabel: "Settings sections",
-		back: "Back to Settings",
+		sectionsLabel: "Management sections",
+		back: "Back to Management",
 		form: {
 			validation: {
 				name: "Enter a name"
