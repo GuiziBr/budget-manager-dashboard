@@ -53,6 +53,21 @@ describe("LookupAddForm", () => {
 		expect(screen.getByRole("textbox", { name: "Name" })).toHaveValue("")
 	})
 
+	it("keeps what was typed while the save was pending", async () => {
+		const { create } = setup({ items: [] })
+		let finish: (value: unknown) => void = () => {}
+		create.mockReturnValue(new Promise((resolve) => (finish = resolve)))
+		await type("Hydro")
+		await save()
+		await waitFor(() => expect(create).toHaveBeenCalled())
+		await type("Rent")
+		finish({})
+		await waitFor(() => expect(toast.success).toHaveBeenCalled())
+		expect(screen.getByRole("textbox", { name: "Name" })).toHaveValue(
+			"HydroRent"
+		)
+	})
+
 	it("does not send an empty name", async () => {
 		const { create } = setup()
 		await save()

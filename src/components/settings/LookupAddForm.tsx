@@ -45,6 +45,7 @@ export function LookupAddForm({
 	const {
 		register,
 		control,
+		getValues,
 		handleSubmit,
 		reset,
 		setError,
@@ -78,10 +79,19 @@ export function LookupAddForm({
 				return
 			}
 		}
+		const submitted = getValues()
 		try {
 			await create(values)
 			toast.success(t.add.added.replace("{name}", name))
-			reset(EMPTY_LOOKUP_FORM)
+			// Keep anything typed while the save was pending
+			const now = getValues()
+			if (
+				now.name === submitted.name &&
+				now.hasBudgetEnvelope === submitted.hasBudgetEnvelope &&
+				now.hasStatement === submitted.hasStatement
+			) {
+				reset(EMPTY_LOOKUP_FORM)
+			}
 		} catch (error) {
 			// The fields keep what was typed
 			fail(name, error)

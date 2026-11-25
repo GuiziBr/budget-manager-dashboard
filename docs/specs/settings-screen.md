@@ -86,7 +86,7 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 *As the budget owner, I want to see every item of a list at a glance.*
 
 **How it works**
-- Rows are sorted alphabetically (ignoring case). The lists are short and **not paginated** (the API returns them whole).
+- Rows are sorted alphabetically (ignoring case). The API returns each list whole, and the table paginates it at 8 rows per page.
 - Each row shows the name, and for categories and payment types a flag column ("Uses envelopes", "Has statement") with a check when it is on and a dash when not. Rows also show **Created at** and **Updated at** (blank if never changed). Headers sort; the table shows 8 rows per page.
 - Each row has a menu with **Edit** and **Delete**. On the phone the whole row isn't tappable; the menu button has a 44px touch target.
 - Loading shows skeleton rows. A failed load shows an inline error with **Retry**. An empty list shows "No {items} yet" with an Add button.
@@ -100,8 +100,8 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 *As the budget owner, I want to add an item or fix its name.*
 
 **How it works**
-1. **Add** opens a form: a side panel on desktop and a full-height sheet on the phone, the same shell as the income and envelope forms (react-hook-form + Zod, red borders with the reason kept for screen readers, **Save** and **Cancel**).
-2. **Edit** opens the same form prefilled, titled "Edit {item}". Only the changed fields are sent; saving with no change closes without a request.
+1. **Add** is the inline card above the table: the name, the flag checkbox for categories and payment types, and **Save** (react-hook-form + Zod, a red border with the reason kept for screen readers). It clears after a successful save, unless the fields were edited while the save was pending.
+2. **Edit** opens a form in a side panel on desktop and a full-height sheet on the phone, the same shell as the income and envelope forms, with **Save** and **Cancel**, prefilled and titled "Edit {item}". Only the changed fields are sent; saving with no change closes without a request.
 3. Fields:
 
 | Lookup | Fields |
@@ -117,7 +117,7 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 **Rules**
 - The name is trimmed and can't be empty. The API documents no maximum length; the form follows the API.
 - Renaming changes the name wherever the item is shown, including past expenses, because expenses show the item's current name.
-- The form closes when the section changes (it is a different page). Only one panel is open at a time.
+- The edit panel closes when the section changes (it is a different page). Only one panel is open at a time.
 - Finish & add another isn't offered: items are added rarely.
 
 **When something goes wrong**
@@ -230,7 +230,7 @@ Decided 2026-11-24: the theme switch stays at the bottom of the sidebar, and in 
 
 | Question | Proposal |
 |---|---|
-| Form shell for add and edit | A panel or sheet, like the other forms, rather than editing in the row. Consistent, and room for the switches' hints |
+| Form shell | **Add:** inline card above the table (changed 2026-11-24, from a reference design). **Edit:** a panel or sheet, like the other forms, rather than editing in the row. Consistent, and room for the flags' hints |
 | Switches in the list | Not inline. A flag with consequences (envelopes, bank rule) changes through the form, where the hint is |
 | Sections as a submenu | **Decided 2026-11-24:** a submenu under Management in the sidebar, one page per section, instead of tabs on one page. On the phone, a list page at `/management` |
 | Appearance | **Decided 2026-11-24:** dropped. The theme switch stays at the bottom of the sidebar and in the More sheet |

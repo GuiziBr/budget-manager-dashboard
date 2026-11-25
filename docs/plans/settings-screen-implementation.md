@@ -32,7 +32,7 @@ Related: [Management spec](../specs/settings-screen.md) · [Month plan](month-sc
 | ST-03 | Lookup mutation hooks | 1 Data | S-02 to S-12 | — | M | — |
 | ST-04 | Management routes and sidebar submenu | 2 Read-only screen | S-00 | — | S | — |
 | ST-05 | Lookup lists | 2 | S-01, S-05, S-09, S-11 | ST-04 | M | — |
-| ST-06 | Lookup form panel: add and rename | 3 Actions | S-02, S-06, S-09, S-11, S-14 | ST-01, ST-02, ST-03, ST-05 | M | G-7, G-15 |
+| ST-06 | Lookup form panel: rename (Edit) | 3 Actions | S-02, S-06, S-09, S-11, S-14 | ST-01, ST-02, ST-03, ST-05 | M | G-7, G-15 |
 | ST-07 | Category flag: Uses envelopes | 3 | S-03 | ST-06 | S | G-14 |
 | ST-08 | Payment type flag: Has statement | 3 | S-07 | ST-06 | S | — |
 | ST-09 | Delete a lookup | 3 | S-04, S-08, S-10, S-12 | ST-01, ST-03, ST-05 | M | G-13 |
@@ -97,11 +97,11 @@ Size: **S** ≈ half a day, **M** ≈ a day.
 
 ### Phase 3 — Actions
 
-#### ST-06 Lookup form panel: add and rename (S-02, S-06, S-09, S-11, S-14)
+#### ST-06 Lookup form panel: rename (S-02, S-06, S-09, S-11, S-14)
 - **Includes:**
-  - `LookupFormPanel`: the add and edit form on the shell of the income and envelope forms. `DetailsSheet` currently lives in `components/month/`; move it to `components/` in this task, since two screens now use it. Fields per lookup as in the spec (Name\*; the two switches arrive in ST-07 and ST-08). **Save** and **Cancel** only;
-  - add from the section's Add button (and the empty state); edit from the row menu, prefilled with `lookupToFormValues`; on add every required field is sent (the flags as `false` when off), on edit only the changed fields, and saving with no change closes without a request;
-  - success: the panel closes and a toast says "{Name} added" or "{Name} saved";
+  - `LookupFormPanel`: the edit form (Add is the inline card above the table, built in ST-05) on the shell of the income and envelope forms. `DetailsSheet` currently lives in `components/month/`; move it to `components/` in this task, since two screens now use it. Fields per lookup as in the spec (Name\*; the two flags arrive in ST-07 and ST-08). **Save** and **Cancel** only;
+  - edit from the row menu, prefilled with `lookupToFormValues`; on edit only the changed fields are sent, and saving with no change closes without a request (add already sends every required field, the flags as `false` when off, from the inline card);
+  - success: the panel closes and a toast says "{Name} saved" (the add card toasts "{Name} added" itself);
   - **duplicate names (S-14):** `isDuplicateName` runs only for a new or changed name, never on a flag-only save and never against the item being edited. On a match the form first re-reads the list (the cache may be stale) and marks the Name field red only if the match is still there; otherwise it sends the request. A 409 marks the field too and shows the toast from ST-01. The form keeps what was typed;
   - a 404 on edit shows "This {item} no longer exists.", closes the form and refreshes the list; other failures show the generic toast and keep the form open;
   - the form closes when the section changes; one panel at a time.
@@ -159,4 +159,4 @@ These don't block any task, but each needs follow-up work once resolved. Each af
 
 ## 5. Open questions
 
-Three decisions in section 7 of the [spec](../specs/settings-screen.md) (panel for add and edit, flags in the form only, case-insensitive name check) are proposals until confirmed. The plan follows them as written; if one changes, ST-05 or ST-06 move. Two were decided on 2026-11-24: sections are a sidebar submenu with one page each, and there is no Appearance section.
+Three decisions in section 7 of the [spec](../specs/settings-screen.md) (panel for edit, add inline above the table, flags in the form only, case-insensitive name check) are proposals until confirmed. The plan follows them as written; if one changes, ST-05 or ST-06 move. Two were decided on 2026-11-24: sections are a sidebar submenu with one page each, and there is no Appearance section.
