@@ -46,12 +46,61 @@ describe("AppSidebar", () => {
 		)
 	})
 
-	it("hides the settings submenu outside Settings", () => {
+	it("collapses the settings submenu outside Settings", () => {
 		setup()
 
 		expect(
 			screen.queryByRole("link", { name: "Banks" })
 		).not.toBeInTheDocument()
+		expect(
+			screen.getByRole("button", { name: "Show or hide the Settings submenu" })
+		).toHaveAttribute("aria-expanded", "false")
+	})
+
+	it("expands and collapses the submenu with the arrow", async () => {
+		const user = userEvent.setup()
+		setup()
+		const toggle = screen.getByRole("button", {
+			name: "Show or hide the Settings submenu"
+		})
+
+		await user.click(toggle)
+		expect(toggle).toHaveAttribute("aria-expanded", "true")
+		expect(screen.getByRole("link", { name: "Banks" })).toBeVisible()
+
+		await user.click(toggle)
+		expect(toggle).toHaveAttribute("aria-expanded", "false")
+		expect(
+			screen.queryByRole("link", { name: "Banks" })
+		).not.toBeInTheDocument()
+	})
+
+	it("can collapse the submenu while on a settings page", async () => {
+		const user = userEvent.setup()
+		pathname.current = "/settings/banks"
+		setup()
+
+		await user.click(
+			screen.getByRole("button", { name: "Show or hide the Settings submenu" })
+		)
+		expect(
+			screen.queryByRole("link", { name: "Banks" })
+		).not.toBeInTheDocument()
+	})
+
+	it("opens the submenu when navigating into Settings", () => {
+		const view = setup()
+		expect(
+			screen.queryByRole("link", { name: "Banks" })
+		).not.toBeInTheDocument()
+
+		pathname.current = "/settings/banks"
+		view.rerender(
+			<ThemeProvider>
+				<AppSidebar />
+			</ThemeProvider>
+		)
+		expect(screen.getByRole("link", { name: "Banks" })).toBeVisible()
 	})
 
 	it("shows the settings submenu under Settings and marks the section", () => {

@@ -24,6 +24,7 @@ export const translations = {
 			recurring: "Recurring",
 			settings: "Settings"
 		},
+		toggleSubmenu: "Show or hide the {item} submenu",
 		settingsSections: {
 			categories: "Categories",
 			"payment-types": "Payment types",

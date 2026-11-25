@@ -1,14 +1,15 @@
 "use client"
 
-import { Moon, Sun, Wallet } from "lucide-react"
+import { ChevronDown, Moon, Sun, Wallet } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useId } from "react"
+import { useEffect, useId, useState } from "react"
 import { translations } from "@/constants/translations"
 import {
 	isNavItemActive,
 	isNavItemWithinActive,
 	NAV_GROUPS,
+	type NavItem,
 	navItemLandingHref
 } from "@/lib/navigation"
 import { cn } from "@/lib/utils"
@@ -41,6 +42,98 @@ function ThemeToggle() {
 				? translations.theme.switchToLight
 				: translations.theme.switchToDark}
 		</button>
+	)
+}
+
+function SidebarItem({
+	item,
+	pathname
+}: {
+	item: NavItem
+	pathname: string | null
+}) {
+	const Icon = item.icon
+	const submenuId = useId()
+	const isActive = isNavItemActive(pathname, item.href)
+	const isWithin = isNavItemWithinActive(pathname, item.href)
+	const [isExpanded, setIsExpanded] = useState(isWithin)
+
+	// Arriving in the section opens its submenu; leaving keeps what you chose
+	useEffect(() => {
+		if (isWithin) setIsExpanded(true)
+	}, [isWithin])
+
+	const hasChildren = !!item.children
+	const label = translations.navigation.toggleSubmenu.replace(
+		"{item}",
+		item.label
+	)
+
+	return (
+		<li className="relative">
+			<Link
+				href={navItemLandingHref(item)}
+				aria-current={isActive ? "page" : undefined}
+				className={cn(
+					itemClass(isActive),
+					hasChildren && "pr-11",
+					isWithin && !isActive && "text-sidebar-foreground"
+				)}
+			>
+				<Icon className="size-[18px] shrink-0" aria-hidden="true" />
+				{item.label}
+			</Link>
+			{item.children && (
+				<>
+					<button
+						type="button"
+						aria-label={label}
+						aria-expanded={isExpanded}
+						aria-controls={submenuId}
+						onClick={() => setIsExpanded((open) => !open)}
+						className="absolute top-1 right-1.5 flex size-8 cursor-pointer items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-ring"
+					>
+						<ChevronDown
+							aria-hidden="true"
+							className={cn(
+								"size-4 transition-transform duration-200 motion-reduce:transition-none",
+								isExpanded && "rotate-180"
+							)}
+						/>
+					</button>
+					{/* Grid rows animate the height; hidden links leave the tab order */}
+					<div
+						id={submenuId}
+						aria-hidden={!isExpanded}
+						inert={!isExpanded}
+						className={cn(
+							"grid transition-[grid-template-rows,visibility] duration-200 ease-out motion-reduce:transition-none",
+							isExpanded ? "grid-rows-[1fr]" : "invisible grid-rows-[0fr]"
+						)}
+					>
+						<ul
+							aria-label={translations.settings.sectionsLabel}
+							className="min-h-0 space-y-1 overflow-hidden"
+						>
+							{item.children.map((child) => {
+								const isChildActive = isNavItemActive(pathname, child.href)
+								return (
+									<li key={child.href} className="first:mt-1">
+										<Link
+											href={child.href}
+											aria-current={isChildActive ? "page" : undefined}
+											className={cn(itemClass(isChildActive), "h-9 pl-10")}
+										>
+											{child.label}
+										</Link>
+									</li>
+								)
+							})}
+						</ul>
+					</div>
+				</>
+			)}
+		</li>
 	)
 }
 
@@ -82,60 +175,13 @@ export function AppSidebar({ className }: { className?: string }) {
 								{group.label}
 							</p>
 							<ul aria-labelledby={titleId} className="space-y-1">
-								{group.items.map((item) => {
-									const Icon = item.icon
-									const isActive = isNavItemActive(pathname, item.href)
-									const isOpen =
-										!!item.children &&
-										isNavItemWithinActive(pathname, item.href)
-									return (
-										<li key={item.href}>
-											<Link
-												href={navItemLandingHref(item)}
-												aria-current={isActive ? "page" : undefined}
-												className={cn(
-													itemClass(isActive),
-													isOpen && !isActive && "text-sidebar-foreground"
-												)}
-											>
-												<Icon
-													className="size-[18px] shrink-0"
-													aria-hidden="true"
-												/>
-												{item.label}
-											</Link>
-											{isOpen && item.children && (
-												<ul
-													aria-label={translations.settings.sectionsLabel}
-													className="mt-1 space-y-1"
-												>
-													{item.children.map((child) => {
-														const isChildActive = isNavItemActive(
-															pathname,
-															child.href
-														)
-														return (
-															<li key={child.href}>
-																<Link
-																	href={child.href}
-																	aria-current={
-																		isChildActive ? "page" : undefined
-																	}
-																	className={cn(
-																		itemClass(isChildActive),
-																		"h-9 pl-10"
-																	)}
-																>
-																	{child.label}
-																</Link>
-															</li>
-														)
-													})}
-												</ul>
-											)}
-										</li>
-									)
-								})}
+								{group.items.map((item) => (
+									<SidebarItem
+										key={item.href}
+										item={item}
+										pathname={pathname}
+									/>
+								))}
 							</ul>
 						</div>
 					)
