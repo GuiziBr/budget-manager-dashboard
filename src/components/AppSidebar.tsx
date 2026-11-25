@@ -57,10 +57,11 @@ function SidebarItem({
 	const isWithin = isNavItemWithinActive(pathname, item.href)
 	const [isExpanded, setIsExpanded] = useState(isWithin)
 
-	// Arriving in the section opens its submenu; leaving keeps what you chose
+	// Every move to a page of the section opens its submenu, also between two
+	// sections (Back after collapsing it); a collapse by hand lasts until then
 	useEffect(() => {
-		if (isWithin) setIsExpanded(true)
-	}, [isWithin])
+		if (isNavItemWithinActive(pathname, item.href)) setIsExpanded(true)
+	}, [pathname, item.href])
 
 	if (!item.children) {
 		return (

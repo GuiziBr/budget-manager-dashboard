@@ -64,6 +64,82 @@ describe("AppSidebar", () => {
 		)
 	})
 
+	it("collapses the submenu outside Management", () => {
+		setup()
+
+		expect(
+			screen.queryByRole("link", { name: "Banks" })
+		).not.toBeInTheDocument()
+		expect(screen.getByRole("button", { name: "Management" })).toHaveAttribute(
+			"aria-expanded",
+			"false"
+		)
+	})
+
+	it("shows or hides the submenu with the Management button", async () => {
+		const user = userEvent.setup()
+		setup()
+		const toggle = screen.getByRole("button", { name: "Management" })
+
+		await user.click(toggle)
+		expect(toggle).toHaveAttribute("aria-expanded", "true")
+		expect(screen.getByRole("link", { name: "Banks" })).toBeVisible()
+
+		await user.click(toggle)
+		expect(toggle).toHaveAttribute("aria-expanded", "false")
+		expect(
+			screen.queryByRole("link", { name: "Banks" })
+		).not.toBeInTheDocument()
+	})
+
+	it("shows the submenu on a Management page and marks the section", () => {
+		pathname.current = "/management/banks"
+		setup()
+
+		expect(screen.getAllByRole("link").map((l) => l.textContent)).toEqual(
+			expect.arrayContaining(["Categories", "Payment types", "Banks", "Stores"])
+		)
+		expect(screen.getByRole("link", { name: "Banks" })).toHaveAttribute(
+			"aria-current",
+			"page"
+		)
+		expect(screen.getByRole("link", { name: "Stores" })).not.toHaveAttribute(
+			"aria-current"
+		)
+		expect(screen.queryByText("Appearance")).not.toBeInTheDocument()
+	})
+
+	it("opens the submenu when navigating into Management", () => {
+		const view = setup()
+		pathname.current = "/management/banks"
+		view.rerender(
+			<ThemeProvider>
+				<AppSidebar />
+			</ThemeProvider>
+		)
+
+		expect(screen.getByRole("link", { name: "Banks" })).toBeVisible()
+	})
+
+	it("reopens the submenu when moving between sections after collapsing it", async () => {
+		const user = userEvent.setup()
+		pathname.current = "/management/categories"
+		const view = setup()
+
+		await user.click(screen.getByRole("button", { name: "Management" }))
+		expect(
+			screen.queryByRole("link", { name: "Banks" })
+		).not.toBeInTheDocument()
+
+		pathname.current = "/management/banks"
+		view.rerender(
+			<ThemeProvider>
+				<AppSidebar />
+			</ThemeProvider>
+		)
+		expect(screen.getByRole("link", { name: "Banks" })).toBeVisible()
+	})
+
 	it("switches the theme", async () => {
 		const user = userEvent.setup()
 		setup()
