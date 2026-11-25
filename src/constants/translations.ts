@@ -36,6 +36,11 @@ export const translations = {
 			banks: "Banks",
 			stores: "Stores",
 			appearance: "Appearance"
+    },
+		form: {
+			validation: {
+				name: "Enter a name"
+			}
 		}
 	},
 	comingSoon: {

@@ -7,3 +7,11 @@ export interface Bank {
 	updatedAt: IsoDate
 	deletedAt: null
 }
+
+export interface CreateBankInput {
+	name: string
+}
+
+export interface UpdateBankInput {
+	name?: string
+}
