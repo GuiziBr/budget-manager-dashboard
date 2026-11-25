@@ -82,7 +82,7 @@ Size: **S** ≈ half a day, **M** ≈ a day.
 #### ST-04 Management routes and sidebar submenu (S-00)
 - **Status: built (2026-11-24), PR #107.** First built as tabs (`?tab=`), then changed the same day to a sidebar submenu, and Appearance was dropped (see ST-10).
 - **Includes:**
-  - `src/lib/navigation.ts`: `SETTINGS_SECTIONS` (Categories, Payment types, Banks, Stores) as `children` of the Management item, plus `findSettingsSection`, `isNavItemWithinActive`; `getPageTitle` returns the section's name on a section page;
+  - `src/lib/navigation.ts`: `SETTINGS_SECTIONS` (Categories, Payment types, Banks, Stores) as `children` of the Management item, plus `findSettingsSection`, `isNavItemWithinActive`; `getPageTitle` returns "Management" on a section page too (changed after the first build, which showed the section's name);
   - one page per section, `src/app/(app)/management/[section]/page.tsx` (`generateStaticParams` over the four ids, `dynamicParams = false`, so an unknown section is a 404), rendering an empty `SettingsSection` until ST-05;
   - `src/app/(app)/management/page.tsx`: `SettingsIndex`, the list of sections, which is how the phone reaches them;
   - `AppSidebar`: the Management entry is a button that only shows or hides the submenu (arrow, animated height; no navigation). The submenu opens on arriving in a section, and the current section is highlighted; `BottomTabBar` keeps the Management tab current on section pages and `SettingsSection` has a **Back to Management** link on the phone only.

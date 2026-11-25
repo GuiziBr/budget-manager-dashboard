@@ -69,7 +69,7 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 **How it works**
 1. **Management** in the sidebar has a submenu: **Categories**, **Payment types**, **Banks**, **Stores**. It is shown while any Management page is open and hidden elsewhere. The current section is highlighted.
 2. Each section is its own page, so a link and the back button return to it: `/management/categories`, `/management/payment-types`, `/management/banks`, `/management/stores`. An unknown section is a 404.
-3. Clicking **Management** in the sidebar only shows or hides the submenu (an arrow beside it points up when open, down when closed, and the height animates); it doesn't open a page. The submenu opens by itself when you arrive in a section, and can be collapsed by hand. The page title is the section's name.
+3. Clicking **Management** in the sidebar only shows or hides the submenu (an arrow beside it points up when open, down when closed, and the height animates); it doesn't open a page. The submenu opens by itself when you arrive in a section, and can be collapsed by hand. The page title stays "Management" on every section; the section's name is the heading of its add card.
 4. The phone has no sidebar. The **Management** tab opens `/management`, a list of the four sections; each section page has a **Back to Management** link at the top (hidden on desktop).
 5. Each section has the same layout (S-01): a header with the section's **Add** button and a list below it, inside one card.
 6. There is no Appearance section: the theme switch stays where it is (S-13 dropped).

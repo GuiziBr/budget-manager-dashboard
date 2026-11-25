@@ -47,9 +47,9 @@ describe("navigation", () => {
 		expect(getPageTitle("/unknown")).toBe("Month")
 	})
 
-	it("titles a settings section page with the section name", () => {
-		expect(getPageTitle("/management/banks")).toBe("Banks")
-		expect(getPageTitle("/management/payment-types")).toBe("Payment types")
+	it("titles a settings section page "Management"", () => {
+		expect(getPageTitle("/management/banks")).toBe("Management")
+		expect(getPageTitle("/management/payment-types")).toBe("Management")
 	})
 
 	it("lists the four settings sections under Management, without Appearance", () => {
