@@ -7,3 +7,11 @@ export interface Store {
 	updatedAt: IsoDate
 	deletedAt: null
 }
+
+export interface CreateStoreInput {
+	name: string
+}
+
+export interface UpdateStoreInput {
+	name?: string
+}
