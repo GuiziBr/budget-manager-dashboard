@@ -14,10 +14,10 @@ describe("SettingsIndex", () => {
 			"Stores"
 		])
 		expect(links.map((l) => l.getAttribute("href"))).toEqual([
-			"/settings/categories",
-			"/settings/payment-types",
-			"/settings/banks",
-			"/settings/stores"
+			"/management/categories",
+			"/management/payment-types",
+			"/management/banks",
+			"/management/stores"
 		])
 	})
 

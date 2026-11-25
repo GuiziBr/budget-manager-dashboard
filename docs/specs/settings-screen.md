@@ -6,7 +6,7 @@ The Management screen is where the budget owner maintains the lists the rest of 
 
 The forms and confirmations opened from this screen are specified here, because they are only reachable from it.
 
-The menu entry is titled **Management** (it was "Settings"). The route (`/settings`), the code and these file names keep the old name.
+The menu entry is titled **Management** (it was "Settings"). The route is `/management` (it was `/settings`); the code and these file names keep the old name.
 
 Related: [UX brief](../ui/ux-brief.md) · [Software specification](../software_specification.md) · [API docs](../APIs/api-reference.md) · [Month spec](month-screen.md) · [Backlog](todo.md) · [Design system](../../DESIGN_SYSTEM.md)
 
@@ -68,15 +68,15 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 
 **How it works**
 1. **Management** in the sidebar has a submenu: **Categories**, **Payment types**, **Banks**, **Stores**. It is shown while any Management page is open and hidden elsewhere. The current section is highlighted.
-2. Each section is its own page, so a link and the back button return to it: `/settings/categories`, `/settings/payment-types`, `/settings/banks`, `/settings/stores`. An unknown section is a 404.
+2. Each section is its own page, so a link and the back button return to it: `/management/categories`, `/management/payment-types`, `/management/banks`, `/management/stores`. An unknown section is a 404.
 3. Clicking **Management** in the sidebar only shows or hides the submenu (an arrow beside it points up when open, down when closed, and the height animates); it doesn't open a page. The submenu opens by itself when you arrive in a section, and can be collapsed by hand. The page title is the section's name.
-4. The phone has no sidebar. The **Management** tab opens `/settings`, a list of the four sections; each section page has a **Back to Management** link at the top (hidden on desktop).
+4. The phone has no sidebar. The **Management** tab opens `/management`, a list of the four sections; each section page has a **Back to Management** link at the top (hidden on desktop).
 5. Each section has the same layout (S-01): a header with the section's **Add** button and a list below it, inside one card.
 6. There is no Appearance section: the theme switch stays where it is (S-13 dropped).
 
 **Acceptance criteria**
 - *Given* I click Management in the sidebar, *then* the submenu opens or closes and the page doesn't change.
-- *Given* I click Banks in the submenu, *then* the address reads `/settings/banks` and Back returns to the previous section.
+- *Given* I click Banks in the submenu, *then* the address reads `/management/banks` and Back returns to the previous section.
 - *Given* the phone, *when* I tap the Management tab, *then* I see the four sections, and opening one shows a link back to the list.
 
 ### Lookup lists (S-01, S-05, S-09, S-11)
@@ -232,7 +232,7 @@ Decided 2026-11-24: the theme switch stays at the bottom of the sidebar, and in 
 |---|---|
 | Form shell for add and edit | A panel or sheet, like the other forms, rather than editing in the row. Consistent, and room for the switches' hints |
 | Switches in the list | Not inline. A flag with consequences (envelopes, bank rule) changes through the form, where the hint is |
-| Sections as a submenu | **Decided 2026-11-24:** a submenu under Management in the sidebar, one page per section, instead of tabs on one page. On the phone, a list page at `/settings` |
+| Sections as a submenu | **Decided 2026-11-24:** a submenu under Management in the sidebar, one page per section, instead of tabs on one page. On the phone, a list page at `/management` |
 | Appearance | **Decided 2026-11-24:** dropped. The theme switch stays at the bottom of the sidebar and in the More sheet |
 | Name check ignoring case | Yes, before sending (S-14) |
 

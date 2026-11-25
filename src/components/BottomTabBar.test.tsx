@@ -34,7 +34,7 @@ describe("BottomTabBar", () => {
 	})
 
 	it("keeps the Management tab current on a settings section", () => {
-		pathname.current = "/settings/banks"
+		pathname.current = "/management/banks"
 		setup()
 
 		expect(screen.getByRole("link", { name: "Management" })).toHaveAttribute(

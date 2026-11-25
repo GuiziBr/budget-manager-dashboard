@@ -48,8 +48,8 @@ describe("navigation", () => {
 	})
 
 	it("titles a settings section page with the section name", () => {
-		expect(getPageTitle("/settings/banks")).toBe("Banks")
-		expect(getPageTitle("/settings/payment-types")).toBe("Payment types")
+		expect(getPageTitle("/management/banks")).toBe("Banks")
+		expect(getPageTitle("/management/payment-types")).toBe("Payment types")
 	})
 
 	it("lists the four settings sections under Management, without Appearance", () => {
@@ -75,14 +75,14 @@ describe("navigation", () => {
 	})
 
 	it("finds a section by id and rejects an unknown one", () => {
-		expect(findSettingsSection("banks")?.href).toBe("/settings/banks")
+		expect(findSettingsSection("banks")?.href).toBe("/management/banks")
 		expect(findSettingsSection("appearance")).toBeUndefined()
 	})
 
 	it("is active on the page and below it", () => {
-		expect(isNavItemWithinActive("/settings", SETTINGS_PATH)).toBe(true)
-		expect(isNavItemWithinActive("/settings/banks", SETTINGS_PATH)).toBe(true)
-		expect(isNavItemWithinActive("/settings-x", SETTINGS_PATH)).toBe(false)
+		expect(isNavItemWithinActive("/management", SETTINGS_PATH)).toBe(true)
+		expect(isNavItemWithinActive("/management/banks", SETTINGS_PATH)).toBe(true)
+		expect(isNavItemWithinActive("/management-x", SETTINGS_PATH)).toBe(false)
 		expect(isNavItemWithinActive(null, SETTINGS_PATH)).toBe(false)
 	})
 

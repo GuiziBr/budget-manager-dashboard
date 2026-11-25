@@ -8,6 +8,6 @@ describe("SettingsSection", () => {
 		render(<SettingsSection />)
 		expect(
 			screen.getByRole("link", { name: "Back to Management" })
-		).toHaveAttribute("href", "/settings")
+		).toHaveAttribute("href", "/management")
 	})
 })

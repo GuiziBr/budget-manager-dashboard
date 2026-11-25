@@ -33,7 +33,7 @@ export interface NavGroup {
 
 export const MONTH_PATH = "/month"
 export const RECURRING_PATH = "/recurring"
-export const SETTINGS_PATH = "/settings"
+export const SETTINGS_PATH = "/management"
 
 export const SETTINGS_SECTION_IDS = [
 	"categories",
