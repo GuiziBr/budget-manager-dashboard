@@ -2,66 +2,111 @@
 
 import { ChevronLeft } from "lucide-react"
 import Link from "next/link"
+import { useRef, useState } from "react"
 import { translations } from "@/constants/translations"
-import { useBanks, useCreateBank } from "@/hooks/use-banks"
-import { useCategories, useCreateCategory } from "@/hooks/use-categories"
+import { useBanks, useCreateBank, useUpdateBank } from "@/hooks/use-banks"
+import {
+	useCategories,
+	useCreateCategory,
+	useUpdateCategory
+} from "@/hooks/use-categories"
 import {
 	useCreatePaymentType,
-	usePaymentTypes
+	usePaymentTypes,
+	useUpdatePaymentType
 } from "@/hooks/use-payment-types"
-import { useCreateStore, useStores } from "@/hooks/use-stores"
-import { buildCreateLookupInput } from "@/lib/lookup-form"
+import { useCreateStore, useStores, useUpdateStore } from "@/hooks/use-stores"
+import { buildCreateLookupInput, type LookupItem } from "@/lib/lookup-form"
 import { SETTINGS_PATH, type SettingsSectionId } from "@/lib/navigation"
-import { LookupList } from "./LookupList"
+import { LookupFormPanel } from "./LookupFormPanel"
+import { type LookupKind, LookupList, type LookupQuery } from "./LookupList"
+
+interface LookupSectionProps {
+	lookup: LookupKind
+	query: LookupQuery
+	create: (input: never) => Promise<unknown>
+	update: (input: { id: string } & object) => Promise<unknown>
+}
+
+/** A lookup's list and its edit panel; the section components below supply the hooks. */
+function LookupSection({ lookup, query, create, update }: LookupSectionProps) {
+	const [editing, setEditing] = useState<LookupItem | null>(null)
+	const [open, setOpen] = useState(false)
+	const openerRef = useRef<HTMLElement | null>(null)
+	return (
+		<>
+			<LookupList
+				lookup={lookup}
+				query={query}
+				create={(values) =>
+					create(buildCreateLookupInput(lookup, values) as never)
+				}
+				onEdit={(item, opener) => {
+					openerRef.current = opener
+					setEditing(item)
+					setOpen(true)
+				}}
+			/>
+			<LookupFormPanel
+				open={open}
+				onClose={() => setOpen(false)}
+				lookup={lookup}
+				item={editing}
+				items={query.data ?? []}
+				reload={async () => (await query.refetch()).data}
+				update={(item, changes) => update({ id: item.id, ...changes })}
+				returnFocusRef={openerRef}
+			/>
+		</>
+	)
+}
 
 // One component per lookup, so each calls its own hooks unconditionally
 function Categories() {
 	const create = useCreateCategory()
+	const update = useUpdateCategory()
 	return (
-		<LookupList
+		<LookupSection
 			lookup="category"
 			query={useCategories()}
-			create={(values) =>
-				create.mutateAsync(buildCreateLookupInput("category", values) as never)
-			}
+			create={create.mutateAsync as LookupSectionProps["create"]}
+			update={update.mutateAsync as LookupSectionProps["update"]}
 		/>
 	)
 }
 function PaymentTypes() {
 	const create = useCreatePaymentType()
+	const update = useUpdatePaymentType()
 	return (
-		<LookupList
+		<LookupSection
 			lookup="paymentType"
 			query={usePaymentTypes()}
-			create={(values) =>
-				create.mutateAsync(
-					buildCreateLookupInput("paymentType", values) as never
-				)
-			}
+			create={create.mutateAsync as LookupSectionProps["create"]}
+			update={update.mutateAsync as LookupSectionProps["update"]}
 		/>
 	)
 }
 function Banks() {
 	const create = useCreateBank()
+	const update = useUpdateBank()
 	return (
-		<LookupList
+		<LookupSection
 			lookup="bank"
 			query={useBanks()}
-			create={(values) =>
-				create.mutateAsync(buildCreateLookupInput("bank", values) as never)
-			}
+			create={create.mutateAsync as LookupSectionProps["create"]}
+			update={update.mutateAsync as LookupSectionProps["update"]}
 		/>
 	)
 }
 function Stores() {
 	const create = useCreateStore()
+	const update = useUpdateStore()
 	return (
-		<LookupList
+		<LookupSection
 			lookup="store"
 			query={useStores()}
-			create={(values) =>
-				create.mutateAsync(buildCreateLookupInput("store", values) as never)
-			}
+			create={create.mutateAsync as LookupSectionProps["create"]}
+			update={update.mutateAsync as LookupSectionProps["update"]}
 		/>
 	)
 }
@@ -73,7 +118,7 @@ const SECTION_LISTS: Record<SettingsSectionId, () => React.JSX.Element> = {
 	stores: Stores
 }
 
-/** One settings section: its lookup list. The forms arrive in later tasks (ST-06 on). */
+/** One settings section: its lookup list. Edit is here (ST-06); delete arrives in ST-09. */
 export function SettingsSection({ section }: { section: SettingsSectionId }) {
 	const List = SECTION_LISTS[section]
 	return (

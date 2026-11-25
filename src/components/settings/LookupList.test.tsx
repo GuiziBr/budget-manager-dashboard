@@ -165,7 +165,7 @@ describe("LookupList", () => {
 			screen.getByRole("button", { name: "Actions for Nubank" })
 		)
 		await userEvent.click(screen.getByRole("menuitem", { name: "Edit" }))
-		expect(onEdit).toHaveBeenCalledWith(nubank)
+		expect(onEdit).toHaveBeenCalledWith(nubank, expect.any(HTMLElement))
 		await userEvent.click(
 			screen.getByRole("button", { name: "Actions for Nubank" })
 		)
