@@ -90,6 +90,7 @@ Size: **S** ≈ half a day, **M** ≈ a day.
 - **Design:** no `design.pen` frames exist for Management. Compare with the Month screen's header and cards, and add frames afterwards if wanted.
 
 #### ST-05 Lookup lists (S-01, S-05, S-09, S-11)
+- **Status: built (2026-11-24).** `LookupList` is presentational (it takes the query result); `SettingsSection` picks the hook per section.
 - **Includes:** one `LookupList` used by the four sections: a card with the section's **Add** button in the header (does nothing until ST-06), rows sorted with `sortLookups`, the flag **badge** after the name ("Uses envelopes" / "Requires a bank", reusing `badge.tsx`), and a row menu with **Edit** and **Delete** (44px touch target on the phone; the entries do nothing until ST-06 and ST-09). States: skeleton rows while loading, an inline error with **Retry**, and "No {items} yet" with an Add button when the list is empty.
 - **Done when:** the S-01 acceptance criteria pass (Grocery, Hydro, Transport in that order; badge on the category with envelopes), and each section matches the others in light and dark at 390px.
 - **Backend:** none. The lists come whole from `GET /categories`, `/payment-types`, `/banks` and `/stores`.
