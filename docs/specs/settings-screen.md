@@ -29,9 +29,9 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 | S-03 | Turn "Uses envelopes" on or off | Must | Ready |
 | S-04 | Delete a category | Must | Ready (see G-13) |
 | **Payment types** | | | |
-| S-05 | List payment types, showing which require a bank | Must | Ready |
+| S-05 | List payment types, showing which have a statement | Must | Ready |
 | S-06 | Add and rename a payment type | Must | Ready |
-| S-07 | Turn "Requires a bank" on or off | Must | Ready |
+| S-07 | Turn "Has statement" on or off | Must | Ready |
 | S-08 | Delete a payment type | Must | Ready (see G-13) |
 | **Banks** | | | |
 | S-09 | List, add and rename banks | Must | Ready |
@@ -50,9 +50,9 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 
 | Term | Meaning |
 |---|---|
-| **Lookup** | One of the four lists: category, payment type, bank, store. Each item has a name; categories also have **Uses envelopes** and payment types also have **Requires a bank** |
+| **Lookup** | One of the four lists: category, payment type, bank, store. Each item has a name; categories also have **Uses envelopes** and payment types also have **Has statement** |
 | **Uses envelopes** | The category's `hasBudgetEnvelope`. Months opened from now on get an envelope for it, and envelopes can be added for it (M-23) |
-| **Requires a bank** | The payment type's `hasStatement`. An expense with this payment type must have a bank (M-14) |
+| **Has statement** | The payment type's `hasStatement` (it was labelled "Requires a bank"). An expense with this payment type must have a bank (M-14) |
 | **Actively referenced** | What the backend checks before a delete: a recurring bill that isn't cancelled (or is cancelled on or after the first day of the current UTC month), or an expense in the current or a future month. For categories, also an envelope in the current or a future month. References from past months **don't** block a delete |
 | **Deleted lookup** | A lookup that was deleted. It stays on the past expenses that used it, shown as "Name (deleted)" (M-05, M-17), but can't be picked for new ones |
 
@@ -87,7 +87,7 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 
 **How it works**
 - Rows are sorted alphabetically (ignoring case). The lists are short and **not paginated** (the API returns them whole).
-- Each row shows the name, and for categories and payment types a **badge** after it: "Uses envelopes" on a category that has them, "Requires a bank" on a payment type that does. Items without the flag show no badge.
+- Each row shows the name, and for categories and payment types a flag column ("Uses envelopes", "Has statement") with a check when it is on and a dash when not. Rows also show **Created at** and **Updated at** (blank if never changed). Headers sort; the table shows 8 rows per page.
 - Each row has a menu with **Edit** and **Delete**. On the phone the whole row isn't tappable; the menu button has a 44px touch target.
 - Loading shows skeleton rows. A failed load shows an inline error with **Retry**. An empty list shows "No {items} yet" with an Add button.
 
@@ -107,7 +107,7 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 | Lookup | Fields |
 |---|---|
 | Category | Name\*, **Uses envelopes** (switch, off by default) |
-| Payment type | Name\*, **Requires a bank** (switch, off by default) |
+| Payment type | Name\*, **Has statement** (checkbox in the add card, off by default) |
 | Bank | Name\* |
 | Store | Name\* |
 
@@ -147,7 +147,7 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 **Acceptance criteria**
 - *Given* a category without envelopes, *when* I turn the switch on and save, *then* its row shows the "Uses envelopes" badge and the category is offered in + Add → Category.
 
-#### S-07 Requires a bank
+#### S-07 Has statement
 
 *As the budget owner, I want payment types like credit cards to demand a bank.*
 
@@ -155,7 +155,7 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 - The expense form uses the new setting as soon as the list is refreshed (the Bank field's asterisk follows the chosen payment type, M-14).
 
 **Acceptance criteria**
-- *Given* "Debit" doesn't require a bank, *when* I turn the switch on, *then* adding an expense paid with Debit marks Bank as required.
+- *Given* "Debit" doesn't have a statement, *when* I turn the switch on, *then* adding an expense paid with Debit marks Bank as required.
 
 ### Delete (S-04, S-08, S-10, S-12)
 

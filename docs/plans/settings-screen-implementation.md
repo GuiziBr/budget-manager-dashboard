@@ -34,7 +34,7 @@ Related: [Management spec](../specs/settings-screen.md) · [Month plan](month-sc
 | ST-05 | Lookup lists | 2 | S-01, S-05, S-09, S-11 | ST-04 | M | — |
 | ST-06 | Lookup form panel: add and rename | 3 Actions | S-02, S-06, S-09, S-11, S-14 | ST-01, ST-02, ST-03, ST-05 | M | G-7, G-15 |
 | ST-07 | Category flag: Uses envelopes | 3 | S-03 | ST-06 | S | G-14 |
-| ST-08 | Payment type flag: Requires a bank | 3 | S-07 | ST-06 | S | — |
+| ST-08 | Payment type flag: Has statement | 3 | S-07 | ST-06 | S | — |
 | ST-09 | Delete a lookup | 3 | S-04, S-08, S-10, S-12 | ST-01, ST-03, ST-05 | M | G-13 |
 | ST-10 | ~~Appearance tab, and remove the More sheet~~ | 4 Appearance | S-13, A-03 | — | — | Dropped 2026-11-24 |
 | ST-11 | Final pass: themes, 390px, accessibility, clean-up | 5 Polish | all | everything | S | G-7 (docs) |
@@ -91,7 +91,7 @@ Size: **S** ≈ half a day, **M** ≈ a day.
 
 #### ST-05 Lookup lists (S-01, S-05, S-09, S-11)
 - **Status: built (2026-11-24), PR #108.** Changed after review of a reference design: each section is an **add card** (name, the flag checkbox for categories and payment types, Save; add is already working, using the ST-03 hook, `isDuplicateName` and the 409 message) above a **table** (Name, flag, Created at, Updated at, row menu) with sortable headers and the Month screen's `Pagination`, 8 rows per page, sorted and paged on the client because the API returns the lists whole (`lib/lookup-table.ts`). This replaces the side panel for **add** planned in ST-06; ST-06 now covers rename only (Edit), and ST-07/ST-08's switches become the checkboxes of the add card (still to add to Edit). The flag shows as a check or dash instead of a badge; `Updated at` is empty when it equals `Created at`.
-- **Includes:** one `LookupList` used by the four sections: a card with the section's **Add** button in the header (does nothing until ST-06), rows sorted with `sortLookups`, the flag **badge** after the name ("Uses envelopes" / "Requires a bank", reusing `badge.tsx`), and a row menu with **Edit** and **Delete** (44px touch target on the phone; the entries do nothing until ST-06 and ST-09). States: skeleton rows while loading, an inline error with **Retry**, and "No {items} yet" with an Add button when the list is empty.
+- **Includes (original scope, see Status):** one `LookupList` used by the four sections: a card with the section's **Add** button in the header (does nothing until ST-06), rows sorted with `sortLookups`, the flag **badge** after the name ("Uses envelopes" / "Has statement", reusing `badge.tsx`), and a row menu with **Edit** and **Delete** (44px touch target on the phone; the entries do nothing until ST-06 and ST-09). States: skeleton rows while loading, an inline error with **Retry**, and "No {items} yet" with an Add button when the list is empty.
 - **Done when:** the S-01 acceptance criteria pass (Grocery, Hydro, Transport in that order; badge on the category with envelopes), and each section matches the others in light and dark at 390px.
 - **Backend:** none. The lists come whole from `GET /categories`, `/payment-types`, `/banks` and `/stores`.
 
@@ -116,8 +116,8 @@ Size: **S** ≈ half a day, **M** ≈ a day.
 - **Backend:**
   - **G-14** (existing envelopes when turned off): the API docs only say that creating an envelope for a category without the flag returns 400; they don't say what happens to envelopes that already exist, nor whether the flag also affects months already open. The hint above assumes existing envelopes are left alone. *To address when reached:* check against the real API (turn the flag off on a category that has an envelope in the current month, then read the envelopes and try the Month screen's Edit budget and Delete on it). If anything differs, reword the hint and the spec's S-03, and if the envelope becomes unusable add a note in the Month screen's envelope details.
 
-#### ST-08 Payment type flag: Requires a bank (S-07)
-- **Includes:** the **Requires a bank** switch in the payment type form, off by default on Add, with the hint "Expenses paid this way must have a bank. Existing expenses aren't checked again."; on add `hasStatement` is always sent (`false` when off, because the API requires it), on edit only when changed; the expense form's Bank asterisk follows the new setting once the list refreshes (M-14).
+#### ST-08 Payment type flag: Has statement (S-07)
+- **Includes:** the **Has statement** switch in the payment type form, off by default on Add, with the hint "Expenses paid this way must have a bank. Existing expenses aren't checked again."; on add `hasStatement` is always sent (`false` when off, because the API requires it), on edit only when changed; the expense form's Bank asterisk follows the new setting once the list refreshes (M-14).
 - **Done when:** the S-07 acceptance criteria pass: after turning it on for Debit, adding an expense paid with Debit marks Bank as required.
 - **Backend:** none. `PATCH /payment-types/:id` takes `hasStatement` and, per the API docs, doesn't re-validate existing expenses (which the hint says). An edit form for an existing expense whose payment type now requires a bank is answered by the server's 400 (the Month screen already maps it, T-29).
 

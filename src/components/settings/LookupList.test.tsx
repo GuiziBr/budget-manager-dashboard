@@ -78,7 +78,7 @@ describe("LookupList", () => {
 			/>
 		)
 		expect(
-			screen.getByRole("columnheader", { name: /Requires a bank/ })
+			screen.getByRole("columnheader", { name: /Has statement/ })
 		).toBeTruthy()
 		unmount()
 		render(

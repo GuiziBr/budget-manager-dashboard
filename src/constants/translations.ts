@@ -54,7 +54,7 @@ export const translations = {
 			// Column header and checkbox label of each lookup's flag
 			flags: {
 				category: "Uses envelopes",
-				paymentType: "Requires a bank"
+				paymentType: "Has statement"
 			},
 			yes: "Yes",
 			no: "No",

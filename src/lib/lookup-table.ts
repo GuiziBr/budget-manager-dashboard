@@ -16,7 +16,7 @@ export const DEFAULT_LOOKUP_SORT: LookupSort = {
 	direction: "asc"
 }
 
-/** Whether the item has its flag on (uses envelopes, requires a bank). Banks and stores have none. */
+/** Whether the item has its flag on (uses envelopes, has statement). Banks and stores have none. */
 export function lookupFlag(item: LookupItem): boolean {
 	if ("hasBudgetEnvelope" in item) return item.hasBudgetEnvelope
 	if ("hasStatement" in item) return item.hasStatement
