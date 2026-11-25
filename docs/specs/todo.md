@@ -19,9 +19,9 @@ Needed alongside the Month screen, since the Month screen lives inside it.
 
 | ID | Feature | Priority | Status |
 |---|---|---|---|
-| A-01 | Navigation: sidebar on desktop, tab bar on the phone, with Month, Recurring and Settings | Must | Ready |
+| A-01 | Navigation: sidebar on desktop, tab bar on the phone, with Month, Recurring and Management | Must | Ready |
 | A-02 | Page title in the top bar for each screen | Must | Ready |
-| A-03 | ~~Remove the More sheet; move the theme switch to Settings~~ | — | Dropped (2026-11-24): the theme switch stays at the bottom of the sidebar and in the More sheet |
+| A-03 | ~~Remove the More sheet; move the theme switch to Management~~ | — | Dropped (2026-11-24): the theme switch stays at the bottom of the sidebar and in the More sheet |
 
 ### 1.2 Recurring screen
 
@@ -38,7 +38,7 @@ Needed alongside the Month screen, since the Month screen lives inside it.
 | R-09 | Add a recurring bill: opens the expense form of the Month screen (M-16) on the current month | Should | Ready |
 | R-10 | Empty, loading and error states | Must | Ready |
 
-### 1.3 Settings screen
+### 1.3 Management screen
 
 One sidebar submenu entry per lookup (one page each). Lists are short and not paginated. Full spec: [settings-screen.md](settings-screen.md) (draft 2, 2026-11-24).
 

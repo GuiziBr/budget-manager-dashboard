@@ -1,10 +1,12 @@
-# Settings Screen — Functional Specification
+# Management Screen — Functional Specification
 
 Status: draft 2 · Last updated: 2026-11-24
 
-The Settings screen is where the budget owner maintains the lists the rest of the app draws from (categories, payment types, banks and stores). It is used rarely, but without it a new bank or store can't be added from the app.
+The Management screen is where the budget owner maintains the lists the rest of the app draws from (categories, payment types, banks and stores). It is used rarely, but without it a new bank or store can't be added from the app.
 
 The forms and confirmations opened from this screen are specified here, because they are only reachable from it.
+
+The menu entry is titled **Management** (it was "Settings"). The route (`/settings`), the code and these file names keep the old name.
 
 Related: [UX brief](../ui/ux-brief.md) · [Software specification](../software_specification.md) · [API docs](../APIs/api-reference.md) · [Month spec](month-screen.md) · [Backlog](todo.md) · [Design system](../../DESIGN_SYSTEM.md)
 
@@ -20,7 +22,7 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 | ID | Feature | Priority | Status |
 |---|---|---|---|
 | **Screen** | | | |
-| S-00 | Settings submenu: Categories, Payment types, Banks, Stores | Must | Ready |
+| S-00 | Management submenu: Categories, Payment types, Banks, Stores | Must | Ready |
 | **Categories** | | | |
 | S-01 | List categories, showing which use envelopes | Must | Ready |
 | S-02 | Add and rename a category | Must | Ready |
@@ -38,7 +40,7 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 | S-11 | List, add and rename stores | Must | Ready |
 | S-12 | Delete a store | Must | Ready (see G-13) |
 | **Appearance** | | | |
-| S-13 | ~~Choose light or dark theme in Settings~~ | — | Dropped (2026-11-24): the theme switch stays at the bottom of the sidebar, and in the More sheet on the phone |
+| S-13 | ~~Choose light or dark theme in Management~~ | — | Dropped (2026-11-24): the theme switch stays at the bottom of the sidebar, and in the More sheet on the phone |
 | **Rules across the screen** | | | |
 | S-14 | Duplicate names are rejected with a clear message | Must | Ready (see G-7) |
 
@@ -60,22 +62,22 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 
 ### Screen
 
-#### S-00 Settings submenu
+#### S-00 Management submenu
 
 *As the budget owner, I want one place for every list, so I don't hunt through the app to add a bank.*
 
 **How it works**
-1. **Settings** in the sidebar has a submenu: **Categories**, **Payment types**, **Banks**, **Stores**. It is shown while any Settings page is open and hidden elsewhere. The current section is highlighted.
+1. **Management** in the sidebar has a submenu: **Categories**, **Payment types**, **Banks**, **Stores**. It is shown while any Management page is open and hidden elsewhere. The current section is highlighted.
 2. Each section is its own page, so a link and the back button return to it: `/settings/categories`, `/settings/payment-types`, `/settings/banks`, `/settings/stores`. An unknown section is a 404.
-3. Clicking **Settings** in the sidebar opens the first section, Categories. The page title is the section's name.
-4. The phone has no sidebar. The **Settings** tab opens `/settings`, a list of the four sections; each section page has a **Back to Settings** link at the top (hidden on desktop).
+3. Clicking **Management** in the sidebar opens the first section, Categories. The page title is the section's name.
+4. The phone has no sidebar. The **Management** tab opens `/settings`, a list of the four sections; each section page has a **Back to Management** link at the top (hidden on desktop).
 5. Each section has the same layout (S-01): a header with the section's **Add** button and a list below it, inside one card.
 6. There is no Appearance section: the theme switch stays where it is (S-13 dropped).
 
 **Acceptance criteria**
-- *Given* I click Settings in the sidebar, *then* Categories opens and the submenu shows Categories highlighted.
+- *Given* I click Management in the sidebar, *then* Categories opens and the submenu shows Categories highlighted.
 - *Given* I click Banks in the submenu, *then* the address reads `/settings/banks` and Back returns to the previous section.
-- *Given* the phone, *when* I tap the Settings tab, *then* I see the four sections, and opening one shows a link back to the list.
+- *Given* the phone, *when* I tap the Management tab, *then* I see the four sections, and opening one shows a link back to the list.
 
 ### Lookup lists (S-01, S-05, S-09, S-11)
 
@@ -230,7 +232,7 @@ Decided 2026-11-24: the theme switch stays at the bottom of the sidebar, and in 
 |---|---|
 | Form shell for add and edit | A panel or sheet, like the other forms, rather than editing in the row. Consistent, and room for the switches' hints |
 | Switches in the list | Not inline. A flag with consequences (envelopes, bank rule) changes through the form, where the hint is |
-| Sections as a submenu | **Decided 2026-11-24:** a submenu under Settings in the sidebar, one page per section, instead of tabs on one page. On the phone, a list page at `/settings` |
+| Sections as a submenu | **Decided 2026-11-24:** a submenu under Management in the sidebar, one page per section, instead of tabs on one page. On the phone, a list page at `/settings` |
 | Appearance | **Decided 2026-11-24:** dropped. The theme switch stays at the bottom of the sidebar and in the More sheet |
 | Name check ignoring case | Yes, before sending (S-14) |
 

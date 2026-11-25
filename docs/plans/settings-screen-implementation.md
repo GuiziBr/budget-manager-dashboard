@@ -1,10 +1,12 @@
-# Settings Screen — Implementation Plan
+# Management Screen — Implementation Plan
 
 Status: draft 2 · Last updated: 2026-11-24
 
-Breaks the [Settings screen spec](../specs/settings-screen.md) into small tasks. Each task is one pull request to `development`, sized to be reviewed in one sitting. Task IDs start with **ST-** so they don't clash with the Month plan's T- numbers.
+The menu entry is titled **Management** (it was "Settings"); the route (`/settings`), the code and the file names keep the old name.
 
-Related: [Settings spec](../specs/settings-screen.md) · [Month plan](month-screen-implementation.md) · [Backlog](../specs/todo.md) · [API docs](../APIs/api-reference.md) · [Design system](../../DESIGN_SYSTEM.md)
+Breaks the [Management screen spec](../specs/settings-screen.md) into small tasks. Each task is one pull request to `development`, sized to be reviewed in one sitting. Task IDs start with **ST-** so they don't clash with the Month plan's T- numbers.
+
+Related: [Management spec](../specs/settings-screen.md) · [Month plan](month-screen-implementation.md) · [Backlog](../specs/todo.md) · [API docs](../APIs/api-reference.md) · [Design system](../../DESIGN_SYSTEM.md)
 
 ---
 
@@ -12,10 +14,10 @@ Related: [Settings spec](../specs/settings-screen.md) · [Month plan](month-scre
 
 - **One task, one PR**, with a conventional commit title (`feat(settings): …`). A task is done when its "Done when" checks pass and `npm run check`, `npm run build` and `npm run test:cov` are green.
 - **Order:** phases run top to bottom. Inside a phase, tasks without a dependency can be done in parallel.
-- **Ship read-only first.** Phases 0–2 give a Settings screen that lists the four lookups with real data before any form exists. Actions come after.
+- **Ship read-only first.** Phases 0–2 give a Management screen that lists the four lookups with real data before any form exists. Actions come after.
 - **Logic in `src/lib/`, UI in components.** The name rules, the duplicate check and the request builders are pure functions with tests, held to the 90% coverage bar. Components stay thin.
 - **Reuse the Month screen's patterns.** The forms use the same shell, field and toast conventions as the income and envelope forms (T-32, T-33); deletes use `ConfirmDeleteModal`; errors go through `describeApiError` (T-07).
-- **Every screen task** is checked in light and dark, on desktop and at 390px. `design.pen` has no Settings frames, so compare against the income form frames and the existing screens until frames exist.
+- **Every screen task** is checked in light and dark, on desktop and at 390px. `design.pen` has no Management frames, so compare against the income form frames and the existing screens until frames exist.
 - **Strings** go in `src/constants/translations.ts`; **colours** only through tokens.
 - **Backend gaps stay inside the task they affect.** Each task that depends on a gap (G-7, G-13, G-14, G-15) repeats the gap in its **Backend** line, with what to do now and what changes when it is answered. The gaps are addressed when the task is reached, not before.
 
@@ -28,7 +30,7 @@ Related: [Settings spec](../specs/settings-screen.md) · [Month plan](month-scre
 | ST-01 | Lookup error messages (`lib/api-error-message.ts`) | 0 Foundations | S-02, S-04, S-14 | — | S | G-7, G-13 |
 | ST-02 | Lookup form rules (`lib/lookup-form.ts`) | 0 | S-02, S-14 | — | S | G-7, G-15 |
 | ST-03 | Lookup mutation hooks | 1 Data | S-02 to S-12 | — | M | — |
-| ST-04 | Settings routes and sidebar submenu | 2 Read-only screen | S-00 | — | S | — |
+| ST-04 | Management routes and sidebar submenu | 2 Read-only screen | S-00 | — | S | — |
 | ST-05 | Lookup lists | 2 | S-01, S-05, S-09, S-11 | ST-04 | M | — |
 | ST-06 | Lookup form panel: add and rename | 3 Actions | S-02, S-06, S-09, S-11, S-14 | ST-01, ST-02, ST-03, ST-05 | M | G-7, G-15 |
 | ST-07 | Category flag: Uses envelopes | 3 | S-03 | ST-06 | S | G-14 |
@@ -75,17 +77,17 @@ Size: **S** ≈ half a day, **M** ≈ a day.
 - **Done when:** each hook sends the expected request (`POST`, `PATCH` with only the given fields, `DELETE`), invalidates the list on success (and, for an update, the expenses), and leaves everything alone on error.
 - **Note:** the Month screen's forms read the lookup keys, so a change shows there after the refetch. Expense rows carry the names they display, so a rename must also invalidate the expenses (`EXPENSES_QUERY_KEY`, the root key the expense mutations already use); otherwise rows cached within their 30-second `staleTime` keep the old name. Creates and deletes need only the lookup's own key: a deleted item stays on past rows as "(deleted)", which the expense data already says.
 
-### Phase 2 — Read-only Settings screen
+### Phase 2 — Read-only Management screen
 
-#### ST-04 Settings routes and sidebar submenu (S-00)
+#### ST-04 Management routes and sidebar submenu (S-00)
 - **Status: built (2026-11-24), PR #107.** First built as tabs (`?tab=`), then changed the same day to a sidebar submenu, and Appearance was dropped (see ST-10).
 - **Includes:**
-  - `src/lib/navigation.ts`: `SETTINGS_SECTIONS` (Categories, Payment types, Banks, Stores) as `children` of the Settings item, plus `findSettingsSection`, `isNavItemWithinActive`, `navItemLandingHref`; `getPageTitle` returns the section's name on a section page;
+  - `src/lib/navigation.ts`: `SETTINGS_SECTIONS` (Categories, Payment types, Banks, Stores) as `children` of the Management item, plus `findSettingsSection`, `isNavItemWithinActive`, `navItemLandingHref`; `getPageTitle` returns the section's name on a section page;
   - one page per section, `src/app/(app)/settings/[section]/page.tsx` (`generateStaticParams` over the four ids, `dynamicParams = false`, so an unknown section is a 404), rendering an empty `SettingsSection` until ST-05;
   - `src/app/(app)/settings/page.tsx`: `SettingsIndex`, the list of sections, which is how the phone reaches them;
-  - `AppSidebar`: the Settings entry links to the first section and shows the submenu while any Settings page is open, with the current section highlighted; `BottomTabBar` keeps the Settings tab current on section pages and `SettingsSection` has a **Back to Settings** link on the phone only.
-- **Done when:** the S-00 acceptance criteria pass: Settings opens Categories with the submenu shown, Banks writes `/settings/banks` and Back returns to the previous section, and on the phone the Settings tab lists the sections.
-- **Design:** no `design.pen` frames exist for Settings. Compare with the Month screen's header and cards, and add frames afterwards if wanted.
+  - `AppSidebar`: the Management entry links to the first section and shows the submenu while any Management page is open, with the current section highlighted; `BottomTabBar` keeps the Management tab current on section pages and `SettingsSection` has a **Back to Management** link on the phone only.
+- **Done when:** the S-00 acceptance criteria pass: Management opens Categories with the submenu shown, Banks writes `/settings/banks` and Back returns to the previous section, and on the phone the Management tab lists the sections.
+- **Design:** no `design.pen` frames exist for Management. Compare with the Month screen's header and cards, and add frames afterwards if wanted.
 
 #### ST-05 Lookup lists (S-01, S-05, S-09, S-11)
 - **Includes:** one `LookupList` used by the four sections: a card with the section's **Add** button in the header (does nothing until ST-06), rows sorted with `sortLookups`, the flag **badge** after the name ("Uses envelopes" / "Requires a bank", reusing `badge.tsx`), and a row menu with **Edit** and **Delete** (44px touch target on the phone; the entries do nothing until ST-06 and ST-09). States: skeleton rows while loading, an inline error with **Retry**, and "No {items} yet" with an Add button when the list is empty.
