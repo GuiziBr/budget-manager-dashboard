@@ -37,6 +37,26 @@ export const translations = {
 	settings: {
 		sectionsLabel: "Management sections",
 		back: "Back to Management",
+		list: {
+			add: "Add",
+			edit: "Edit",
+			delete: "Delete",
+			retry: "Retry",
+			loading: "Loading",
+			loadError: "Couldn't load the {items}",
+			empty: "No {items} yet",
+			rowActions: "Actions for {name}",
+			badges: {
+				category: "Uses envelopes",
+				paymentType: "Requires a bank"
+			},
+			items: {
+				category: { plural: "categories", title: "Categories" },
+				paymentType: { plural: "payment types", title: "Payment types" },
+				bank: { plural: "banks", title: "Banks" },
+				store: { plural: "stores", title: "Stores" }
+			}
+		},
 		form: {
 			validation: {
 				name: "Enter a name"
