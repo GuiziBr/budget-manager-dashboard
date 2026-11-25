@@ -9,7 +9,7 @@ import {
 	DetailsSheet,
 	PositionCounter,
 	StepButton
-} from "@/components/month/DetailsSheet"
+} from "@/components/DetailsSheet"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
