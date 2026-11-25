@@ -98,6 +98,7 @@ Size: **S** ≈ half a day, **M** ≈ a day.
 ### Phase 3 — Actions
 
 #### ST-06 Lookup form panel: rename (S-02, S-06, S-09, S-11, S-14)
+- **Status: built (2026-11-25).** `LookupFormPanel` (name only; the flags come in ST-07/ST-08) on `DetailsSheet`, which moved to `components/`. `SettingsSection` wires each section to its `useUpdateX` hook through a shared `LookupSection`; the row menu hands its button back so focus returns there on close.
 - **Includes:**
   - `LookupFormPanel`: the edit form (Add is the inline card above the table, built in ST-05) on the shell of the income and envelope forms. `DetailsSheet` currently lives in `components/month/`; move it to `components/` in this task, since two screens now use it. Fields per lookup as in the spec (Name\*; the two flags arrive in ST-07 and ST-08). **Save** and **Cancel** only;
   - edit from the row menu, prefilled with `lookupToFormValues`; on edit only the changed fields are sent, and saving with no change closes without a request (add already sends every required field, the flags as `false` when off, from the inline card);
