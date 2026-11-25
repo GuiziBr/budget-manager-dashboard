@@ -114,10 +114,6 @@ export const isNavItemActive = (pathname: string | null, href: string) =>
 export const isNavItemWithinActive = (pathname: string | null, href: string) =>
 	pathname === href || !!pathname?.startsWith(`${href}/`)
 
-/** Where the sidebar sends you: the first submenu entry, if there is one. */
-export const navItemLandingHref = (item: NavItem) =>
-	item.children?.[0]?.href ?? item.href
-
 export const isMoreTabActive = (pathname: string | null) =>
 	MORE_NAV_ITEMS.some((item) => isNavItemActive(pathname, item.href))
 

@@ -9,8 +9,7 @@ import {
 	isNavItemActive,
 	isNavItemWithinActive,
 	NAV_GROUPS,
-	type NavItem,
-	navItemLandingHref
+	type NavItem
 } from "@/lib/navigation"
 import { cn } from "@/lib/utils"
 import { useTheme } from "@/providers/theme-provider"
@@ -63,44 +62,49 @@ function SidebarItem({
 		if (isWithin) setIsExpanded(true)
 	}, [isWithin])
 
-	const hasChildren = !!item.children
-	const label = translations.navigation.toggleSubmenu.replace(
-		"{item}",
-		item.label
-	)
+	if (!item.children) {
+		return (
+			<li>
+				<Link
+					href={item.href}
+					aria-current={isActive ? "page" : undefined}
+					className={itemClass(isActive)}
+				>
+					<Icon className="size-[18px] shrink-0" aria-hidden="true" />
+					{item.label}
+				</Link>
+			</li>
+		)
+	}
 
 	return (
-		<li className="relative">
-			<Link
-				href={navItemLandingHref(item)}
-				aria-current={isActive ? "page" : undefined}
+		<li>
+			{/* A menu with a submenu only shows or hides it; it goes nowhere itself */}
+			<button
+				type="button"
+				aria-expanded={isExpanded}
+				aria-controls={submenuId}
+				onClick={() => setIsExpanded((open) => !open)}
 				className={cn(
-					itemClass(isActive),
-					hasChildren && "pr-11",
-					isWithin && !isActive && "text-sidebar-foreground"
+					itemClass(false),
+					"cursor-pointer justify-between",
+					isWithin && "text-sidebar-foreground"
 				)}
 			>
-				<Icon className="size-[18px] shrink-0" aria-hidden="true" />
-				{item.label}
-			</Link>
+				<span className="flex items-center gap-3">
+					<Icon className="size-[18px] shrink-0" aria-hidden="true" />
+					{item.label}
+				</span>
+				<ChevronDown
+					aria-hidden="true"
+					className={cn(
+						"size-4 transition-transform duration-200 motion-reduce:transition-none",
+						isExpanded && "rotate-180"
+					)}
+				/>
+			</button>
 			{item.children && (
 				<>
-					<button
-						type="button"
-						aria-label={label}
-						aria-expanded={isExpanded}
-						aria-controls={submenuId}
-						onClick={() => setIsExpanded((open) => !open)}
-						className="absolute top-1 right-1.5 flex size-8 cursor-pointer items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-ring"
-					>
-						<ChevronDown
-							aria-hidden="true"
-							className={cn(
-								"size-4 transition-transform duration-200 motion-reduce:transition-none",
-								isExpanded && "rotate-180"
-							)}
-						/>
-					</button>
 					{/* Grid rows animate the height; hidden links leave the tab order */}
 					<div
 						id={submenuId}

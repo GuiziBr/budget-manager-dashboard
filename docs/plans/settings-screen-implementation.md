@@ -82,11 +82,11 @@ Size: **S** ≈ half a day, **M** ≈ a day.
 #### ST-04 Management routes and sidebar submenu (S-00)
 - **Status: built (2026-11-24), PR #107.** First built as tabs (`?tab=`), then changed the same day to a sidebar submenu, and Appearance was dropped (see ST-10).
 - **Includes:**
-  - `src/lib/navigation.ts`: `SETTINGS_SECTIONS` (Categories, Payment types, Banks, Stores) as `children` of the Management item, plus `findSettingsSection`, `isNavItemWithinActive`, `navItemLandingHref`; `getPageTitle` returns the section's name on a section page;
+  - `src/lib/navigation.ts`: `SETTINGS_SECTIONS` (Categories, Payment types, Banks, Stores) as `children` of the Management item, plus `findSettingsSection`, `isNavItemWithinActive`; `getPageTitle` returns the section's name on a section page;
   - one page per section, `src/app/(app)/settings/[section]/page.tsx` (`generateStaticParams` over the four ids, `dynamicParams = false`, so an unknown section is a 404), rendering an empty `SettingsSection` until ST-05;
   - `src/app/(app)/settings/page.tsx`: `SettingsIndex`, the list of sections, which is how the phone reaches them;
-  - `AppSidebar`: the Management entry links to the first section and shows the submenu while any Management page is open, with the current section highlighted; `BottomTabBar` keeps the Management tab current on section pages and `SettingsSection` has a **Back to Management** link on the phone only.
-- **Done when:** the S-00 acceptance criteria pass: Management opens Categories with the submenu shown, Banks writes `/settings/banks` and Back returns to the previous section, and on the phone the Management tab lists the sections.
+  - `AppSidebar`: the Management entry is a button that only shows or hides the submenu (arrow, animated height; no navigation). The submenu opens on arriving in a section, and the current section is highlighted; `BottomTabBar` keeps the Management tab current on section pages and `SettingsSection` has a **Back to Management** link on the phone only.
+- **Done when:** the S-00 acceptance criteria pass: clicking Management only toggles the submenu, Banks writes `/settings/banks` and Back returns to the previous section, and on the phone the Management tab lists the sections.
 - **Design:** no `design.pen` frames exist for Management. Compare with the Month screen's header and cards, and add frames afterwards if wanted.
 
 #### ST-05 Lookup lists (S-01, S-05, S-09, S-11)

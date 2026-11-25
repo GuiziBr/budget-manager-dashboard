@@ -69,13 +69,13 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 **How it works**
 1. **Management** in the sidebar has a submenu: **Categories**, **Payment types**, **Banks**, **Stores**. It is shown while any Management page is open and hidden elsewhere. The current section is highlighted.
 2. Each section is its own page, so a link and the back button return to it: `/settings/categories`, `/settings/payment-types`, `/settings/banks`, `/settings/stores`. An unknown section is a 404.
-3. Clicking **Management** in the sidebar opens the first section, Categories. The page title is the section's name.
+3. Clicking **Management** in the sidebar only shows or hides the submenu (an arrow beside it points up when open, down when closed, and the height animates); it doesn't open a page. The submenu opens by itself when you arrive in a section, and can be collapsed by hand. The page title is the section's name.
 4. The phone has no sidebar. The **Management** tab opens `/settings`, a list of the four sections; each section page has a **Back to Management** link at the top (hidden on desktop).
 5. Each section has the same layout (S-01): a header with the section's **Add** button and a list below it, inside one card.
 6. There is no Appearance section: the theme switch stays where it is (S-13 dropped).
 
 **Acceptance criteria**
-- *Given* I click Management in the sidebar, *then* Categories opens and the submenu shows Categories highlighted.
+- *Given* I click Management in the sidebar, *then* the submenu opens or closes and the page doesn't change.
 - *Given* I click Banks in the submenu, *then* the address reads `/settings/banks` and Back returns to the previous section.
 - *Given* the phone, *when* I tap the Management tab, *then* I see the four sections, and opening one shows a link back to the list.
 

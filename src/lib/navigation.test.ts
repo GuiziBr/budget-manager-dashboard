@@ -11,7 +11,6 @@ import {
 	MOBILE_TAB_ITEMS,
 	MONTH_PATH,
 	monthHref,
-	navItemLandingHref,
 	RECURRING_PATH,
 	SETTINGS_PATH,
 	SETTINGS_SECTIONS
@@ -85,11 +84,6 @@ describe("navigation", () => {
 		expect(isNavItemWithinActive("/settings/banks", SETTINGS_PATH)).toBe(true)
 		expect(isNavItemWithinActive("/settings-x", SETTINGS_PATH)).toBe(false)
 		expect(isNavItemWithinActive(null, SETTINGS_PATH)).toBe(false)
-	})
-
-	it("lands on the first submenu entry, or on the item itself", () => {
-		expect(navItemLandingHref(MAIN_NAV_ITEMS[2])).toBe("/settings/categories")
-		expect(navItemLandingHref(MAIN_NAV_ITEMS[0])).toBe(MONTH_PATH)
 	})
 
 	it("shows every item as a tab, so no More item is active", () => {
