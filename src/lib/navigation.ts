@@ -4,7 +4,7 @@ import {
 	Landmark,
 	type LucideIcon,
 	Repeat,
-	Settings,
+	Settings2,
 	Store,
 	Tags
 } from "lucide-react"
@@ -89,7 +89,7 @@ export const NAV_GROUPS: NavGroup[] = [
 			{
 				label: translations.navigation.items.settings,
 				href: SETTINGS_PATH,
-				icon: Settings,
+				icon: Settings2,
 				children: SETTINGS_SECTIONS
 			}
 		]
