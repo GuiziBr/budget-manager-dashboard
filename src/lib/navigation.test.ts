@@ -47,7 +47,7 @@ describe("navigation", () => {
 		expect(getPageTitle("/unknown")).toBe("Month")
 	})
 
-	it("titles a settings section page "Management"", () => {
+	it("keeps the Management title on a settings section page", () => {
 		expect(getPageTitle("/management/banks")).toBe("Management")
 		expect(getPageTitle("/management/payment-types")).toBe("Management")
 	})
