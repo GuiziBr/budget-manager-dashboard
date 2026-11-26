@@ -72,4 +72,20 @@ describe("ConfirmDeleteModal", () => {
 			screen.queryByRole("button", { name: translations.common.delete })
 		).not.toBeInTheDocument()
 	})
+
+	it("ignores Escape while a delete is pending", async () => {
+		const { onClose, user } = setup({ isPending: true })
+
+		await user.keyboard("{Escape}")
+
+		expect(onClose).not.toHaveBeenCalled()
+	})
+
+	it("closes on Escape when nothing is pending", async () => {
+		const { onClose, user } = setup()
+
+		await user.keyboard("{Escape}")
+
+		expect(onClose).toHaveBeenCalled()
+	})
 })

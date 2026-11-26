@@ -82,7 +82,7 @@ export function LookupFormPanel({
 			title={t.title.replace("{item}", names[lookup].item)}
 			titleClassName="text-xl"
 			separated
-			description={t.description.replace("{name}", shown?.name ?? "")}
+			description={t.description.replace("{name}", () => shown?.name ?? "")}
 			returnFocusRef={returnFocusRef}
 			fallbackFocusRef={fallbackFocusRef}
 			fullHeight
@@ -183,7 +183,7 @@ function LookupForm({
 			fail(error)
 			return
 		}
-		toast.success(t.saved.replace("{name}", name))
+		toast.success(t.saved.replace("{name}", () => name))
 		onClose()
 	})
 

@@ -30,7 +30,10 @@ export function ConfirmDeleteModal({
 	isPending = false
 }: ConfirmDeleteModalProps) {
 	return (
-		<Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+		<Dialog
+			open={isOpen}
+			onOpenChange={(open) => !open && !isPending && onClose()}
+		>
 			<DialogContent className="sm:max-w-[425px]">
 				<DialogHeader>
 					<DialogTitle>{title}</DialogTitle>

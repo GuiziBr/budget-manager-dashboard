@@ -91,6 +91,11 @@ export const translations = {
 			save: "Save",
 			cancel: "Cancel"
 		},
+		remove: {
+			title: "Delete {item}",
+			confirm: "Are you sure you want to delete the {item} {name}?",
+			deleted: "{name} deleted"
+		},
 		form: {
 			validation: {
 				name: "Enter a name"

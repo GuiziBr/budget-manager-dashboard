@@ -170,6 +170,6 @@ describe("LookupList", () => {
 			screen.getByRole("button", { name: "Actions for Nubank" })
 		)
 		await userEvent.click(screen.getByRole("menuitem", { name: "Delete" }))
-		expect(onDelete).toHaveBeenCalledWith(nubank)
+		expect(onDelete).toHaveBeenCalledWith(nubank, expect.any(HTMLElement))
 	})
 })
