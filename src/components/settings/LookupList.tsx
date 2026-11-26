@@ -192,7 +192,8 @@ export function LookupList({
 	} else {
 		body = (
 			<>
-				<div className="overflow-x-auto">
+				{/* relative: the header's sr-only text is absolute and would otherwise escape the scroll and widen the page */}
+				<div className="relative overflow-x-auto">
 					<table aria-label={title} className="w-full min-w-[34rem]">
 						<thead>
 							<tr className="border-border border-b bg-background">
