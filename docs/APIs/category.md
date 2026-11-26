@@ -1,6 +1,6 @@
 # Category API
 
-Base route: `/categories`. Lookup table classifying expenses. Names are unique among active categories (the check is by exact value, so it is case-sensitive).
+Base route: `/categories`. Lookup table classifying expenses. Names are unique among active categories, ignoring case ("Grocery" and "grocery" are duplicates).
 
 ## Resource
 
@@ -29,7 +29,7 @@ Base route: `/categories`. Lookup table classifying expenses. Names are unique a
 
 | Field | Type | Required | Rules |
 |---|---|---|---|
-| `name` | string | yes | non-empty, unique |
+| `name` | string | yes | non-empty, unique (case-insensitive) |
 | `hasBudgetEnvelope` | boolean | yes | |
 
 ```json
@@ -38,14 +38,14 @@ Base route: `/categories`. Lookup table classifying expenses. Names are unique a
 
 - **201** `Category`
 - **400** validation failure
-- **409** `A category named 'Grocery' already exists`
+- **409** `A category named 'Grocery' already exists` (also returned when the name differs only by case)
 - **500**
 
 ## PATCH /categories/:id
 
 | Field | Type | Rules |
 |---|---|---|
-| `name` | string | non-empty, unique |
+| `name` | string | non-empty, unique (case-insensitive) |
 | `hasBudgetEnvelope` | boolean | |
 
 At least one field is required.
@@ -53,7 +53,7 @@ At least one field is required.
 - **200** updated `Category`
 - **400** `id` not a UUID, invalid body, or empty body
 - **404** category not found
-- **409** the new name is already used by another category
+- **409** the new name is already used by another category (case-insensitive)
 - **500**
 
 ## DELETE /categories/:id

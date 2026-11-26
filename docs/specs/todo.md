@@ -57,7 +57,7 @@ One sidebar submenu entry per lookup (one page each). Lists are short and not pa
 | S-11 | Stores: list, add, rename | Must | Ready |
 | S-12 | Stores: delete, blocked while in use | Must | Ready |
 | S-13 | ~~Appearance: light or dark theme~~ | — | Dropped (2026-11-24) |
-| S-14 | Duplicate names rejected with a clear message | Must | Ready (see G-7) |
+| S-14 | Duplicate names rejected with a clear message | Must | Ready |
 
 ---
 
@@ -95,7 +95,7 @@ U-1 (marking a bill paid after its month ends) and BE-3 were resolved on 2026-11
 | ID | Gap | Affects | Suggested fix |
 |---|---|---|---|
 | G-4 | ~~Does a new recurring expense also reach later months that are already opened?~~ **Resolved 2026-11-13:** yes, verified against the backend (a bill created in October appeared in the opened November) | M-16 | Align `docs/APIs/expense.md`, `recurring-expense.md` and `software_specification.md` (the spec is right; the API docs omit the backfill) |
-| G-7 | Lookup names: the software specification says unique ignoring case, the API docs say exact (case-sensitive) match | S-02, S-06, S-09, S-11, S-14 | Confirm which rule applies |
+| G-7 | ~~Lookup names: unique ignoring case or exact match?~~ **Resolved 2026-11-26:** ignoring case ("Food" and "food" are duplicates). The software specification and the API docs now say so | S-02, S-06, S-09, S-11, S-14 | None |
 | G-9 | No endpoint lists installment plans, so plans can only be reached from their expense rows | M-19 | `GET /installment-groups`, if a list of plans is ever wanted |
 | G-12 | `BudgetEnvelope` carries only `categoryId`, so the name of a category deleted after the envelope's month can't be shown (the same problem G-3 had for expenses) | M-04, M-08 | Return `category: { id, name }` on envelopes |
 | G-13 | No way to tell whether a lookup is in use, so a delete is refused (409) only after the user confirms | S-04, S-08, S-10, S-12 | Return an `inUse` flag, or the count of active references, on each lookup |

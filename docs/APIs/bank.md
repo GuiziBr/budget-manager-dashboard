@@ -1,6 +1,6 @@
 # Bank API
 
-Base route: `/banks`. Lookup table of banks/card issuers that expenses can reference. Names are unique among active banks (exact, case-sensitive match).
+Base route: `/banks`. Lookup table of banks/card issuers that expenses can reference. Names are unique among active banks, ignoring case ("Nubank" and "nubank" are duplicates).
 
 ## Resource
 
@@ -28,7 +28,7 @@ Base route: `/banks`. Lookup table of banks/card issuers that expenses can refer
 
 | Field | Type | Required | Rules |
 |---|---|---|---|
-| `name` | string | yes | non-empty, unique |
+| `name` | string | yes | non-empty, unique (case-insensitive) |
 
 ```json
 { "name": "Nubank" }
@@ -36,21 +36,21 @@ Base route: `/banks`. Lookup table of banks/card issuers that expenses can refer
 
 - **201** `Bank`
 - **400** validation failure
-- **409** `A bank named 'Nubank' already exists`
+- **409** `A bank named 'Nubank' already exists` (also returned when the name differs only by case)
 - **500**
 
 ## PATCH /banks/:id
 
 | Field | Type | Rules |
 |---|---|---|
-| `name` | string | non-empty, unique |
+| `name` | string | non-empty, unique (case-insensitive) |
 
 At least one field is required.
 
 - **200** updated `Bank`
 - **400** `id` not a UUID, invalid body, or empty body
 - **404** bank not found
-- **409** the new name is already used by another bank
+- **409** the new name is already used by another bank (case-insensitive)
 - **500**
 
 ## DELETE /banks/:id

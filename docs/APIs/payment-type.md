@@ -1,6 +1,6 @@
 # Payment Type API
 
-Base route: `/payment-types`. Lookup table describing how an expense was paid. Names are unique among active payment types (exact, case-sensitive match).
+Base route: `/payment-types`. Lookup table describing how an expense was paid. Names are unique among active payment types, ignoring case ("Credit Card" and "credit card" are duplicates).
 
 ## Resource
 
@@ -29,7 +29,7 @@ Base route: `/payment-types`. Lookup table describing how an expense was paid. N
 
 | Field | Type | Required | Rules |
 |---|---|---|---|
-| `name` | string | yes | non-empty, unique |
+| `name` | string | yes | non-empty, unique (case-insensitive) |
 | `hasStatement` | boolean | yes | |
 
 ```json
@@ -38,14 +38,14 @@ Base route: `/payment-types`. Lookup table describing how an expense was paid. N
 
 - **201** `PaymentType`
 - **400** validation failure
-- **409** `A payment type named 'Credit Card' already exists`
+- **409** `A payment type named 'Credit Card' already exists` (also returned when the name differs only by case)
 - **500**
 
 ## PATCH /payment-types/:id
 
 | Field | Type | Rules |
 |---|---|---|
-| `name` | string | non-empty, unique |
+| `name` | string | non-empty, unique (case-insensitive) |
 | `hasStatement` | boolean | |
 
 At least one field is required. Changing `hasStatement` does not re-validate existing expenses.
@@ -53,7 +53,7 @@ At least one field is required. Changing `hasStatement` does not re-validate exi
 - **200** updated `PaymentType`
 - **400** `id` not a UUID, invalid body, or empty body
 - **404** payment type not found
-- **409** the new name is already used by another payment type
+- **409** the new name is already used by another payment type (case-insensitive)
 - **500**
 
 ## DELETE /payment-types/:id

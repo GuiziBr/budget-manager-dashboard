@@ -138,7 +138,7 @@ All models include a `deleted_at` timestamp. No records are physically deleted. 
 
 ### Expense
 
-- An expense **cannot be updated or soft-deleted** if its budget period's `(year, month)` is before the current calendar month — returns **422 Unprocessable Entity**
+- An expense **can be updated or soft-deleted in any month**, including past ones (resolved 2026-11-10, BE-3). Only budget envelopes are locked once their month has passed (see Budget Envelope)
 - Must always reference a **non-deleted** `BudgetPeriod`, `Category`, and `PaymentType`
 - If the referenced `PaymentType.hasStatement = true`, a `bankId` is **required**; omitting it returns **400**
 - `bankId` and `storeId` are optional; if provided (non-null), they must reference a **non-deleted** Bank/Store on create and update — otherwise **404**. Existing expenses keep their reference if the bank/store is deleted later (historical integrity is preserved)
@@ -172,7 +172,7 @@ All models include a `deleted_at` timestamp. No records are physically deleted. 
 
 ### Lookup Tables (Category, PaymentType, Bank, Store)
 
-- Names must be **unique case-insensitively** among non-deleted records within each table; duplicates return **409 Conflict**
+- Names must be **unique case-insensitively** among non-deleted records within each table (e.g., "Food" and "food" are duplicates); duplicates return **409 Conflict**. Enforced by a partial unique index on `lower(name) WHERE deleted_at IS NULL`; stored names keep their original casing
 - **Category / PaymentType** cannot be soft-deleted while actively referenced (see below); once deleted, they still appear on historical expenses but **cannot be selected when creating new expenses or recurring expenses**
 - **Bank / Store** cannot be soft-deleted while actively referenced (see below); existing expenses retain their `bankId` / `storeId` reference for historical display; soft-deleted Bank/Store cannot be selected for new or updated expenses
 - **Active reference** (applies to Category, PaymentType, Bank and Store): a non-deleted `RecurringExpense` that is not cancelled (or is cancelled on/after the first day of the current UTC month), or a non-deleted `Expense` in the current or a future budget period. Deleting such a record returns **409 Conflict**; references from past-period expenses do not block deletion.
