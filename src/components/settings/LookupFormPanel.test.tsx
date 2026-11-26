@@ -124,6 +124,55 @@ describe("LookupFormPanel", () => {
 		})
 	})
 
+	describe("Has statement flag", () => {
+		const debit = {
+			id: "3",
+			name: "Debit",
+			hasStatement: false
+		} as LookupItem
+		const credit = {
+			id: "4",
+			name: "Credit",
+			hasStatement: true
+		} as LookupItem
+		const flag = () => screen.getByRole("checkbox", { name: "Has statement" })
+		const open = (item: LookupItem) =>
+			setup({ lookup: "paymentType", item, items: [debit, credit] })
+
+		it("shows the flag prefilled, with its hint", () => {
+			open(credit)
+			expect(flag()).toBeChecked()
+			expect(flag()).toHaveAccessibleDescription(
+				/Expenses paid this way must have a bank/
+			)
+			expect(
+				screen.getByText(/Existing expenses aren't checked again/)
+			).toBeInTheDocument()
+		})
+
+		it("sends only the flag when it is the only change", async () => {
+			const { update, reload, onClose } = open(debit)
+			expect(flag()).not.toBeChecked()
+			await userEvent.click(flag())
+			await save()
+			await waitFor(() =>
+				expect(update).toHaveBeenCalledWith(debit, { hasStatement: true })
+			)
+			expect(reload).not.toHaveBeenCalled()
+			expect(toast.success).toHaveBeenCalledWith("Debit saved")
+			expect(onClose).toHaveBeenCalled()
+		})
+
+		it("sends nothing when the flag is toggled back", async () => {
+			const { update, onClose } = open(debit)
+			await userEvent.click(flag())
+			await userEvent.click(flag())
+			await save()
+			await waitFor(() => expect(onClose).toHaveBeenCalled())
+			expect(update).not.toHaveBeenCalled()
+		})
+	})
+
 	it("closes without a request when nothing changed", async () => {
 		const { update, reload, onClose } = setup()
 		await save()

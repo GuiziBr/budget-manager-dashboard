@@ -106,8 +106,8 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 
 | Lookup | Fields |
 |---|---|
-| Category | Name\*, **Uses envelopes** (switch, off by default) |
-| Payment type | Name\*, **Has statement** (checkbox in the add card, off by default) |
+| Category | Name\*, **Uses envelopes** (checkbox, off by default) |
+| Payment type | Name\*, **Has statement** (checkbox, off by default) |
 | Bank | Name\* |
 | Store | Name\* |
 
@@ -145,17 +145,17 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 - Turning it **off** doesn't remove envelopes that already exist. They can be deleted from the Month screen (M-24) only in the current and future months: the backend refuses to change or delete envelopes of past months (422, M-25).
 
 **Acceptance criteria**
-- *Given* a category without envelopes, *when* I turn the switch on and save, *then* its row shows the "Uses envelopes" badge and the category is offered in + Add → Category.
+- *Given* a category without envelopes, *when* I turn the checkbox on and save, *then* its row shows the "Uses envelopes" badge and the category is offered in + Add → Category.
 
 #### S-07 Has statement
 
 *As the budget owner, I want payment types like credit cards to demand a bank.*
 
-- The switch is in the payment type form. A hint reads: "Expenses paid this way must have a bank. Existing expenses aren't checked again."
+- The "Has statement" checkbox is in the payment type form (the add card and the Edit panel). A hint reads: "Expenses paid this way must have a bank. Existing expenses aren't checked again."
 - The expense form uses the new setting as soon as the list is refreshed (the Bank field's asterisk follows the chosen payment type, M-14).
 
 **Acceptance criteria**
-- *Given* "Debit" doesn't have a statement, *when* I turn the switch on, *then* adding an expense paid with Debit marks Bank as required.
+- *Given* "Debit" doesn't have a statement, *when* I turn the checkbox on, *then* adding an expense paid with Debit marks Bank as required.
 
 ### Delete (S-04, S-08, S-10, S-12)
 

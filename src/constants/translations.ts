@@ -59,7 +59,9 @@ export const translations = {
 			// Shown under the flag: what turning it on means
 			flagHints: {
 				category:
-					"Months you open from now on get an envelope for this category. Existing envelopes don't change."
+					"Months you open from now on get an envelope for this category. Existing envelopes don't change.",
+				paymentType:
+					"Expenses paid this way must have a bank. Existing expenses aren't checked again."
 			},
 			yes: "Yes",
 			no: "No",
