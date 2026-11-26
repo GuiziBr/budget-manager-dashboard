@@ -45,8 +45,8 @@ interface LookupListProps {
 	create: (values: LookupFormValues) => Promise<unknown>
 	/** Gets the row menu's button too, to hand the focus back when the panel closes. */
 	onEdit?: (item: LookupItem, opener: HTMLElement | null) => void
-	/** Gets the item to delete; the section asks for the confirmation. */
-	onDelete?: (item: LookupItem) => void
+	/** Gets the item to delete and the row menu's button; the section asks for the confirmation. */
+	onDelete?: (item: LookupItem, opener: HTMLElement | null) => void
 }
 
 const t = translations.settings.list
@@ -75,7 +75,7 @@ function LookupRow({
 	item: LookupItem
 	hasFlag: boolean
 	onEdit?: (item: LookupItem, opener: HTMLElement | null) => void
-	onDelete?: (item: LookupItem) => void
+	onDelete?: (item: LookupItem, opener: HTMLElement | null) => void
 }) {
 	const triggerRef = useRef<HTMLButtonElement>(null)
 	return (
@@ -98,7 +98,7 @@ function LookupRow({
 						<button
 							ref={triggerRef}
 							type="button"
-							aria-label={t.rowActions.replace("{name}", item.name)}
+							aria-label={t.rowActions.replace("{name}", () => item.name)}
 							className="inline-flex size-11 cursor-pointer items-center justify-center rounded text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:size-8"
 						>
 							<EllipsisVertical className="size-4" aria-hidden="true" />
@@ -112,7 +112,7 @@ function LookupRow({
 						</DropdownMenuItem>
 						<DropdownMenuItem
 							variant="destructive"
-							onSelect={() => onDelete?.(item)}
+							onSelect={() => onDelete?.(item, triggerRef.current)}
 						>
 							{t.delete}
 						</DropdownMenuItem>

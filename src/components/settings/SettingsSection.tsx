@@ -63,13 +63,25 @@ function LookupSection({
 	const listRef = useRef<HTMLDivElement>(null)
 	const names = translations.errors.lookup.names[lookup]
 
+	// The dialog has no trigger of its own, so put the focus back by hand: on the row's
+	// menu button, or on the list when the row is gone
+	const restoreFocus = () =>
+		setTimeout(() => {
+			const opener = openerRef.current
+			;(opener?.isConnected ? opener : listRef.current)?.focus()
+		}, 0)
+	const closeDelete = () => {
+		setDeleting(null)
+		restoreFocus()
+	}
+
 	const confirmDelete = async () => {
 		if (!deleting) return
 		const item = deleting
 		setDeletePending(true)
 		try {
 			await remove(item.id)
-			toast.success(t.remove.deleted.replace("{name}", item.name))
+			toast.success(t.remove.deleted.replace("{name}", () => item.name))
 		} catch (error) {
 			const described = describeApiError(error, {
 				action: "deleteLookup",
@@ -81,11 +93,7 @@ function LookupSection({
 			else toast.error(described.message)
 		} finally {
 			setDeletePending(false)
-			setDeleting(null)
-			// The row may be gone, taking the menu button's focus with it
-			setTimeout(() => {
-				if (document.activeElement === document.body) listRef.current?.focus()
-			}, 0)
+			closeDelete()
 		}
 	}
 
@@ -102,16 +110,19 @@ function LookupSection({
 					setEditing(item)
 					setOpen(true)
 				}}
-				onDelete={setDeleting}
+				onDelete={(item, opener) => {
+					openerRef.current = opener
+					setDeleting(item)
+				}}
 			/>
 			<ConfirmDeleteModal
 				isOpen={deleting !== null}
-				onClose={() => setDeleting(null)}
+				onClose={closeDelete}
 				onConfirm={confirmDelete}
 				title={t.remove.title.replace("{item}", names.item)}
 				description={t.remove.confirm
 					.replace("{item}", names.item)
-					.replace("{name}", deleting?.name ?? "")}
+					.replace("{name}", () => deleting?.name ?? "")}
 				isPending={deletePending}
 			/>
 			<LookupFormPanel

@@ -82,7 +82,7 @@ export function LookupAddForm({
 		const submitted = getValues()
 		try {
 			await create(values)
-			toast.success(t.add.added.replace("{name}", name))
+			toast.success(t.add.added.replace("{name}", () => name))
 			// Keep anything typed while the save was pending
 			const now = getValues()
 			if (

@@ -174,6 +174,46 @@ describe("SettingsSection", () => {
 			expect(toast.success).not.toHaveBeenCalled()
 		})
 
+		it("shows a name with a dollar sequence as typed", async () => {
+			vi.spyOn(api, "get").mockResolvedValue([{ ...item, name: "A$$B" }])
+			vi.spyOn(api, "delete").mockResolvedValue(undefined)
+			const { wrapper } = createQueryWrapper()
+			render(<SettingsSection section="banks" />, { wrapper })
+			await userEvent.click(
+				await screen.findByRole("button", { name: "Actions for A$$B" })
+			)
+			await userEvent.click(screen.getByRole("menuitem", { name: "Delete" }))
+			expect(screen.getByText(/the bank A\$\$B\?/)).toBeTruthy()
+			await confirm()
+			await waitFor(() =>
+				expect(toast.success).toHaveBeenCalledWith("A$$B deleted")
+			)
+		})
+
+		it("returns focus to the row's menu button after cancel or a failure", async () => {
+			vi.spyOn(api, "get").mockResolvedValue([item])
+			vi.spyOn(api, "delete").mockRejectedValue(new ApiError("x", 409))
+			const { wrapper } = createQueryWrapper()
+			render(<SettingsSection section="banks" />, { wrapper })
+			// Held from before the dialog opens: it is hidden from queries while open
+			const button = await screen.findByRole("button", {
+				name: "Actions for Alpha"
+			})
+			const openDialog = async () => {
+				await userEvent.click(button)
+				await userEvent.click(screen.getByRole("menuitem", { name: "Delete" }))
+			}
+
+			await openDialog()
+			await userEvent.click(screen.getByRole("button", { name: "Cancel" }))
+			await waitFor(() => expect(document.activeElement).toBe(button))
+
+			await openDialog()
+			await confirm()
+			await waitFor(() => expect(toast.error).toHaveBeenCalled())
+			await waitFor(() => expect(document.activeElement).toBe(button))
+		})
+
 		it("shows the generic message on any other failure", async () => {
 			vi.spyOn(api, "delete").mockRejectedValue(new ApiError("x", 500))
 			await openDelete("stores")
