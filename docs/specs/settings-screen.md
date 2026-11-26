@@ -139,7 +139,7 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 
 *As the budget owner, I want to choose which categories get a monthly envelope.*
 
-- The switch is in the category form (Add and Edit).
+- The "Uses envelopes" checkbox is in the category form (the add card and the Edit panel).
 - A hint under it reads: "Months you open from now on get an envelope for this category. Existing envelopes don't change."
 - Turning it **on** makes the category appear in **+ Add → Category** of the Month screen (M-23) for current and future months, where an envelope can be added by hand.
 - Turning it **off** doesn't remove envelopes that already exist. They can be deleted from the Month screen (M-24) only in the current and future months: the backend refuses to change or delete envelopes of past months (422, M-25).
@@ -223,7 +223,7 @@ Decided 2026-11-24: the theme switch stays at the bottom of the sidebar, and in 
 |---|---|---|
 | G-7 | Name uniqueness: the software specification says ignoring case, the API docs say exact match | Doesn't block: the form checks ignoring case, the server answers 409 (S-14). Ask the backend which rule applies and align the docs |
 | G-13 | No way to tell whether a lookup is in use. The UX brief (principle 5) wants lookups in use to say so before a delete is attempted | The refusal arrives after the confirmation (S-04). Suggested fix: an `inUse` flag, or the count of active references, on each lookup |
-| G-14 | Does turning "Uses envelopes" off leave existing envelopes alone, as assumed here? The docs only say creating an envelope for such a category returns 400 | Check against the real API before building S-03; reword the hint if not |
+| G-14 | ~~Does turning "Uses envelopes" off leave existing envelopes alone?~~ **Resolved 2026-11-25** against the real API: yes. An envelope of the current month stays, can still be edited (200) and deleted (204), and a new one for the category is refused (400 "does not support budget envelopes"). Not checked: the past-month 422 | None: the hint is right |
 | G-15 | The API documents no maximum length for names | The form sets none. Add one if the backend has a column limit |
 
 ## 7. Decisions to confirm
