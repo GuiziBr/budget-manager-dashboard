@@ -25,14 +25,16 @@ Needed alongside the Month screen, since the Month screen lives inside it.
 
 ### 1.2 Recurring screen
 
+Full spec: [recurring-screen.md](recurring-screen.md) (draft 1, 2026-11-26). Plan: [recurring-screen-implementation.md](../plans/recurring-screen-implementation.md).
+
 | ID | Feature | Priority | Status |
 |---|---|---|---|
-| R-01 | List recurring bills: description, amount, category, payment type, bank, store, start month | Must | Ready |
+| R-01 | List recurring bills: description, amount, category, payment type, bank, store, start month | Must | Ready (G-16: names resolved from the lookups) |
 | R-02 | Show active and cancelled bills separately (filter or sections) | Should | Ready |
 | R-03 | Months running for each bill ("Month 11") | Should | Ready |
 | R-04 | "Months already paid" starting count on the bill form (`monthsAlreadyPaid`) | Should | Ready |
 | R-05 | Edit a bill's description and amount; applies to months opened afterwards only | Must | Ready |
-| R-06 | Cancel a bill from a chosen month (current month or later) | Must | Ready |
+| R-06 | Cancel a bill: choose the last month it appears in (current month or later) | Must | Ready (verify Q-1) |
 | R-07 | Reactivate a cancelled bill | Should | Gap (BE-2) |
 | R-08 | Delete a bill (also cancels it; rows already generated stay) | Must | Ready |
 | R-09 | Add a recurring bill: opens the expense form of the Month screen (M-16) on the current month | Should | Ready |
@@ -69,7 +71,6 @@ One sidebar submenu entry per lookup (one page each). Lists are short and not pa
 |---|---|---|
 | History screen: totals over time, envelope spend over time, an item over time, same month last year | UX brief §12 | First candidate for a later phase. Needs per-month totals from the backend (G-10) |
 | Migrating past months from the spreadsheet: opening a past month that was never opened | Month spec §7 (Q-2) | Only past months that were never opened can't be opened. Opened past months accept new expenses and incomes and are editable, except envelopes (M-25) |
-| Starting point of the recurring months-running count | UX brief §13 | Placeholder field R-04 |
 | Multiple users, sharing, authentication | UX brief §12 | |
 | Push or email notifications | UX brief §12 | Warnings are in-app only |
 | Currencies other than CAD | UX brief §12 | |
@@ -101,6 +102,7 @@ U-1 (marking a bill paid after its month ends) and BE-3 were resolved on 2026-11
 | G-13 | No way to tell whether a lookup is in use, so a delete is refused (409) only after the user confirms | S-04, S-08, S-10, S-12 | Return an `inUse` flag, or the count of active references, on each lookup |
 | G-14 | ~~Unclear whether turning "Uses envelopes" off leaves existing envelopes alone~~ Resolved 2026-11-25: it does (checked against the real API) | S-03 | None |
 | G-15 | No maximum length documented for lookup names | S-02, S-06, S-09, S-11 | State the limit in the API docs |
+| G-16 | `GET /recurring-expenses` returns ids only (no nested `{ id, name }`) and no `monthsRunning` | R-01, R-03 | Return the nested objects and `monthsRunning` on templates, like on expenses. Until then the screen resolves names from the lookups and computes the count |
 
 G-8 moved to BE-2, G-10 to BE-5, G-11 to BE-3. G-2 (plan size on expenses), G-3 (names of deleted lookups), G-5 (envelope spend) and G-6 (months running) were delivered by the backend on 2026-11-03: see [expense.md](../APIs/expense.md), [budget-envelope.md](../APIs/budget-envelope.md) and [recurring-expense.md](../APIs/recurring-expense.md).
 
