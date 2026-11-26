@@ -45,7 +45,7 @@ interface LookupListProps {
 	create: (values: LookupFormValues) => Promise<unknown>
 	/** Gets the row menu's button too, to hand the focus back when the panel closes. */
 	onEdit?: (item: LookupItem, opener: HTMLElement | null) => void
-	/** Wired up by the delete task (ST-09). */
+	/** Gets the item to delete; the section asks for the confirmation. */
 	onDelete?: (item: LookupItem) => void
 }
 
