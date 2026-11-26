@@ -99,7 +99,7 @@ U-1 (marking a bill paid after its month ends) and BE-3 were resolved on 2026-11
 | G-9 | No endpoint lists installment plans, so plans can only be reached from their expense rows | M-19 | `GET /installment-groups`, if a list of plans is ever wanted |
 | G-12 | `BudgetEnvelope` carries only `categoryId`, so the name of a category deleted after the envelope's month can't be shown (the same problem G-3 had for expenses) | M-04, M-08 | Return `category: { id, name }` on envelopes |
 | G-13 | No way to tell whether a lookup is in use, so a delete is refused (409) only after the user confirms | S-04, S-08, S-10, S-12 | Return an `inUse` flag, or the count of active references, on each lookup |
-| G-14 | Unclear whether turning "Uses envelopes" off leaves existing envelopes alone | S-03 | Check against the real API; document it |
+| G-14 | ~~Unclear whether turning "Uses envelopes" off leaves existing envelopes alone~~ Resolved 2026-11-25: it does (checked against the real API) | S-03 | None |
 | G-15 | No maximum length documented for lookup names | S-02, S-06, S-09, S-11 | State the limit in the API docs |
 
 G-8 moved to BE-2, G-10 to BE-5, G-11 to BE-3. G-2 (plan size on expenses), G-3 (names of deleted lookups), G-5 (envelope spend) and G-6 (months running) were delivered by the backend on 2026-11-03: see [expense.md](../APIs/expense.md), [budget-envelope.md](../APIs/budget-envelope.md) and [recurring-expense.md](../APIs/recurring-expense.md).

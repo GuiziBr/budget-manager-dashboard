@@ -3,10 +3,11 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Tags } from "lucide-react"
 import { type RefObject, useEffect, useState } from "react"
-import { useForm } from "react-hook-form"
+import { Controller, useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { DetailsSheet } from "@/components/DetailsSheet"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { FormField, fieldErrorId } from "@/components/ui/form-field"
 import { Input } from "@/components/ui/input"
 import { translations } from "@/constants/translations"
@@ -25,6 +26,8 @@ import type { LookupKind } from "./LookupList"
 
 const t = translations.settings.edit
 const names = translations.errors.lookup.names
+const flagLabel = translations.settings.list.flags
+const flagHint = translations.settings.list.flagHints
 
 interface LookupFormPanelProps {
 	open: boolean
@@ -118,6 +121,7 @@ function LookupForm({
 }) {
 	const {
 		register,
+		control,
 		handleSubmit,
 		setError,
 		formState: { errors, isSubmitting }
@@ -198,6 +202,36 @@ function LookupForm({
 						{...register("name")}
 					/>
 				</FormField>
+				{lookup === "category" && (
+					<Controller
+						control={control}
+						name="hasBudgetEnvelope"
+						render={({ field }) => (
+							<div className="flex flex-col gap-1.5">
+								<label
+									htmlFor="lookup-edit-flag"
+									className="flex min-h-11 cursor-pointer items-center gap-2 font-medium text-foreground text-sm"
+								>
+									<Checkbox
+										id="lookup-edit-flag"
+										checked={field.value}
+										aria-describedby="lookup-edit-flag-hint"
+										onCheckedChange={(checked) =>
+											field.onChange(checked === true)
+										}
+									/>
+									{flagLabel.category}
+								</label>
+								<p
+									id="lookup-edit-flag-hint"
+									className="text-muted-foreground text-sm"
+								>
+									{flagHint.category}
+								</p>
+							</div>
+						)}
+					/>
+				)}
 			</div>
 			<div className="flex shrink-0 flex-col gap-2 border-border border-t px-5 py-5">
 				<Button type="submit" disabled={isSubmitting}>

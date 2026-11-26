@@ -56,6 +56,11 @@ export const translations = {
 				category: "Uses envelopes",
 				paymentType: "Has statement"
 			},
+			// Shown under the flag: what turning it on means
+			flagHints: {
+				category:
+					"Months you open from now on get an envelope for this category. Existing envelopes don't change."
+			},
 			yes: "Yes",
 			no: "No",
 			items: {
@@ -78,7 +83,7 @@ export const translations = {
 		},
 		edit: {
 			title: "Edit {item}",
-			description: "Change the name of {name}.",
+			description: "Change {name}.",
 			nameLabel: "Name",
 			saved: "{name} saved",
 			save: "Save",
