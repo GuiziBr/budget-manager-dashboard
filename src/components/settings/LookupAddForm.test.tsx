@@ -113,5 +113,20 @@ describe("LookupAddForm", () => {
 	it("shows no flag checkbox for banks", () => {
 		setup({ lookup: "bank" })
 		expect(screen.queryByRole("checkbox")).toBeNull()
+		expect(screen.queryByText(/Existing envelopes/)).toBeNull()
+	})
+
+	it("explains the flag for categories and sends it off by default", async () => {
+		const { create } = setup()
+		expect(
+			screen.getByRole("checkbox", { name: "Uses envelopes" })
+		).toHaveAccessibleDescription(/Existing envelopes don't change/)
+		await type("Hydro")
+		await save()
+		await waitFor(() =>
+			expect(create).toHaveBeenCalledWith(
+				expect.objectContaining({ hasBudgetEnvelope: false })
+			)
+		)
 	})
 })

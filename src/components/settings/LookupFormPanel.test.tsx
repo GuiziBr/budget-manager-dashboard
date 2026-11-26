@@ -70,6 +70,60 @@ describe("LookupFormPanel", () => {
 		expect(onClose).toHaveBeenCalled()
 	})
 
+	describe("Uses envelopes flag", () => {
+		const flag = () => screen.getByRole("checkbox", { name: "Uses envelopes" })
+
+		it("shows the flag prefilled, with its hint", () => {
+			setup({ item: grocery })
+			expect(flag()).toBeChecked()
+			expect(
+				screen.getByText(/Existing envelopes don't change/)
+			).toBeInTheDocument()
+		})
+
+		it("keeps its ids apart from the add card's, which shares the page", () => {
+			render(
+				<>
+					<div id="lookup-flag" />
+					<div id="lookup-flag-hint" />
+				</>
+			)
+			setup({ item: grocery })
+			expect(flag()).toHaveAccessibleDescription(
+				/Existing envelopes don't change/
+			)
+			expect(flag().id).not.toBe("lookup-flag")
+		})
+
+		it("sends only the flag when it is the only change", async () => {
+			const { update, reload, onClose } = setup()
+			expect(flag()).not.toBeChecked()
+			await userEvent.click(flag())
+			await save()
+			await waitFor(() =>
+				expect(update).toHaveBeenCalledWith(hydro, { hasBudgetEnvelope: true })
+			)
+			// A flag-only save skips the duplicate check
+			expect(reload).not.toHaveBeenCalled()
+			expect(toast.success).toHaveBeenCalledWith("Hydro saved")
+			expect(onClose).toHaveBeenCalled()
+		})
+
+		it("sends nothing when the flag is toggled back", async () => {
+			const { update, onClose } = setup()
+			await userEvent.click(flag())
+			await userEvent.click(flag())
+			await save()
+			await waitFor(() => expect(onClose).toHaveBeenCalled())
+			expect(update).not.toHaveBeenCalled()
+		})
+
+		it("is not offered for other lookups", () => {
+			setup({ lookup: "bank" })
+			expect(screen.queryByRole("checkbox")).not.toBeInTheDocument()
+		})
+	})
+
 	it("closes without a request when nothing changed", async () => {
 		const { update, reload, onClose } = setup()
 		await save()

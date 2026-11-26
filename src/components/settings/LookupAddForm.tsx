@@ -101,48 +101,56 @@ export function LookupAddForm({
 	const error = errors.name?.message
 
 	return (
-		<form
-			onSubmit={submit}
-			noValidate
-			className="flex flex-col gap-3 sm:flex-row sm:items-center"
-		>
-			<Input
-				icon={Tags}
-				aria-label={t.add.nameLabel}
-				aria-required="true"
-				aria-invalid={!!error}
-				placeholder={t.add.placeholders[lookup]}
-				autoComplete="off"
-				error={error}
-				className="sm:w-1/2 sm:flex-none"
-				{...register("name")}
-			/>
-			{flagField && (
-				<Controller
-					control={control}
-					name={flagField}
-					render={({ field }) => (
-						<label
-							htmlFor="lookup-flag"
-							className="flex min-h-11 cursor-pointer items-center gap-2 font-medium text-sm text-foreground sm:min-h-0"
-						>
-							<Checkbox
-								id="lookup-flag"
-								checked={field.value}
-								onCheckedChange={(checked) => field.onChange(checked === true)}
-							/>
-							{t.list.flags[lookup as keyof typeof t.list.flags]}
-						</label>
-					)}
+		<form onSubmit={submit} noValidate className="flex flex-col gap-2">
+			<div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+				<Input
+					icon={Tags}
+					aria-label={t.add.nameLabel}
+					aria-required="true"
+					aria-invalid={!!error}
+					placeholder={t.add.placeholders[lookup]}
+					autoComplete="off"
+					error={error}
+					className="sm:w-1/2 sm:flex-none"
+					{...register("name")}
 				/>
+				{flagField && (
+					<Controller
+						control={control}
+						name={flagField}
+						render={({ field }) => (
+							<label
+								htmlFor="lookup-flag"
+								className="flex min-h-11 cursor-pointer items-center gap-2 font-medium text-sm text-foreground sm:min-h-0"
+							>
+								<Checkbox
+									id="lookup-flag"
+									aria-describedby={
+										lookup === "category" ? "lookup-flag-hint" : undefined
+									}
+									checked={field.value}
+									onCheckedChange={(checked) =>
+										field.onChange(checked === true)
+									}
+								/>
+								{t.list.flags[lookup as keyof typeof t.list.flags]}
+							</label>
+						)}
+					/>
+				)}
+				<Button
+					type="submit"
+					disabled={isSubmitting}
+					className="sm:ml-auto sm:min-w-28"
+				>
+					{translations.common.save}
+				</Button>
+			</div>
+			{lookup === "category" && (
+				<p id="lookup-flag-hint" className="text-muted-foreground text-sm">
+					{t.list.flagHints.category}
+				</p>
 			)}
-			<Button
-				type="submit"
-				disabled={isSubmitting}
-				className="sm:ml-auto sm:min-w-28"
-			>
-				{translations.common.save}
-			</Button>
 		</form>
 	)
 }
