@@ -73,7 +73,6 @@ export const translations = {
 			}
 		},
 		add: {
-			save: "Save",
 			added: "{name} added",
 			placeholders: {
 				category: "Category name",
