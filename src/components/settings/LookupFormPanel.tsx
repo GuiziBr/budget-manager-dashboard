@@ -28,6 +28,10 @@ const t = translations.settings.edit
 const names = translations.errors.lookup.names
 const flagLabel = translations.settings.list.flags
 const flagHint = translations.settings.list.flagHints
+const FLAG_FIELD = {
+	category: "hasBudgetEnvelope",
+	paymentType: "hasStatement"
+} as const
 
 interface LookupFormPanelProps {
 	open: boolean
@@ -184,6 +188,10 @@ function LookupForm({
 	})
 
 	const error = errors.name?.message
+	const flagField =
+		lookup === "category" || lookup === "paymentType"
+			? FLAG_FIELD[lookup]
+			: null
 
 	return (
 		<form noValidate onSubmit={save} className="flex min-h-0 flex-1 flex-col">
@@ -202,10 +210,10 @@ function LookupForm({
 						{...register("name")}
 					/>
 				</FormField>
-				{lookup === "category" && (
+				{flagField && (
 					<Controller
 						control={control}
-						name="hasBudgetEnvelope"
+						name={flagField}
 						render={({ field }) => (
 							<div className="flex flex-col gap-1.5">
 								<label
@@ -220,13 +228,13 @@ function LookupForm({
 											field.onChange(checked === true)
 										}
 									/>
-									{flagLabel.category}
+									{flagLabel[lookup as keyof typeof flagLabel]}
 								</label>
 								<p
 									id="lookup-edit-flag-hint"
 									className="text-muted-foreground text-sm"
 								>
-									{flagHint.category}
+									{flagHint[lookup as keyof typeof flagHint]}
 								</p>
 							</div>
 						)}

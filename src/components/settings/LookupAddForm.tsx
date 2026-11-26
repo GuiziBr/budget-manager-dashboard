@@ -125,9 +125,7 @@ export function LookupAddForm({
 							>
 								<Checkbox
 									id="lookup-flag"
-									aria-describedby={
-										lookup === "category" ? "lookup-flag-hint" : undefined
-									}
+									aria-describedby={flagField ? "lookup-flag-hint" : undefined}
 									checked={field.value}
 									onCheckedChange={(checked) =>
 										field.onChange(checked === true)
@@ -146,9 +144,9 @@ export function LookupAddForm({
 					{translations.common.save}
 				</Button>
 			</div>
-			{lookup === "category" && (
+			{flagField && (
 				<p id="lookup-flag-hint" className="text-muted-foreground text-sm">
-					{t.list.flagHints.category}
+					{t.list.flagHints[lookup as keyof typeof t.list.flagHints]}
 				</p>
 			)}
 		</form>

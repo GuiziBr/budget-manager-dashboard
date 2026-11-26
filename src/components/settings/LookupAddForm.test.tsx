@@ -129,4 +129,27 @@ describe("LookupAddForm", () => {
 			)
 		)
 	})
+
+	it("explains the flag for payment types and sends it as chosen", async () => {
+		const { create } = setup({ lookup: "paymentType" })
+		const flag = screen.getByRole("checkbox", { name: "Has statement" })
+		expect(flag).toHaveAccessibleDescription(
+			/Expenses paid this way must have a bank/
+		)
+		await type("Debit")
+		await save()
+		await waitFor(() =>
+			expect(create).toHaveBeenCalledWith(
+				expect.objectContaining({ name: "Debit", hasStatement: false })
+			)
+		)
+		await userEvent.click(flag)
+		await type("Credit")
+		await save()
+		await waitFor(() =>
+			expect(create).toHaveBeenLastCalledWith(
+				expect.objectContaining({ name: "Credit", hasStatement: true })
+			)
+		)
+	})
 })
