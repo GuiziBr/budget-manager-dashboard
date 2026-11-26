@@ -37,7 +37,7 @@ Related: [Recurring spec](../specs/recurring-screen.md) · [Management plan](set
 | RC-08 | Delete a bill | 3 | R-08 | RC-03, RC-05 | S | — |
 | RC-09 | Add from the Recurring screen, starting count on the Month form | 4 Add | R-04, R-09 | RC-05 | M | — |
 | RC-10 | Reactivate a bill | 5 Blocked | R-07 | RC-07 | S | BE-2 |
-| RC-11 | Final pass: themes, 390px, accessibility, clean-up | 6 Polish | all | everything built | S | — |
+| RC-11 | Final pass: themes, 390px, accessibility, clean-up | 6 Polish | all except R-07 | RC-00 to RC-09 | S | — |
 
 Size: **S** ≈ half a day, **M** ≈ a day.
 
@@ -72,9 +72,9 @@ Size: **S** ≈ half a day, **M** ≈ a day.
 - **Includes:**
   - a Zod schema: description (trimmed, not empty), amount (the Month form's money rule, reuse it from `lib/expense-form.ts` or `lib/money.ts`, don't copy it), months already paid (whole number, 0 or more; an empty field means 0);
   - `billToFormValues` for the prefill, and `buildUpdateBillInput(bill, values)`: only changed fields, no change → `null` so the caller closes without a request;
-  - `cancelMonthOptions(now)`: the current month and the next 11, as `{ month, value: "YYYY-MM-01", label }`, and `buildCancelInput(month)` → `{ cancelledAt: "YYYY-MM-01" }`;
+  - `cancelMonthOptions(now, currentLast?)`: the current month and the next 11, as `{ month, value: "YYYY-MM-01", label }`. The API sets no upper limit on `cancelledAt`, so when an ending bill's current last month falls outside that range (for example December 2028 seen in November 2026) it is added as an extra option, in order, so the select can start on the stored value and nothing is shortened by accident. `buildCancelInput(month)` → `{ cancelledAt: "YYYY-MM-01" }`;
   - `currentLastMonth(bill)` to preselect a change of end month for an ending bill.
-- **Done when:** tests cover trimming, the empty description, an amount with the wrong number of decimals, a negative or fractional starting count, only-changed-fields and the no-change case, the options across a year end, and the cancel date format.
+- **Done when:** tests cover trimming, the empty description, an amount with the wrong number of decimals, a negative or fractional starting count, only-changed-fields and the no-change case, the options across a year end, an existing last month beyond the 12 months (added once, in order) and one inside the range (not duplicated), and the cancel date format.
 - **Backend:** **Q-1** (see RC-00): `buildCancelInput` and the option labels assume `cancelledAt` is the first day of the last month the bill appears in. *To address when reached:* adjust here once RC-00 has answered.
 
 #### RC-03 Recurring error messages (`lib/api-error-message.ts`)
@@ -92,7 +92,8 @@ Size: **S** ≈ half a day, **M** ≈ a day.
 #### RC-04 Recurring hooks: list, update, delete
 - **Goal:** read the bills and change them, next to the single-bill read the Month screen already uses.
 - **Includes:** in `src/hooks/use-recurring-expense.ts` (keep the file, it already owns `RECURRING_EXPENSES_QUERY_KEY`): `useRecurringExpenses()` (`GET recurring-expenses`, same 10-minute `staleTime` as the lookups, so a screen visit after a change on the Month screen still refetches because the mutations invalidate the key), `useUpdateRecurringExpense()` (takes `{ id, ...changedFields }`, used by edit and cancel) and `useDeleteRecurringExpense()`. Each invalidates `RECURRING_EXPENSES_QUERY_KEY`; an update that carries `monthsAlreadyPaid` also invalidates `EXPENSES_QUERY_KEY`. Add `UpdateRecurringExpenseInput` to `src/types/recurring-expense.ts`. Tests with `src/test/query-wrapper.tsx`.
-- **Done when:** each hook sends the expected request (`GET`, `PATCH` with only the given fields, `DELETE`), invalidates the list on success (and the expenses for a starting-count change), and leaves everything alone on error.
+- **Also:** a bill is created through the Month screen's `useCreateExpense` (`type: "recurring"`), which invalidates only `EXPENSES_QUERY_KEY`. Without more, the list's 10-minute `staleTime` would hide a bill created a minute ago. In `use-expenses.ts`, when the created expense is recurring, `useCreateExpense` also invalidates `RECURRING_EXPENSES_QUERY_KEY`. Deleting or editing a recurring *row* doesn't change the template, so those mutations stay as they are.
+- **Done when:** each hook sends the expected request (`GET`, `PATCH` with only the given fields, `DELETE`), invalidates the list on success (and the expenses for a starting-count change), and leaves everything alone on error; `useCreateExpense` invalidates the bills only for a recurring create, not for one-time or installment ones.
 - **Backend:** **Q-2**: whether the expenses need refreshing after a starting-count change depends on the backend computing `monthsRunning` live. *To address when reached:* if RC-00 shows it doesn't, remove the expenses invalidation and the spec's matching line.
 
 ### Phase 2 — Read-only Recurring screen
@@ -147,7 +148,7 @@ Size: **S** ≈ half a day, **M** ≈ a day.
 
 #### RC-10 Reactivate a bill (R-07)
 - **Status: blocked on BE-2.** Don't start until the backend accepts `cancelledAt: null` (or adds a reactivate action).
-- **Includes:** **Reactivate** in the row menu of ending and cancelled bills, a confirmation ("{Description} will be added to the months you open from now on. Months already open aren't changed."), `cancelledAt: null`, a toast "{Description} reactivated"; the bill moves to Active. Error messages for a 404 and the generic failure as in RC-03. Align the spec, the software specification and `docs/APIs/recurring-expense.md`.
+- **Includes:** **Reactivate** in the row menu of ending and cancelled bills (with the same keyboard, focus-return and light, dark and 390px checks as RC-11, since RC-11 doesn't cover it), a confirmation ("{Description} will be added to the months you open from now on. Months already open aren't changed."), `cancelledAt: null`, a toast "{Description} reactivated"; the bill moves to Active. Error messages for a 404 and the generic failure as in RC-03. Align the spec, the software specification and `docs/APIs/recurring-expense.md`.
 - **Done when:** a cancelled bill comes back, shows under Active, and the next opened month includes it.
 - **Backend:** **BE-2** (see [todo.md](../specs/todo.md) §2.4). *To address when reached:* check whether months opened between the cancellation and the reactivation get rows (they shouldn't: only months opened after).
 
@@ -160,7 +161,7 @@ Size: **S** ≈ half a day, **M** ≈ a day.
   - unused translations removed;
   - the docs brought up to date: mark built tasks in this plan, resolve Q-1 to Q-3 in the spec, and align `docs/APIs/recurring-expense.md` and the UX brief §13 (the "Coming soon" field is live);
   - coverage thresholds in `vitest.config.ts` raised to the new floor (they only go up).
-- **Done when:** `npm run check`, `npm run build` and `npm run test:cov` are green, and every spec acceptance criterion has been checked in the browser against the real API.
+- **Done when:** `npm run check`, `npm run build` and `npm run test:cov` are green, and every spec acceptance criterion except reactivation (R-07, RC-10) has been checked in the browser against the real API. RC-11 doesn't wait for BE-2; when RC-10 is built it adds its own row-menu keyboard check and light, dark and 390px check.
 - **Backend:** none.
 
 ---

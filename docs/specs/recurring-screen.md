@@ -87,7 +87,7 @@ Sections: **Active** holds active and ending bills (an ending bill carries an "E
 | Amount\* | A monetary amount, greater than zero, two decimals (the Month form's rule) |
 | Months already paid | A whole number, 0 or more. Hint: "Months you paid before adding this bill here. It sets where the count starts." |
 
-3. A note at the top: "Changes apply to months you open from now on. Months that are already open keep their rows." Category, payment type, bank, store and start month aren't editable: the API doesn't allow it. They are shown above the fields as read-only text, with: "To change them, cancel this bill and add a new one."
+3. A note at the top: "Changes apply to months you open from now on. Months that are already open keep their rows." Category, payment type, bank, store and start month aren't editable: the API doesn't allow it. They are shown above the fields as read-only text, with: "To change them, cancel this bill, delete its rows in months that are already open, and add a new one." Without the cleanup, those months would carry both the old and the new bill
 4. Only the fields that changed are sent. Saving with no change closes without a request.
 5. On success the panel closes, the list refreshes and a toast says "{Description} saved".
 
@@ -114,7 +114,7 @@ Sections: **Active** holds active and ending bills (an ending bill carries an "E
 *As the budget owner, I want to stop a bill that has ended, such as a finished contract, so new months don't include it.*
 
 **How it works**
-1. **Cancel bill** in the row menu opens a dialog: "Cancel {description}?" with a select, **Last month it appears in**, listing the current month and the next 11, the current month chosen by default. Below it: "It won't be added to any month after {Month}. Months that are already open keep their rows: delete them from the Month screen if you don't want them."
+1. **Cancel bill** in the row menu opens a dialog: "Cancel {description}?" with a select, **Last month it appears in**, listing the current month and the next 11, the current month chosen by default. The API has no upper limit on the date, so an ending bill whose last month is beyond those 12 gets that month added to the list, and starts on it. Below it: "It won't be added to any month after {Month}. Months that are already open keep their rows: delete them from the Month screen if you don't want them."
 2. **Cancel bill** (the confirm button, destructive style) sends `cancelledAt` as the first day of the chosen month. **Keep bill** closes the dialog.
 3. On success the dialog closes, the bill moves to Cancelled once its last month is past (until then it stays under Active with "Ends {Month}"), and a toast says "{Description} will end after {Month}", or "{Description} cancelled" when the last month is the current one.
 4. The action isn't offered on a bill that is already cancelled. On an ending bill it reads **Change end month** and the select starts on the current last month. A bill can't be set back to active in this version (R-07).
@@ -135,6 +135,7 @@ Sections: **Active** holds active and ending bills (an ending bill carries an "E
 **Acceptance criteria**
 - *Given* it is November 2026 and December isn't opened, *when* I cancel Netflix with last month November, *then* opening December gives no Netflix row and November's row stays.
 - *Given* Netflix ending in December, *when* I open the dialog again, *then* the select starts on December.
+- *Given* a bill ending in December 2028 and it is November 2026, *when* I open the dialog, *then* December 2028 is in the list and selected.
 - *Given* December is already open, *when* I cancel Netflix with last month November, *then* the dialog warns that December keeps its row, and it does.
 
 ### Reactivate (R-07) — blocked
