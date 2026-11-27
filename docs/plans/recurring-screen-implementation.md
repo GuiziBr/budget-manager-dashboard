@@ -48,6 +48,7 @@ Size: **S** ≈ half a day, **M** ≈ a day.
 ### Phase 0 — Foundations
 
 #### RC-00 Verify the open questions against the real API
+- **Status: done (2026-11-26).** Settled by reading the backend code (repository, service, `months-running.ts`) and confirmed against the live API with a throwaway bill, which was deleted afterwards along with everything it generated. Q-1 and Q-2 both match the spec, so no wording changes.
 - **Goal:** settle Q-1 and Q-2 of the spec before RC-02, RC-06 and RC-07 depend on the answers.
 - **Includes:** with a throwaway bill (delete it afterwards, and anything it generated):
   - **Q-1:** `PATCH` `cancelledAt` to the first day of the current month, open next month and check there is no row for the bill; set it to next month's first day on another bill and check that month does get its row. Also check that the date `PATCH` accepts is exactly "first day of the current UTC month" (the docs' boundary).
@@ -75,7 +76,7 @@ Size: **S** ≈ half a day, **M** ≈ a day.
   - `cancelMonthOptions(now, currentLast?)`: the current month and the next 11, as `{ month, value: "YYYY-MM-01", label }`. The API sets no upper limit on `cancelledAt`, so when an ending bill's current last month falls outside that range (for example December 2028 seen in November 2026) it is added as an extra option, in order, so the select can start on the stored value and nothing is shortened by accident. `buildCancelInput(month)` → `{ cancelledAt: "YYYY-MM-01" }`;
   - `currentLastMonth(bill)` to preselect a change of end month for an ending bill.
 - **Done when:** tests cover trimming, the empty description, an amount with the wrong number of decimals, a negative or fractional starting count, only-changed-fields and the no-change case, the options across a year end, an existing last month beyond the 12 months (added once, in order) and one inside the range (not duplicated), and the cancel date format.
-- **Backend:** **Q-1** (see RC-00): `buildCancelInput` and the option labels assume `cancelledAt` is the first day of the last month the bill appears in. *To address when reached:* adjust here once RC-00 has answered.
+- **Backend:** **Q-1** (see RC-00): `buildCancelInput` and the option labels assume `cancelledAt` is the first day of the last month the bill appears in. Confirmed by RC-00: no change needed.
 
 #### RC-03 Recurring error messages (`lib/api-error-message.ts`)
 - **Goal:** map the backend's errors to the spec's messages with `describeApiError`, as ST-01 did for lookups.
@@ -94,7 +95,7 @@ Size: **S** ≈ half a day, **M** ≈ a day.
 - **Includes:** in `src/hooks/use-recurring-expense.ts` (keep the file, it already owns `RECURRING_EXPENSES_QUERY_KEY`): `useRecurringExpenses()` (`GET recurring-expenses`, same 10-minute `staleTime` as the lookups, so a screen visit after a change on the Month screen still refetches because the mutations invalidate the key), `useUpdateRecurringExpense()` (takes `{ id, ...changedFields }`, used by edit and cancel) and `useDeleteRecurringExpense()`. Each invalidates `RECURRING_EXPENSES_QUERY_KEY`; an update that carries `monthsAlreadyPaid` also invalidates `EXPENSES_QUERY_KEY`. Add `UpdateRecurringExpenseInput` to `src/types/recurring-expense.ts`. Tests with `src/test/query-wrapper.tsx`.
 - **Also:** a bill is created through the Month screen's `useCreateExpense` (`type: "recurring"`), which invalidates only `EXPENSES_QUERY_KEY`. Without more, the list's 10-minute `staleTime` would hide a bill created a minute ago. In `use-expenses.ts`, when the created expense is recurring, `useCreateExpense` also invalidates `RECURRING_EXPENSES_QUERY_KEY`. Deleting or editing a recurring *row* doesn't change the template, so those mutations stay as they are.
 - **Done when:** each hook sends the expected request (`GET`, `PATCH` with only the given fields, `DELETE`), invalidates the list on success (and the expenses for a starting-count change), and leaves everything alone on error; `useCreateExpense` invalidates the bills only for a recurring create, not for one-time or installment ones.
-- **Backend:** **Q-2**: whether the expenses need refreshing after a starting-count change depends on the backend computing `monthsRunning` live. *To address when reached:* if RC-00 shows it doesn't, remove the expenses invalidation and the spec's matching line.
+- **Backend:** **Q-2**: whether the expenses need refreshing after a starting-count change depends on the backend computing `monthsRunning` live. Confirmed by RC-00: the backend computes it live, so keep the expenses invalidation.
 
 ### Phase 2 — Read-only Recurring screen
 
@@ -119,13 +120,13 @@ Size: **S** ≈ half a day, **M** ≈ a day.
   - a 404 shows "This recurring bill no longer exists.", closes the panel and refreshes the list; other failures show the generic toast and keep the form open with what was typed;
   - one panel at a time; the panel closes if its bill leaves the list.
 - **Done when:** the R-05 acceptance criteria pass: Hydro 105.00 → 112.40 updates the list, leaves the open month's row alone and opens the next month at 112.40; saving unchanged sends no request; the starting count changes the Month n here and on the Month screen's row.
-- **Backend:** **Q-2**: the "Month n changes on existing rows" rule rests on the check in RC-00.
+- **Backend:** **Q-2**: the "Month n changes on existing rows" rule was confirmed by RC-00.
 
 #### RC-07 Cancel dialog (R-06)
 - **Goal:** stop a bill from a chosen month.
 - **Includes:** `CancelBillDialog` (`EditModal` or the app's dialog shell): the select **Last month it appears in** from `cancelMonthOptions`, defaulting to the current month (or the current last month for an ending bill, where the menu entry reads **Change end month**), the explanation under it, **Keep bill** and **Cancel bill** (destructive style); one `PATCH` per confirm with the pending spinner; success closes the dialog and toasts "{Description} will end after {Month}" (or "{Description} cancelled" for the current month); a 404 and other failures as in the spec; the entry is hidden on a cancelled bill. If the month rolls over while the dialog is open, the options are rebuilt on a 400.
 - **Done when:** the R-06 acceptance criteria pass against the real API: cancelling for the current month leaves this month's row and gives next month none; a bill ending in December reopens its dialog on December; the already-open month keeps its row and the dialog says so. Test bills removed afterwards.
-- **Backend:** **Q-1**: the wording, the options and the badge all rest on the answer from RC-00. **BE-2**: until reactivation exists there is no "Keep running" choice and no way back (RC-10).
+- **Backend:** **Q-1**: the wording, the options and the badge all match what RC-00 confirmed. **BE-2**: until reactivation exists there is no "Keep running" choice and no way back (RC-10).
 
 #### RC-08 Delete a bill (R-08)
 - **Goal:** remove a bill.
@@ -170,8 +171,8 @@ Size: **S** ≈ half a day, **M** ≈ a day.
 
 | ID | Question | Settled in |
 |---|---|---|
-| Q-1 | What `cancelledAt` means for the last month | RC-00 |
-| Q-2 | Does a starting-count change refresh `monthsRunning` on existing rows | RC-00 |
+| Q-1 | What `cancelledAt` means for the last month | RC-00 (resolved) |
+| Q-2 | Does a starting-count change refresh `monthsRunning` on existing rows | RC-00 (resolved) |
 | Q-3 | Hide the Month screen's link to a deleted bill | RC-09 |
 | BE-2 | Reactivate | RC-10, waits on the backend |
 | G-16 | Names and `monthsRunning` on templates | Optional clean-up in RC-01 and RC-05 when the backend delivers |
