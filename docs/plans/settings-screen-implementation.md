@@ -1,6 +1,6 @@
 # Management Screen — Implementation Plan
 
-Status: draft 2 · Last updated: 2026-11-24
+Status: done · Last updated: 2026-11-26
 
 The menu entry is titled **Management** (it was "Settings"); the route is `/management`; the code and the file names keep the old name.
 
@@ -19,7 +19,7 @@ Related: [Management spec](../specs/settings-screen.md) · [Month plan](month-sc
 - **Reuse the Month screen's patterns.** The forms use the same shell, field and toast conventions as the income and envelope forms (T-32, T-33); deletes use `ConfirmDeleteModal`; errors go through `describeApiError` (T-07).
 - **Every screen task** is checked in light and dark, on desktop and at 390px. `design.pen` has no Management frames, so compare against the income form frames and the existing screens until frames exist.
 - **Strings** go in `src/constants/translations.ts`; **colours** only through tokens.
-- **Backend gaps stay inside the task they affect.** Each task that depends on a gap (G-7, G-13, G-14, G-15) repeats the gap in its **Backend** line, with what to do now and what changes when it is answered. The gaps are addressed when the task is reached, not before.
+- **Backend gaps stay inside the task they affect.** Each task that depends on a gap (G-13, G-14, G-15; G-7 was resolved on 2026-11-26) repeats the gap in its **Backend** line, with what to do now and what changes when it is answered. The gaps are addressed when the task is reached, not before.
 
 ---
 
@@ -27,17 +27,17 @@ Related: [Management spec](../specs/settings-screen.md) · [Month plan](month-sc
 
 | ID | Task | Phase | Spec | Depends on | Size | Backend |
 |---|---|---|---|---|---|---|
-| ST-01 | Lookup error messages (`lib/api-error-message.ts`) | 0 Foundations | S-02, S-04, S-14 | — | S | G-7, G-13 |
-| ST-02 | Lookup form rules (`lib/lookup-form.ts`) | 0 | S-02, S-14 | — | S | G-7, G-15 |
+| ST-01 | Lookup error messages (`lib/api-error-message.ts`) | 0 Foundations | S-02, S-04, S-14 | — | S | G-13 |
+| ST-02 | Lookup form rules (`lib/lookup-form.ts`) | 0 | S-02, S-14 | — | S | G-15 |
 | ST-03 | Lookup mutation hooks | 1 Data | S-02 to S-12 | — | M | — |
 | ST-04 | Management routes and sidebar submenu | 2 Read-only screen | S-00 | — | S | — |
 | ST-05 | Lookup lists | 2 | S-01, S-05, S-09, S-11 | ST-04 | M | — |
-| ST-06 | Lookup form panel: rename (Edit) | 3 Actions | S-02, S-06, S-09, S-11, S-14 | ST-01, ST-02, ST-03, ST-05 | M | G-7, G-15 |
+| ST-06 | Lookup form panel: rename (Edit) | 3 Actions | S-02, S-06, S-09, S-11, S-14 | ST-01, ST-02, ST-03, ST-05 | M | G-15 |
 | ST-07 | Category flag: Uses envelopes | 3 | S-03 | ST-06 | S | G-14 |
 | ST-08 | Payment type flag: Has statement | 3 | S-07 | ST-06 | S | — |
 | ST-09 | Delete a lookup | 3 | S-04, S-08, S-10, S-12 | ST-01, ST-03, ST-05 | M | G-13 |
 | ST-10 | ~~Appearance tab, and remove the More sheet~~ | 4 Appearance | S-13, A-03 | — | — | Dropped 2026-11-24 |
-| ST-11 | Final pass: themes, 390px, accessibility, clean-up | 5 Polish | all | everything | S | G-7 (docs) |
+| ST-11 | Final pass: themes, 390px, accessibility, clean-up | 5 Polish | all | everything | S | — |
 
 Size: **S** ≈ half a day, **M** ≈ a day.
 
@@ -55,7 +55,7 @@ Size: **S** ≈ half a day, **M** ≈ a day.
   - Unmatched errors give the generic message, never the raw backend text.
 - **Done when:** each row of the spec's two error tables has a test, for all four lookups.
 - **Backend:**
-  - **G-7** (name uniqueness): the software specification says names are unique ignoring case, the API docs say exact (case-sensitive) match. The 409 message above doesn't depend on the answer, so this task doesn't block. *To address when reached:* ask which rule applies, and if the backend turns out to be exact-match, check that the 409 text still reads right when "grocery" is accepted next to "Grocery".
+  - ~~**G-7** (name uniqueness)~~ **Resolved 2026-11-26:** names are unique ignoring case, as the software specification says; the API docs now agree. No code changes.
   - **G-13** (no way to tell whether a lookup is in use): the screen can't say beforehand that an item can't be deleted, so the `inUse` message is the only explanation and it arrives after the confirmation. *To address when reached:* if the backend adds an `inUse` flag or a count of active references per lookup, this message can also be shown before the delete (see ST-09); the wording of the `inUse` message can then name what uses the item.
 
 #### ST-02 Lookup form rules (`lib/lookup-form.ts`)
@@ -66,7 +66,7 @@ Size: **S** ≈ half a day, **M** ≈ a day.
   - `buildCreateLookupInput` (always sends every field the API requires on create: the name, and for categories and payment types the flag too, `false` when the switch is off) and `buildUpdateLookupInput` (only changed fields; no change → `null`, so the caller closes without a request), `lookupToFormValues` for the prefill, and `sortLookups` (alphabetical, ignoring case).
 - **Done when:** tests cover trimming, the empty name, the duplicate check (case, spaces, the edited item itself), only-changed-fields and the no-change case.
 - **Backend:**
-  - **G-7** (name uniqueness, see ST-01): the duplicate check here is deliberately stricter than an exact match and is correct under either rule. *To address when reached:* if the backend confirms exact-match, keep the check as it is (the screen blocks "grocery" next to "Grocery" on purpose, S-14) and say so in the spec; if it confirms ignoring case, nothing changes.
+  - ~~**G-7** (name uniqueness)~~ **Resolved 2026-11-26:** names are unique ignoring case, as the software specification says; the API docs now agree. No code changes. The duplicate check here matches the server's rule.
   - **G-15** (no maximum length documented for names): the schema sets none. *To address when reached:* if the backend has a column limit, add it to the schema and the error message, and state it in `docs/APIs/`.
 
 ### Phase 1 — Data hooks
@@ -108,7 +108,7 @@ Size: **S** ≈ half a day, **M** ≈ a day.
   - the form closes when the section changes; one panel at a time.
 - **Done when:** the S-02 and S-14 acceptance criteria pass: adding "Nubank" shows it in the list and in the expense form's bank select, a duplicate marks the field and adds nothing (also for " grocery "), and saving an unchanged item sends no request.
 - **Backend:**
-  - **G-7** (name uniqueness, see ST-01): the pre-send check and the 409 handling are both in this task. *To address when reached:* the answer decides whether the pre-send check is stricter than the server (exact-match) or the same (ignoring case); the behaviour on screen stays the same either way, so only the spec's wording changes.
+  - ~~**G-7** (name uniqueness)~~ **Resolved 2026-11-26:** names are unique ignoring case, as the software specification says; the API docs now agree. No code changes. The pre-send check and the server's rule are the same.
   - **G-15** (no maximum length documented for names): *To address when reached:* if a limit is confirmed, add it to the schema from ST-02, to the field's hint, and to this form's tests; until then the form accepts any non-empty name and relies on the server's 400 (generic toast).
 
 #### ST-07 Category flag: Uses envelopes (S-03)
@@ -139,6 +139,7 @@ Size: **S** ≈ half a day, **M** ≈ a day.
 ### Phase 5 — Polish
 
 #### ST-11 Final pass
+- **Status: built (2026-11-26).**
 - **Includes:**
   - keyboard paths: the sidebar submenu, the row menu, the form panel with focus trap, Escape and focus return, the delete modal;
   - the empty, loading and error states of the four sections in light and dark at 390px, with nothing scrolling sideways;
@@ -146,7 +147,7 @@ Size: **S** ≈ half a day, **M** ≈ a day.
   - docs aligned: `docs/software_specification.md` line 141 still says an expense can't be updated in a past month (resolved 2026-11-10, BE-3); the case-sensitivity of lookup names (G-7) stated the same way in the software specification and the API docs; todo.md's feature map statuses updated, and the plan and spec statuses set to done;
   - coverage thresholds raised if they went up.
 - **Done when:** the checklist is complete and `check`, `build` and `test:cov` pass.
-- **Backend:** **G-7** (name uniqueness) — only the documentation part: once answered, make the software specification and the API docs say the same thing. No code depends on it at this point.
+- **Backend:** none. **G-7** (name uniqueness) was resolved on 2026-11-26 (ignoring case) and the docs were aligned in this task.
 
 ---
 
@@ -156,7 +157,7 @@ These don't block any task, but each needs follow-up work once resolved. Each af
 
 | Item | Affects | What changes when it lands |
 |---|---|---|
-| G-7 name uniqueness (ignoring case or exact) | ST-01, ST-02, ST-06, ST-11 | Spec wording and docs; the screen already behaves the same under either rule |
+| ~~G-7~~ name uniqueness (ignoring case or exact) | ST-01, ST-02, ST-06, ST-11 | Resolved 2026-11-26: ignoring case; docs aligned; no change |
 | G-13 no way to tell whether a lookup is in use | ST-01, ST-09 | Disable Delete with the reason before the attempt; keep the 409 handling for stale lists |
 | ~~G-14~~ existing envelopes when "Uses envelopes" is turned off | ST-07 | Resolved 2026-11-25: existing envelopes are left alone; no change |
 | G-15 no maximum length for names | ST-02, ST-06 | Add the limit to the schema, hint and tests |

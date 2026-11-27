@@ -1,6 +1,6 @@
 # Store API
 
-Base route: `/stores`. Lookup table of merchants that expenses can reference. Names are unique among active stores (exact, case-sensitive match).
+Base route: `/stores`. Lookup table of merchants that expenses can reference. Names are unique among active stores, ignoring case ("Supermarket" and "supermarket" are duplicates).
 
 ## Resource
 
@@ -28,7 +28,7 @@ Base route: `/stores`. Lookup table of merchants that expenses can reference. Na
 
 | Field | Type | Required | Rules |
 |---|---|---|---|
-| `name` | string | yes | non-empty, unique |
+| `name` | string | yes | non-empty, unique (case-insensitive) |
 
 ```json
 { "name": "Supermarket" }
@@ -36,21 +36,21 @@ Base route: `/stores`. Lookup table of merchants that expenses can reference. Na
 
 - **201** `Store`
 - **400** validation failure
-- **409** `A store named 'Supermarket' already exists`
+- **409** `A store named 'Supermarket' already exists` (also returned when the name differs only by case)
 - **500**
 
 ## PATCH /stores/:id
 
 | Field | Type | Rules |
 |---|---|---|
-| `name` | string | non-empty, unique |
+| `name` | string | non-empty, unique (case-insensitive) |
 
 At least one field is required.
 
 - **200** updated `Store`
 - **400** `id` not a UUID, invalid body, or empty body
 - **404** store not found
-- **409** the new name is already used by another store
+- **409** the new name is already used by another store (case-insensitive)
 - **500**
 
 ## DELETE /stores/:id

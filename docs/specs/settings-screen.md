@@ -1,6 +1,6 @@
 # Management Screen — Functional Specification
 
-Status: draft 2 · Last updated: 2026-11-24
+Status: done · Last updated: 2026-11-26
 
 The Management screen is where the budget owner maintains the lists the rest of the app draws from (categories, payment types, banks and stores). It is used rarely, but without it a new bank or store can't be added from the app.
 
@@ -42,7 +42,7 @@ Feature IDs keep the numbering of [todo.md](todo.md) (S-01 to S-14), so the back
 | **Appearance** | | | |
 | S-13 | ~~Choose light or dark theme in Management~~ | — | Dropped (2026-11-24): the theme switch stays at the bottom of the sidebar, and in the More sheet on the phone |
 | **Rules across the screen** | | | |
-| S-14 | Duplicate names are rejected with a clear message | Must | Ready (see G-7) |
+| S-14 | Duplicate names are rejected with a clear message | Must | Ready |
 
 ---
 
@@ -188,7 +188,7 @@ Decided 2026-11-24: the theme switch stays at the bottom of the sidebar, and in 
 ### S-14 Duplicate names
 
 - The backend answers 409 for a duplicate. The screen shows the message of the Add and rename table.
-- **Before sending** a new or changed name, the form compares it, ignoring case and surrounding spaces, with the other items already loaded, and marks the field at once. The item being edited is not compared with itself, and a save that keeps the name unchanged (a flag-only edit, for example) doesn't run the check. This is stricter than an exact match, and safe either way: if the backend turns out to be case-sensitive (G-7), "grocery" next to "Grocery" can exist, and only new or changed names are blocked by the screen, which is the intended behaviour for a one-person budget.
+- **Before sending** a new or changed name, the form compares it, ignoring case and surrounding spaces, with the other items already loaded, and marks the field at once. The item being edited is not compared with itself, and a save that keeps the name unchanged (a flag-only edit, for example) doesn't run the check. This is the same rule as the backend's (unique ignoring case, G-7), so the screen blocks "grocery" next to "Grocery" before the server would answer 409.
 - **A local match is confirmed before it blocks.** The list on screen may be stale (another client may have deleted or renamed the item). On a match, the form first re-reads the list; it marks the field only if the match is still there, and otherwise sends the request.
 - The server's answer always wins: a 409 marks the field even when the list showed no match.
 
@@ -221,7 +221,7 @@ Decided 2026-11-24: the theme switch stays at the bottom of the sidebar, and in 
 
 | ID | Item | Effect on this screen |
 |---|---|---|
-| G-7 | Name uniqueness: the software specification says ignoring case, the API docs say exact match | Doesn't block: the form checks ignoring case, the server answers 409 (S-14). Ask the backend which rule applies and align the docs |
+| G-7 | ~~Name uniqueness: ignoring case or exact match?~~ **Resolved 2026-11-26:** ignoring case. The software specification and the API docs agree | None: the form's check matches the server |
 | G-13 | No way to tell whether a lookup is in use. The UX brief (principle 5) wants lookups in use to say so before a delete is attempted | The refusal arrives after the confirmation (S-04). Suggested fix: an `inUse` flag, or the count of active references, on each lookup |
 | G-14 | ~~Does turning "Uses envelopes" off leave existing envelopes alone?~~ **Resolved 2026-11-25** against the real API: yes. An envelope of the current month stays, can still be edited (200) and deleted (204), and a new one for the category is refused (400 "does not support budget envelopes"). Not checked: the past-month 422 | None: the hint is right |
 | G-15 | The API documents no maximum length for names | The form sets none. Add one if the backend has a column limit |
