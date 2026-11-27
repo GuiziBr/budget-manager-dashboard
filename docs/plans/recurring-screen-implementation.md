@@ -48,7 +48,7 @@ Size: **S** ≈ half a day, **M** ≈ a day.
 ### Phase 0 — Foundations
 
 #### RC-00 Verify the open questions against the real API
-- **Status: done (2026-11-26).** Settled by reading the backend code (repository, service, `months-running.ts`), not by calling the live API. Q-1 and Q-2 both match the spec, so no wording changes.
+- **Status: done (2026-11-26).** Settled by reading the backend code (repository, service, `months-running.ts`) and confirmed against the live API with a throwaway bill, which was deleted afterwards along with everything it generated. Q-1 and Q-2 both match the spec, so no wording changes.
 - **Goal:** settle Q-1 and Q-2 of the spec before RC-02, RC-06 and RC-07 depend on the answers.
 - **Includes:** with a throwaway bill (delete it afterwards, and anything it generated):
   - **Q-1:** `PATCH` `cancelledAt` to the first day of the current month, open next month and check there is no row for the bill; set it to next month's first day on another bill and check that month does get its row. Also check that the date `PATCH` accepts is exactly "first day of the current UTC month" (the docs' boundary).
